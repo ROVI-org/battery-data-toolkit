@@ -13,6 +13,8 @@ You can install the toolkit with conda or pip as below.
 `conda env create --file environment.yml --force`
 
 ### Pip
+`pip install -r requirements.txt`
+
 `pip install -e .`
 
 ## Project Organization
