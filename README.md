@@ -7,7 +7,13 @@ It also contains some scripts that run these utilities on datasets available to 
 
 ## Installation
 
-Install the environment needed with `conda env create --file environment.yml --force`.
+You can install the toolkit with conda or pip as below. 
+
+### Conda
+`conda env create --file environment.yml --force`
+
+### Pip
+`pip install -e .`
 
 ## Project Organization
 
