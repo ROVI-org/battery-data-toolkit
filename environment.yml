@@ -1,0 +1,10 @@
+name: batdata
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - pip
+  - pip:
+    - -r file:requirements.txt
+    - git+https://github.com/materials-data-facility/MaterialsIO.git
+    - -e .  # Installs the batdata library in development mode
