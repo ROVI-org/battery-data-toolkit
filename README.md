@@ -7,15 +7,24 @@ It also contains some scripts that run these utilities on datasets available to 
 
 ## Installation
 
-You can install the toolkit with conda or pip as below. 
+The package can be installed with pip,
+which will install the minimal amount of packages needed for this library
+to function:
 
-### Conda
+```bash
+pip install -r requirements.txt
+pip install -e .
+```
+
+For development purposes, we recommend installing the library and 
+all requirements
+using Anaconda rather than pip. 
+Anaconda reliably gathers compatible 
+versions of all libraries and we have the versions of the libraries
+fixed in that development environment.
+Install the environment using: 
+
 `conda env create --file environment.yml --force`
-
-### Pip
-`pip install -r requirements.txt`
-
-`pip install -e .`
 
 ## Project Organization
 
