@@ -81,7 +81,7 @@ class BatteryDataExtractor(BaseParser, metaclass=ABCMeta):
             start_time = df_out['test_time'].max()
 
         # Combine the data from all files
-        df_out = pd.concat(output_dfs)
+        df_out = pd.concat(output_dfs, ignore_index=True)
 
         # Attach the metadata and return the data
         return BatteryDataFrame(data=df_out, metadata=metadata)
