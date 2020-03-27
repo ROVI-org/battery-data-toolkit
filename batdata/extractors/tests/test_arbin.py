@@ -4,7 +4,7 @@ import os
 
 from batdata.extractors.arbin import ArbinExtractor
 
-test_file = os.path.join(os.path.dirname(__file__), 'files', '2018-04-12_batch8_CH38.csv')
+test_file = os.path.join(os.path.dirname(__file__), 'files', 'arbin_example.csv')
 
 
 def test_validation():

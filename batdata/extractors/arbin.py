@@ -1,6 +1,7 @@
 """Extractor for Arbin-format files"""
 from typing import Union, List, Iterator, Tuple
 
+import numpy as np
 import pandas as pd
 
 from batdata.extractors.base import BatteryDataExtractor
@@ -22,7 +23,7 @@ class ArbinExtractor(BatteryDataExtractor):
                 yield file
 
     def generate_dataframe(self, file: str, file_number: int = 0, start_cycle: int = 0,
-                           start_time: int = 0) -> pd.DataFrame:
+                           start_time: float = 0) -> pd.DataFrame:
         """Generate a DataFrame containing the data in this file
 
         The dataframe will be in our standard format
@@ -59,7 +60,7 @@ class ArbinExtractor(BatteryDataExtractor):
         df_out['cycle_number'] = df['Cycle_Index'] + start_cycle - df['Cycle_Index'].min()
         df_out['cycle_number'] = df_out['cycle_number'].astype('int64')
         df_out['file_number'] = file_number  # df_out['cycle_number']*0
-        df_out['test_time'] = df['test_time'] - df['test_time'][0] + start_time
+        df_out['test_time'] = np.array(df['test_time'] - df['test_time'][0] + start_time, dtype=float)
         df_out['current'] = df['Current']
         df_out['temperature'] = df['Temperature']
         df_out['internal_resistance'] = df['Internal_Resistance']
