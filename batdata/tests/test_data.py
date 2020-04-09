@@ -40,6 +40,10 @@ def test_read_hdf(tmpdir, test_df):
     out_path = os.path.join(tmpdir, 'test.h5')
     test_df.to_batdata_hdf(out_path)
 
+    # Test reading only the metadata
+    metadata = BatteryDataFrame.get_metadata_from_hdf5(out_path)
+    assert metadata.name == 'Test data'
+
     # Read it
     data = BatteryDataFrame.from_batdata_hdf(out_path)
     assert data.metadata.name == 'Test data'

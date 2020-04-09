@@ -143,3 +143,21 @@ class BatteryDataFrame(pd.DataFrame):
     def from_batdata_dict(cls, d):
         """Read battery data and metadata from """
         return cls(data=d['data'], metadata=d['metadata'])
+
+    @staticmethod
+    def get_metadata_from_hdf5(path: str) -> BatteryMetadata:
+        """Open an HDF5 file and read only the metadata
+
+        Parameters
+        ----------
+        path: str
+            Path to an HDF5 file
+
+        Returns
+        -------
+        metadata: BatteryMetadata
+            Metadata from this file
+        """
+
+        with h5py.File(path, 'r') as f:
+            return BatteryMetadata.parse_raw(f.attrs['metadata'])
