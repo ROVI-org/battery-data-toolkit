@@ -1,12 +1,16 @@
 """Utility functions for computing properties of certain cycles"""
+from scipy.integrate import cumtrapz
 
 from batdata.data import BatteryDataFrame
+import pandas as pd
 import numpy as np
 
 
 # TODO (wardlt): Add back in features I removed to simplify the code as other functions:
 #   - [ ] Dropping outliers
 #   - [ ] Smoothing with Gaussian Process regression
+from batdata.schemas import ChargingState
+
 
 def compute_energy_per_cycle(df: BatteryDataFrame):
     """
@@ -63,3 +67,52 @@ def compute_energy_per_cycle(df: BatteryDataFrame):
         cycle_ind = np.append(cycle_ind, cyc)
 
     return cycle_ind, energies, capacities
+
+
+def compute_charging_curve(df: BatteryDataFrame, discharge: bool = True) -> pd.DataFrame:
+    """Compute estimates for the battery capacity for each measurement
+    of the charging or discharging sections of each cycle.
+
+    The capacity for each cycle are determined independently,
+    and is assumed to start at zero at the beginning of the cycle.
+
+    Parameters
+    ----------
+    df: BatteryDataFrame
+        Battery dataset. Must have test_time, voltage and current columns.
+        Processing will add "capacity" and "energy" columns with units
+        of A-hr and W-hr, respectively
+    discharge: bool
+        Whether to compute the discharge or charge curve
+
+    Returns
+    -------
+    curves: pd.DataFrame
+        Charge and discharge curves for each cycle in a single dataframe
+    """
+
+    # Get only the [dis]charging data
+    df = pd.DataFrame(df[df['state'] == (ChargingState.discharging if discharge else ChargingState.charging)])
+
+    # Add columns for the capacity and energy
+    df['capacity'] = 0
+    df['energy'] = 0
+
+    # Compute the capacity and energy for each cycle
+    for cid, cycle in df.groupby('cycle_number'):
+
+        # Compute in segments over each subset (avoid issues with rests)
+        for _, subcycle in cycle.groupby('substep_index'):
+            # Integrate over it
+            cap = cumtrapz(subcycle['current'], subcycle['test_time'], initial=0) / 3600  # Computes capacity in A-hr
+            eng = cumtrapz(subcycle['current'] * subcycle['voltage'],
+                           subcycle['test_time'], initial=0) / 3600  # Energy in A-hr
+
+            # Multiply by -1 for the discharging segment
+            if discharge:
+                cap *= -1
+                eng *= -1
+            df.loc[subcycle.index, 'capacity'] = cap
+            df.loc[subcycle.index, 'energy'] = eng
+
+    return df
