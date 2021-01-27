@@ -1,6 +1,6 @@
 """Schemas for battery data and metadata"""
 from datetime import date
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from enum import Enum
 
 from pandas import DataFrame
@@ -44,6 +44,9 @@ class BatteryMetadata(BaseModel):
     associated_ids: List[AnyUrl] = Field(None, description="Any identifiers associated with this data file."
                                                            " Identifiers can be any URI, such as DOIs of associated"
                                                            " paper or HTTP addresses of associated websites")
+
+    # Generic metadata
+    other: Dict = Field(default_factory=dict, help="Any other useful run information")
 
 
 class ChargingState(str, Enum):
