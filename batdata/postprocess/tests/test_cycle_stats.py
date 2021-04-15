@@ -5,7 +5,7 @@ import numpy as np
 from pytest import fixture
 
 from batdata.extractors.arbin import ArbinExtractor
-from batdata.postprocess.cycle_stats import compute_energy_per_cycle, compute_charging_curve
+from batdata.postprocess.cycle_stats import CapacityPerCycle, compute_charging_curve
 
 
 @fixture
@@ -15,10 +15,10 @@ def example_data():
 
 
 def test_cycle_stats(example_data):
-    cyc, eng, cap = compute_energy_per_cycle(example_data)
-    assert np.isclose([0, 1], cyc).all()
-    assert np.isclose([3.256, 3.262], eng, atol=1e-2).all()
-    assert np.isclose([1.073, 1.074], cap, atol=1e-2).all()
+    feat = CapacityPerCycle().compute_features(example_data)
+    assert np.isclose([0, 1], feat['cycle_ind']).all()
+    assert np.isclose([3.256, 3.262], feat['energy'], atol=1e-2).all()
+    assert np.isclose([1.073, 1.074], feat['capacity'], atol=1e-2).all()
 
 
 def test_capacity(example_data):

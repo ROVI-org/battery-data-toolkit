@@ -10,65 +10,58 @@ import numpy as np
 #   - [ ] Dropping outliers
 #   - [ ] Smoothing with Gaussian Process regression
 from batdata.schemas import ChargingState
+from batdata.postprocess.base import BaseFeatureComputer
 
 
-def compute_energy_per_cycle(df: BatteryDataFrame):
-    """
-    Calculate the maximum energy and capacity on a per-cycle basis
+class CapacityPerCycle(BaseFeatureComputer):
+    """Compute the capacity and energy per cycle
 
-    Parameters
-    ----------
-    df : BatteryDataFrame
-        Input dataframe
+    Capacity is computed by integrating the discharge segments of the battery
 
-    Returns
-    -------
-    cycle_ind : array
-        array of cycle numbers
-    energies : array
-        array of maximum for each cycle. Units: W-hr
-    capacities : array
-        array of maximum for each cycle. Units: A-hr
-
-    Examples
-    --------
-    none yet
-
+    Output dataframe has 3 columns:
+        - ``cycle_ind``: Index of the cycle
+        - ``energy``: Energy per the cycle in W-hr
+        - ``capacity``: Capacity of the cycle in A-hr
     """
 
-    # Initialize the output arrays
-    energies = np.array([])
-    capacities = np.array([])
-    cycle_ind = np.array([])
+    def compute_features(self, data: BatteryDataFrame) -> pd.DataFrame:
+        # Initialize the output arrays
+        energies = []
+        capacities = []
+        cycle_ind = []
 
-    # Loop over each cycle
-    for cyc, cycle_data in df.query("state=='discharging'").groupby('cycle_number'):
-        # Calculate accumulated energy/capacity for each sub-segment
-        ene = 0
-        cap = 0
-        for _, subseg in cycle_data.groupby('substep_index'):
-            # Sort by test time, just in case
-            subseg_sorted = subseg.sort_values('test_time')
+        # Loop over each cycle
+        for cyc, cycle_data in data.query("state=='discharging'").groupby('cycle_number'):
+            # Calculate accumulated energy/capacity for each sub-segment
+            ene = 0
+            cap = 0
+            for _, subseg in cycle_data.groupby('substep_index'):
+                # Sort by test time, just in case
+                subseg_sorted = subseg.sort_values('test_time')
 
-            # Use current as always positive convention, opposite of what our standard uses
-            t = subseg_sorted['test_time'].values
-            i = -1 * subseg_sorted['current'].values
-            v = subseg_sorted['voltage'].values
+                # Use current as always positive convention, opposite of what our standard uses
+                t = subseg_sorted['test_time'].values
+                i = -1 * subseg_sorted['current'].values
+                v = subseg_sorted['voltage'].values
 
-            # integrate for energy and capacity and convert to
-            # Watt/hrs. and Amp/hrs. respectively
-            ene += np.trapz(i * v, t) / 3600
-            cap += np.trapz(i, t) / 3600
+                # integrate for energy and capacity and convert to
+                # Watt/hrs. and Amp/hrs. respectively
+                ene += np.trapz(i * v, t) / 3600
+                cap += np.trapz(i, t) / 3600
 
-        # TODO (wardlt): This version of append re-allocates arrays, O(n). Consider using list.append instead,
-        #  which uses linked lists O(1)
-        energies = np.append(energies, ene)
-        capacities = np.append(capacities, cap)
-        cycle_ind = np.append(cycle_ind, cyc)
+            # Append to the list
+            energies.append(ene)
+            capacities.append(cap)
+            cycle_ind.append(cyc)
 
-    return cycle_ind, energies, capacities
+        return pd.DataFrame({
+            'cycle_ind': cycle_ind,
+            'energy': energies,
+            'capacity': capacities
+        })
 
 
+# TODO (wardlt): Move this elsewhere? Does not quite match the API for the BaseFeatureComputer
 def compute_charging_curve(df: BatteryDataFrame, discharge: bool = True) -> pd.DataFrame:
     """Compute estimates for the battery capacity for each measurement
     of the charging or discharging sections of each cycle.
