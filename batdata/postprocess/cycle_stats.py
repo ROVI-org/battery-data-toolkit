@@ -1,7 +1,7 @@
 """Utility functions for computing properties of certain cycles"""
 from scipy.integrate import cumtrapz
 
-from batdata.data import BatteryDataFrame
+from batdata.data import BatteryDataset
 import pandas as pd
 import numpy as np
 
@@ -12,14 +12,14 @@ import numpy as np
 from batdata.schemas import ChargingState
 
 
-def compute_energy_per_cycle(df: BatteryDataFrame):
+def compute_energy_per_cycle(data: BatteryDataset):
     """
     Calculate the maximum energy and capacity on a per-cycle basis
 
     Parameters
     ----------
-    df : BatteryDataFrame
-        Input dataframe
+    data : BatteryDataset
+        Input battery dataset. Must have raw data defined
 
     Returns
     -------
@@ -42,7 +42,7 @@ def compute_energy_per_cycle(df: BatteryDataFrame):
     cycle_ind = np.array([])
 
     # Loop over each cycle
-    for cyc, cycle_data in df.query("state=='discharging'").groupby('cycle_number'):
+    for cyc, cycle_data in data.raw_data.query("state=='discharging'").groupby('cycle_number'):
         # Calculate accumulated energy/capacity for each sub-segment
         ene = 0
         cap = 0
@@ -69,7 +69,7 @@ def compute_energy_per_cycle(df: BatteryDataFrame):
     return cycle_ind, energies, capacities
 
 
-def compute_charging_curve(df: BatteryDataFrame, discharge: bool = True) -> pd.DataFrame:
+def compute_charging_curve(data: BatteryDataset, discharge: bool = True) -> pd.DataFrame:
     """Compute estimates for the battery capacity for each measurement
     of the charging or discharging sections of each cycle.
 
@@ -78,8 +78,8 @@ def compute_charging_curve(df: BatteryDataFrame, discharge: bool = True) -> pd.D
 
     Parameters
     ----------
-    df: BatteryDataFrame
-        Battery dataset. Must have test_time, voltage and current columns.
+    data: BatteryDataset
+        Battery dataset with raw data available. Must have test_time, voltage and current columns.
         Processing will add "capacity" and "energy" columns with units
         of A-hr and W-hr, respectively
     discharge: bool
@@ -92,14 +92,15 @@ def compute_charging_curve(df: BatteryDataFrame, discharge: bool = True) -> pd.D
     """
 
     # Get only the [dis]charging data
-    df = pd.DataFrame(df[df['state'] == (ChargingState.discharging if discharge else ChargingState.charging)])
+    data = data.raw_data
+    data = pd.DataFrame(data[data['state'] == (ChargingState.discharging if discharge else ChargingState.charging)])
 
     # Add columns for the capacity and energy
-    df['capacity'] = 0
-    df['energy'] = 0
+    data['capacity'] = 0
+    data['energy'] = 0
 
     # Compute the capacity and energy for each cycle
-    for cid, cycle in df.groupby('cycle_number'):
+    for cid, cycle in data.groupby('cycle_number'):
 
         # Compute in segments over each subset (avoid issues with rests)
         for _, subcycle in cycle.groupby('substep_index'):
@@ -112,7 +113,7 @@ def compute_charging_curve(df: BatteryDataFrame, discharge: bool = True) -> pd.D
             if discharge:
                 cap *= -1
                 eng *= -1
-            df.loc[subcycle.index, 'capacity'] = cap
-            df.loc[subcycle.index, 'energy'] = eng
+            data.loc[subcycle.index, 'capacity'] = cap
+            data.loc[subcycle.index, 'energy'] = eng
 
-    return df
+    return data

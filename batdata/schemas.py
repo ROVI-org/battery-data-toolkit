@@ -161,8 +161,14 @@ class CyclingData(BaseModel):
                     raise ValueError(f'Dataset is missing a required column: {column}')
                 continue
 
+            # Get the data type for the column
+            if '$ref' in col_schema['items']:
+                ref_name = col_schema['items']['$ref'].split("/")[-1]
+                col_type = schema['definitions'][ref_name]['type']
+            else:
+                col_type = col_schema['items']['type']
+
             # Check data types
-            col_type = col_schema['items']['type']
             actual_type = data_columns[column]
             if col_type == "number":
                 if actual_type.kind not in ['f', 'c']:
