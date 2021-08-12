@@ -1,5 +1,7 @@
 # Battery Data Extractor 
 
+[![Python Package using Conda](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package-conda.yml)
+
 This directory contains utilities for converting battery testing data files from native formats
 to a standardized HDF5 file.
 
