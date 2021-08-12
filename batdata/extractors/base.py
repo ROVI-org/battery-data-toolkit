@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Tuple, List, Optional, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 from materials_io.base import BaseParser

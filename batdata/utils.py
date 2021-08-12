@@ -1,4 +1,3 @@
-from typing import Tuple
 from pandas import DataFrame
 import logging
 
@@ -22,7 +21,7 @@ def drop_cycles(df: DataFrame, digit: int = 2):
         input dataframe
     digit : int
         number of digits to round to in time index (in seconds)
-        
+
     Returns
     -------
     df : Pandas DataFrame
@@ -58,5 +57,5 @@ def drop_cycles(df: DataFrame, digit: int = 2):
 
     # remove the now-unneed column
     df.drop(columns=['TMP'], inplace=True)
-    
+
     return df

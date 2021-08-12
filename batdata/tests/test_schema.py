@@ -58,4 +58,3 @@ def test_monotonic(example_df):
 
     example_df['cycle_number'] = [1, 1]
     CyclingData.validate_dataframe(example_df)
-

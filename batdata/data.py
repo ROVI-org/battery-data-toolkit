@@ -1,5 +1,5 @@
 """Objects that represent battery datasets"""
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path

@@ -65,43 +65,43 @@ def add_method(df):
 
             # normalize voltage and current for purposes
             # of determining CC vs CV
-            V = (max(V)-V)/(max(V)-min(V))
-            current = current/max(abs(current))
+            V = (max(V) - V) / (max(V) - min(V))
+            current = current / max(abs(current))
 
             # get "differentials"
             dV = np.diff(V, prepend=0)
             dI = np.diff(current, prepend=0)
             dt = np.diff(t, prepend=0)
 
-            a = dI/dt
-            b = dV/dt
-            a = abs(a/max(abs(a)))
-            b = abs(b/max(abs(b)))
-            a = a**2
-            b = b**2
+            a = dI / dt
+            b = dV / dt
+            a = abs(a / max(abs(a)))
+            b = abs(b / max(abs(b)))
+            a = a ** 2
+            b = b ** 2
             # d = np.minimum(a, b)
             d = np.exp(abs(a - b)) - 1
-            peaks, _ = find_peaks(d, distance=5, prominence=10**-3)
+            peaks, _ = find_peaks(d, distance=5, prominence=10 ** -3)
 
             extrema = [0] + list(peaks) + [len(d)]
 
             ind_tmp = np.array([None] * len(d))
-            for i in range(len(extrema)-1):
+            for i in range(len(extrema) - 1):
                 low = extrema[i]
-                high = extrema[i+1]
+                high = extrema[i + 1]
                 r = range(low, high)
 
                 sI = abs(np.std(current[r]))
                 sV = abs(np.std(V[r]))
 
                 # Measure the ratio between the change and current and the change in the voltage
-                val = sI/(sI + sV)
-                if len(r) < 5 or t[high-1] - t[low] < 10:
+                val = sI / (sI + sV)
+                if len(r) < 5 or t[high - 1] - t[low] < 10:
                     ind_tmp[r] = ControlMethod.other
 
                 if val > 0.66:  # If the change in the current is 2x as large as the change in current
                     ind_tmp[r] = ControlMethod.constant_voltage
-                elif val < 0.33: # If voltage is 2x larger than the voltage
+                elif val < 0.33:  # If voltage is 2x larger than the voltage
                     ind_tmp[r] = ControlMethod.constant_current
                 else:  # Indeterminate
                     ind_tmp[r] = ControlMethod.other
