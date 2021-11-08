@@ -10,6 +10,7 @@ setup(
         "materialsio.parser": [
             'arbin = batdata.extractors.arbin:ArbinExtractor',
             'maccor = batdata.extractors.maccor:MACCORExtractor',
+            'batteryarchive = batdata.extractors.batteryarchive:BatteryArchiveExtractor',
         ]
     }
 )
