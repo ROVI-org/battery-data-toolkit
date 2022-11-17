@@ -46,32 +46,54 @@ def add_method(df):
         if len(ind) < 5 and state[0] == 0:
             # if there's a very short rest (less than 5 points)
             # we label as "anomalous rest"
-            df.at[ind, 'method'] = ControlMethod.short_rest
+
+            # df.at[ind, 'method'] = ControlMethod.short_rest
+            df.loc[ind, 'method'] = ControlMethod.short_rest
         elif state[0] == 0:
             # if there are 5 or more points it's a
             # standard "rest"
-            df.at[ind, 'method'] = ControlMethod.rest
+
+            # df.at[ind, 'method'] = ControlMethod.rest
+            df.loc[ind, 'method'] = ControlMethod.rest
         elif len(ind) < 5:
             # if it's a charge or discharage and there
             # are fewer than 5 points it is an
             # "anomalous charge or discharge"
-            df.at[ind, 'method'] = ControlMethod.short_nonrest
+
+            # df.at[ind, 'method'] = ControlMethod.short_nonrest
+            df.loc[ind, 'method'] = ControlMethod.short_nonrest
         elif t[-1] - t[0] < 30:
             # if the step is less than 30 seconds
             # index as "pulse"
-            df.at[ind, 'method'] = ControlMethod.pulse
+
+            # df.at[ind, 'method'] = ControlMethod.pulse
+            df.loc[ind, 'method'] = ControlMethod.pulse
         else:
             # otherwise it is CC, CV or in-between
 
             # normalize voltage and current for purposes
             # of determining CC vs CV
-            V = (max(V) - V) / (max(V) - min(V))
-            current = current / max(abs(current))
+            Vrng = max(V) - min(V)
+            if Vrng == 0:
+                df.loc[ind, 'method'] = ControlMethod.constant_voltage
+                continue
+            else:
+                V = (max(V) - V) / Vrng
+
+            max_abs_I = max(abs(current))
+            if max_abs_I == 0:
+                df.loc[ind, 'method'] = ControlMethod.rest 
+            else:
+                current = current / max_abs_I
 
             # get "differentials"
             dV = np.diff(V, prepend=0)
             dI = np.diff(current, prepend=0)
             dt = np.diff(t, prepend=0)
+
+            dV[dV == 0] = np.nan
+            dI[dI == 0] = np.nan
+            dt[dt == 0] = np.nan
 
             a = dI / dt
             b = dV / dt
@@ -80,6 +102,7 @@ def add_method(df):
             a = a ** 2
             b = b ** 2
             # d = np.minimum(a, b)
+
             d = np.exp(abs(a - b)) - 1
             peaks, _ = find_peaks(d, distance=5, prominence=10 ** -3)
 
@@ -95,7 +118,11 @@ def add_method(df):
                 sV = abs(np.std(V[r]))
 
                 # Measure the ratio between the change and current and the change in the voltage
-                val = sI / (sI + sV)
+                if sI == 0 or sV == 0:
+                    val = np.nan
+                else:
+                    val = sI / (sI + sV)
+
                 if len(r) < 5 or t[high - 1] - t[low] < 10:
                     ind_tmp[r] = ControlMethod.other
 
@@ -106,7 +133,7 @@ def add_method(df):
                 else:  # Indeterminate
                     ind_tmp[r] = ControlMethod.other
 
-            df.at[ind, 'method'] = ind_tmp
+            df.loc[ind, 'method'] = ind_tmp
 
 
 def add_steps(df):
