@@ -23,5 +23,5 @@ jobs:
         flake8 batdata/ scripts/
     - name: Test with pytest
       run: |
-        pip install pytest-coverage
+        pip install -r test-requirements
         pytest
