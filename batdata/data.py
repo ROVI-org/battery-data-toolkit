@@ -1,5 +1,5 @@
 """Objects that represent battery datasets"""
-from typing import Union, Optional, List
+from typing import Union, Optional
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
@@ -11,7 +11,7 @@ from batdata.schemas import BatteryMetadata, CyclingData
 
 
 class BatteryDataset:
-    """Holder for all of the data associated with tests for a battery.
+    """Holder for all data associated with tests for a battery.
 
     Attributes of this class define different view of the data (e.g., raw time-series, per-cycle statistics)
     or different types of data (e.g., EIS) along with the metadata for the class

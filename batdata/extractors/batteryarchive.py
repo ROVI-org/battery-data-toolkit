@@ -1,4 +1,3 @@
-import numpy as np
 from collections import defaultdict
 from typing import Union, List, Iterator, Tuple, Optional
 

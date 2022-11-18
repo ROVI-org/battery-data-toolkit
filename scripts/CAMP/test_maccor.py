@@ -1,28 +1,20 @@
 """Pasrse example MACCOR data
 
 """
-
-from batdata.extractors.maccor import MACCORExtractor
-
-
 from tqdm import tqdm
 import pandas as pd
 
 import shutil
 import os
-import re
-import numpy as np
-# Hard code root directory of data
 from batdata.schemas import BatteryMetadata
+from batdata.extractors.maccor import MACCORExtractor
 
+# Hard code root directory of data
 root_folder = os.path.join(os.path.dirname(__file__))
 output_folder = os.path.join(os.path.join(os.path.dirname(__file__)), 'out_maccor')
 
-
-
 if __name__ == "__main__":
-    # Find all of the potential files
-
+    # Find all potential files
     extractor = MACCORExtractor()
     all_files = list(extractor.identify_files(root_folder))
     print(f'Located {len(all_files)} csv files in {root_folder}')
@@ -36,9 +28,10 @@ if __name__ == "__main__":
         metadata['filename'] = filename
         metadata['channel'] = 4
         return metadata
+
     metadata = list(filter(lambda x: x is not None, map(parse_filename, all_files)))
 
-    # Create a dataframe of all of the files
+    # Create a dataframe of all files
     data = pd.DataFrame(metadata)
     print(f'Found {len(data)} total data files')
 
@@ -48,13 +41,9 @@ if __name__ == "__main__":
     os.makedirs(output_folder)
 
     # Coerce data into numeric types
- 
-
-
 
     data['cell_id'] = range(len(data))  # Give each battery a unique cell ID
     n_cells = len(set(data["cell_id"]))
-
 
     # Loop over all of the batteries
     for cell_index, (_, subset) in tqdm(enumerate(data.groupby('cell_id')), total=n_cells):
