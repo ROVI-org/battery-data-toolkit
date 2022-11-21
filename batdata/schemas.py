@@ -37,13 +37,16 @@ class BatteryMetadata(BaseModel):
     nominal_capacity: float = Field(None, description="Rated capacity of the battery. Units: Ah")
 
     # Fields that describe the source of data
-    # TODO (wardlt): Consult Ben about whether we should use DataCite
     source: str = Field(None, description="Organization who created this data")
     dataset_name: str = Field(None, description="Name of a larger dataset this data is associated with")
     authors: List[Tuple[str, str]] = Field(None, description="Name and affiliation of each of the authors of the data")
     associated_ids: List[AnyUrl] = Field(None, description="Any identifiers associated with this data file."
                                                            " Identifiers can be any URI, such as DOIs of associated"
                                                            " paper or HTTP addresses of associated websites")
+
+    # Description of additional columns
+    raw_data_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the raw data')
+    cycle_stats_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the cycle stats')
 
     # Generic metadata
     other: Dict = Field(default_factory=dict, help="Any other useful run information")
@@ -86,7 +89,7 @@ class ControlMethod(str, Enum):
     other = "other"
 
 
-class _ColumnSchema(BaseModel):
+class ColumnSchema(BaseModel):
     """Base class for schemas that describe the columns of a tabular dataset"""
 
     @classmethod
@@ -161,7 +164,7 @@ class _ColumnSchema(BaseModel):
                     raise ValueError(f'Column {column} is not monotonically increasing')
 
 
-class RawData(_ColumnSchema):
+class RawData(ColumnSchema):
     """Schema for the battery testing data.
 
     Each attribute in this array specifies columns within a :class:`BatteryDataFrame`.
@@ -199,7 +202,7 @@ class RawData(_ColumnSchema):
     #  whether they have any additional fields they would recommend standardizing
 
 
-class CycleLevelData(_ColumnSchema):
+class CycleLevelData(ColumnSchema):
     """Statistics about the performance of a cell over a certain cycle"""
 
     # Related to time

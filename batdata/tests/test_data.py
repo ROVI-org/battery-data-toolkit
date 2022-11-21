@@ -13,8 +13,10 @@ from batdata.data import BatteryDataset
 @fixture()
 def test_df():
     return BatteryDataset(raw_data=pd.DataFrame({
-        'current': [1, 0, -1],
-        'voltage': [2, 2, 2]
+        'test_time': [0, 1, 2.],
+        'current': [1., 0., -1.],
+        'voltage': [2., 2., 2.],
+        'other': [1, 2, 3]
     }), metadata={'name': 'Test data'})
 
 
@@ -75,3 +77,16 @@ def test_dict(test_df):
     data = BatteryDataset.from_batdata_dict(d)
     assert len(data.raw_data) == 3
     assert data.metadata.name == 'Test data'
+
+
+def test_validate(test_df):
+    # Make sure the provided data passes
+    warnings = test_df.validate()
+    assert len(warnings) == 1
+    assert 'other' in warnings[0]
+
+    # Make sure we can define new columns
+    test_df.metadata.raw_data_columns['other'] = 'A column I added for testing purposes'
+    warnings = test_df.validate()
+    assert len(warnings) == 0
+

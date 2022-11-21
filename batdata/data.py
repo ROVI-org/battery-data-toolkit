@@ -1,5 +1,5 @@
 """Objects that represent battery datasets"""
-from typing import Union, Optional, Collection
+from typing import Union, Optional, Collection, List
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import pandas as pd
 import h5py
 
-from batdata.schemas import BatteryMetadata, RawData, CycleLevelData
+from batdata.schemas import BatteryMetadata, RawData, CycleLevelData, ColumnSchema
 
 _subsets = ('raw_data', 'cycle_stats')
 
@@ -78,6 +78,45 @@ class BatteryDataset:
             RawData.validate_dataframe(self.raw_data, allow_extra_columns)
         if self.cycle_stats is not None:
             CycleLevelData.validate_dataframe(self.raw_data, allow_extra_columns)
+
+    def validate(self) -> List[str]:
+        """Validate the data stored in this object
+
+        Ensures that the data are valid according to schemas and
+        makes recommendations of improvements that one could make
+        to increase the re-usability of the data.
+
+        Returns
+        -------
+        List of str
+            Recommendations to improve data re-use
+        """
+        self.validate_columns()
+        output = []
+
+        # Mapping between subset and schema
+        _schemas = {
+            'raw_data': RawData,
+            'cycle_stats': CycleLevelData
+        }
+
+        # Check whether there are undocumented columns
+        def _find_undefined_columns(data: pd.DataFrame, column_schema: ColumnSchema) -> List[str]:
+            """Get the list of columns which are not defined in the schema"""
+
+            cols = set(data.columns).difference(column_schema.__fields__)
+            return list(cols)
+
+        for subset in _subsets:
+            data = getattr(self, subset)
+            defined_columns = getattr(self.metadata, f'{subset}_columns')
+            if data is not None:
+                new_cols = _find_undefined_columns(data, _schemas[subset])
+                undefined = set(new_cols).difference(defined_columns.keys())
+                output.extend([f'Undefined column, {u}, in {subset}. Add a description into metadata.{subset}_columns'
+                               for u in undefined])
+
+        return output
 
     def to_batdata_hdf(self, path_or_buf, complevel=0, complib='zlib'):
         """Save the data in the standardized HDF5 file format
