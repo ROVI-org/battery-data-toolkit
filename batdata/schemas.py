@@ -86,42 +86,8 @@ class ControlMethod(str, Enum):
     other = "other"
 
 
-class CyclingData(BaseModel):
-    """Schema for the battery testing data.
-
-    Each attribute in this array specifies columns within a :class:`BatteryDataFrame`.
-    The schema is defined such that extra columns are allowed by default.
-    The columns listed here represent those types of data for which we specify
-    a common definition.
-    """
-
-    cycle_number: List[int] = Field(None, description="Index of the testing cycle. All indices should be"
-                                                      " nonnegative and be monotonically increasing", monotonic=True)
-    step_index: List[int] = Field(None, description="Index of the step number within a testing cycle. A step change"
-                                                    " is defined by a change states between charging, discharging,"
-                                                    " or resting.")
-    file_number: List[int] = Field(None, description="Used if test data is stored in multiple files. Number represents "
-                                                     "the index of the file. All indices should be nonnegative and "
-                                                     "monotonically increasing", ge=0, monotonic=True)
-    test_time: List[float] = Field(..., description="Time from the beginning of the cycling test. Times must be "
-                                                    "nonnegative and monotonically increasing. Units: s",
-                                   monotonic=True)
-    voltage: List[float] = Field(..., description="Measured voltage of the system. Units: V")
-    current: List[float] = Field(..., description="Measured current of the system. Positive current represents "
-                                                  "the battery discharging and negative represents the battery"
-                                                  "charging. Units: A")
-    state: List[ChargingState] = Field(None, description="Determination of whether the battery is being charged, "
-                                                         "discharged or held at a constant charge")
-    method: List[ControlMethod] = Field(None, description="List of the method used to control "
-                                                          "the battery system")
-    temperature: List[float] = Field(None, description="Temperature of the battery. Units: C")
-    internal_resistance: List[float] = Field(None, description="Internal resistance of the battery. Units: ohm")
-    substep_index: List[int] = Field(None, description="Index of the substep within a testing cycle. A substep"
-                                                       " change is defined by a change of the charging or discharging"
-                                                       " method, such as change from constant voltage to"
-                                                       " constant current")
-    # TODO (wardlt): Consult battery data working group on whether they support the definitions listed here and
-    #  whether they have any additional fields they would recommend standardizing
+class _ColumnSchema(BaseModel):
+    """Base class for schemas that describe the columns of a tabular dataset"""
 
     @classmethod
     def validate_dataframe(cls, data: DataFrame, allow_extra_columns: bool = True):
@@ -193,3 +159,66 @@ class CyclingData(BaseModel):
                 is_monotonic = all(y >= x for x, y in zip(data[column], data[column].iloc[1:]))
                 if not is_monotonic:
                     raise ValueError(f'Column {column} is not monotonically increasing')
+
+
+class CyclingData(_ColumnSchema):
+    """Schema for the battery testing data.
+
+    Each attribute in this array specifies columns within a :class:`BatteryDataFrame`.
+    The schema is defined such that extra columns are allowed by default.
+    The columns listed here represent those types of data for which we specify
+    a common definition.
+    """
+
+    cycle_number: List[int] = Field(None, description="Index of the testing cycle. All indices should be"
+                                                      " nonnegative and be monotonically increasing", monotonic=True)
+    step_index: List[int] = Field(None, description="Index of the step number within a testing cycle. A step change"
+                                                    " is defined by a change states between charging, discharging,"
+                                                    " or resting.")
+    file_number: List[int] = Field(None, description="Used if test data is stored in multiple files. Number represents "
+                                                     "the index of the file. All indices should be nonnegative and "
+                                                     "monotonically increasing", ge=0, monotonic=True)
+    test_time: List[float] = Field(..., description="Time from the beginning of the cycling test. Times must be "
+                                                    "nonnegative and monotonically increasing. Units: s",
+                                   monotonic=True)
+    voltage: List[float] = Field(..., description="Measured voltage of the system. Units: V")
+    current: List[float] = Field(..., description="Measured current of the system. Positive current represents "
+                                                  "the battery discharging and negative represents the battery"
+                                                  "charging. Units: A")
+    state: List[ChargingState] = Field(None, description="Determination of whether the battery is being charged, "
+                                                         "discharged or held at a constant charge")
+    method: List[ControlMethod] = Field(None, description="List of the method used to control "
+                                                          "the battery system")
+    temperature: List[float] = Field(None, description="Temperature of the battery. Units: C")
+    internal_resistance: List[float] = Field(None, description="Internal resistance of the battery. Units: ohm")
+    substep_index: List[int] = Field(None, description="Index of the substep within a testing cycle. A substep"
+                                                       " change is defined by a change of the charging or discharging"
+                                                       " method, such as change from constant voltage to"
+                                                       " constant current")
+    # TODO (wardlt): Consult battery data working group on whether they support the definitions listed here and
+    #  whether they have any additional fields they would recommend standardizing
+
+
+class CycleStats(_ColumnSchema):
+    """Statistics about the performance of a cell over a certain cycle"""
+
+    # Related to time
+    cycle_number: List[int] = Field(..., description='Index of the cycle', monotonic=True)
+
+    # Related to the total amount of energy or electrons moved
+    discharge_capacity: List[float] = Field(..., description='Total amount of electrons moved during discharge. Units: A-hr')
+    discharge_energy: List[float] = Field(..., description='Total amount of energy released during discharge. Units: A-hr')
+    charge_capacity: List[float] = Field(..., description='Total amount of electrons moved during charge. Units: J')
+    charge_energy: List[float] = Field(..., description='Total amount of energy stored during charge. Units: J')
+    coulomb_efficiency: List[float] = Field(..., description='Fraction of electrons that are lost during charge and recharge. Units: %')
+    energy_efficiency: List[float] = Field(..., description='Amount of energy lost during charge and discharge')
+
+    # Related to voltage
+    discharge_V_average: List[float] = Field(..., description='Average voltage during discharging. Units: V')
+    charge_V_average: List[float] = Field(..., description='Average voltage during charge. Units: V')
+    V_maximum: List[float] = Field(..., description='Maximum voltage during cycle. Units: V')
+    V_minimum: List[float] = Field(..., description='Minimum voltage during cycle. Units: V')
+
+    # Related to current
+    discharge_I_average: List[float] = Field(..., description='Average current during discharge. Units: A')
+    charge_I_average: List[float] = Field(..., description='Average current during charge. Units: A')
