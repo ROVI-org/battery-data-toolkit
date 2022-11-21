@@ -46,20 +46,20 @@ def add_method(df):
         if len(ind) < 5 and state[0] == 0:
             # if there's a very short rest (less than 5 points)
             # we label as "anomalous rest"
-            df.at[ind, 'method'] = ControlMethod.short_rest
+            df.loc[ind, 'method'] = ControlMethod.short_rest
         elif state[0] == 0:
             # if there are 5 or more points it's a
             # standard "rest"
-            df.at[ind, 'method'] = ControlMethod.rest
+            df.loc[ind, 'method'] = ControlMethod.rest
         elif len(ind) < 5:
             # if it's a charge or discharage and there
             # are fewer than 5 points it is an
             # "anomalous charge or discharge"
-            df.at[ind, 'method'] = ControlMethod.short_nonrest
+            df.loc[ind, 'method'] = ControlMethod.short_nonrest
         elif t[-1] - t[0] < 30:
             # if the step is less than 30 seconds
             # index as "pulse"
-            df.at[ind, 'method'] = ControlMethod.pulse
+            df.loc[ind, 'method'] = ControlMethod.pulse
         else:
             # otherwise it is CC, CV or in-between
 
@@ -106,7 +106,7 @@ def add_method(df):
                 else:  # Indeterminate
                     ind_tmp[r] = ControlMethod.other
 
-            df.at[ind, 'method'] = ind_tmp
+            df.loc[ind, 'method'] = ind_tmp
 
 
 def add_steps(df):
