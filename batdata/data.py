@@ -1,5 +1,5 @@
 """Objects that represent battery datasets"""
-from typing import Union, Optional
+from typing import Union, Optional, Collection
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
@@ -8,6 +8,8 @@ import pandas as pd
 import h5py
 
 from batdata.schemas import BatteryMetadata, CyclingData
+
+_subsets = ('raw_data', 'cycle_stats')
 
 
 class BatteryDataset:
@@ -33,11 +35,14 @@ class BatteryDataset:
 
     """
 
-    raw_data: Optional[pd.DataFrame]
+    raw_data: Optional[pd.DataFrame] = None
     """Time-series data capturing the state of the battery as a function of time"""
 
+    cycle_stats: Optional[pd.DataFrame] = None
+    """Summary statistics of each cycle"""
+
     metadata: BatteryMetadata
-    """Metadata fro the battery construction and testing"""
+    """Metadata for the battery construction and testing"""
 
     def __init__(self, metadata: Union[BatteryMetadata, dict] = None, raw_data: Optional[pd.DataFrame] = None):
         """
@@ -96,8 +101,12 @@ class BatteryDataset:
 
         # Store the various datasets
         #  Note that we use the "table" format to allow for partial reads / querying
-        self.raw_data.to_hdf(path_or_buf, 'raw_data', complevel=complevel, complib=complib,
-                             append=False, format='table', index=False)
+        if self.raw_data is not None:
+            self.raw_data.to_hdf(path_or_buf, 'raw_data', complevel=complevel, complib=complib,
+                                 append=False, format='table', index=False)
+        if self.cycle_stats is not None:
+            self.cycle_stats.to_hdf(path_or_buf, 'cycle_stats', complevel=complevel, complib=complib,
+                                    append=False, format='table', index=False)
 
         # Create logic for adding metadata
         def add_metadata(f: HDFStore):
@@ -116,16 +125,35 @@ class BatteryDataset:
             add_metadata(path_or_buf)
 
     @classmethod
-    def from_batdata_hdf(cls, path_or_buf: Union[str, HDFStore]):
+    def from_batdata_hdf(cls, path_or_buf: Union[str, HDFStore], subsets: Optional[Collection[str]] = None):
         """Read the battery data from an HDF file
 
         Parameters
         ----------
         path_or_buf : str or pandas.HDFStore
             File path or HDFStore object.
+        subsets : List of strings
+            Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
         """
-        # Read the available datasets
-        data = pd.read_hdf(path_or_buf, "raw_data")
+
+        # Determine which datasets to read
+        read_all = False
+        if subsets is None:
+            subsets = _subsets
+            read_all = True
+
+        data = {}
+        for key in subsets:
+            if key not in _subsets:
+                raise ValueError(f'Unknown subset: {key}')
+
+            try:
+                data[key] = pd.read_hdf(path_or_buf, key)
+            except KeyError as exc:
+                if read_all:
+                    continue
+                else:
+                    raise ValueError(f'File does not contain {key}') from exc
 
         # Read out the battery metadata
         if isinstance(path_or_buf, str):
@@ -134,7 +162,7 @@ class BatteryDataset:
         else:
             metadata = BatteryMetadata.parse_raw(path_or_buf.root._v_attrs.metadata)
 
-        return cls(raw_data=data, metadata=metadata)
+        return cls(**data, metadata=metadata)
 
     def to_batdata_dict(self) -> dict:
         """Generate data in dictionary format
@@ -143,14 +171,19 @@ class BatteryDataset:
         -------
             (dict) Data in dictionary format
         """
-        return {
-            'metadata': self.metadata.dict(),
-            'raw_data': self.raw_data.to_dict('list')
-        }
+
+        output = {'metadata': self.metadata.dict()}
+        for key in _subsets:
+            data = getattr(self, key)
+            if data is not None:
+                output[key] = data.to_dict('list')
+
+        return output
 
     @classmethod
     def from_batdata_dict(cls, d):
-        """Read battery data and metadata from """
+        """Read battery data and metadata from a dictionary format"""
+
         return cls(raw_data=pd.DataFrame(d['raw_data']), metadata=d['metadata'])
 
     @staticmethod

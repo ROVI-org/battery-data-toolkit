@@ -5,7 +5,7 @@ import os
 import h5py
 import pandas as pd
 from pandas import HDFStore
-from pytest import fixture
+from pytest import fixture, raises
 
 from batdata.data import BatteryDataset
 
@@ -32,8 +32,8 @@ def test_write_hdf(tmpdir, test_df):
         assert 'raw_data' in f
 
     # Test writing to an already-open HDFStore
-    store = HDFStore(out_path, 'r+')
-    test_df.to_batdata_hdf(store)
+    with HDFStore(out_path, 'r+') as store:
+        test_df.to_batdata_hdf(store)
 
 
 def test_read_hdf(tmpdir, test_df):
@@ -50,9 +50,19 @@ def test_read_hdf(tmpdir, test_df):
     assert data.metadata.name == 'Test data'
 
     # Test reading from an already-open file
-    store = HDFStore(out_path, 'r')
-    data = BatteryDataset.from_batdata_hdf(store)
+    with HDFStore(out_path, 'r') as store:
+        data = BatteryDataset.from_batdata_hdf(store)
     assert data.metadata.name == 'Test data'
+
+    # Test requesting an unknown type of field
+    with raises(ValueError) as exc:
+        BatteryDataset.from_batdata_hdf(out_path, subsets=('bad)_!~',))
+    assert 'bad)_!~' in str(exc)
+
+    # Test reading an absent field
+    with raises(ValueError) as exc:
+        BatteryDataset.from_batdata_hdf(out_path, subsets=('cycle_stats',))
+    assert 'File does not contain' in str(exc)
 
 
 def test_dict(test_df):
