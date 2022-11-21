@@ -161,7 +161,7 @@ class _ColumnSchema(BaseModel):
                     raise ValueError(f'Column {column} is not monotonically increasing')
 
 
-class CyclingData(_ColumnSchema):
+class RawData(_ColumnSchema):
     """Schema for the battery testing data.
 
     Each attribute in this array specifies columns within a :class:`BatteryDataFrame`.
@@ -199,7 +199,7 @@ class CyclingData(_ColumnSchema):
     #  whether they have any additional fields they would recommend standardizing
 
 
-class CycleStats(_ColumnSchema):
+class CycleLevelData(_ColumnSchema):
     """Statistics about the performance of a cell over a certain cycle"""
 
     # Related to time

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 import pandas as pd
 import h5py
 
-from batdata.schemas import BatteryMetadata, CyclingData
+from batdata.schemas import BatteryMetadata, RawData, CycleLevelData
 
 _subsets = ('raw_data', 'cycle_stats')
 
@@ -74,7 +74,10 @@ class BatteryDataset:
         ValueError
             If the dataset fails validation
         """
-        CyclingData.validate_dataframe(self.raw_data, allow_extra_columns)
+        if self.raw_data is not None:
+            RawData.validate_dataframe(self.raw_data, allow_extra_columns)
+        if self.cycle_stats is not None:
+            CycleLevelData.validate_dataframe(self.raw_data, allow_extra_columns)
 
     def to_batdata_hdf(self, path_or_buf, complevel=0, complib='zlib'):
         """Save the data in the standardized HDF5 file format
