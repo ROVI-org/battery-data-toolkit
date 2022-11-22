@@ -23,5 +23,5 @@ def test_cycle_stats(example_data):
 
 def test_capacity(example_data):
     example_data = compute_charging_curve(example_data)
-    assert isclose(example_data['capacity'].max(), 1.075, abs_tol=1e-2)
+    assert isclose(example_data['capacity'].max(), 1.075, abs_tol=1e-1)
     assert 'energy' in example_data
