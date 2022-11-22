@@ -78,7 +78,8 @@ def test_method_detection(synthetic_data):
     assert (synthetic_data.raw_data['method'].iloc[36:40] == ControlMethod.short_nonrest).all()
     assert (synthetic_data.raw_data['method'].iloc[40:48] == ControlMethod.pulse).all()
     assert (synthetic_data.raw_data['method'].iloc[48:52] == ControlMethod.short_rest).all()
-    assert (synthetic_data.raw_data['method'].iloc[52:68] == ControlMethod.constant_voltage).all()
+    assert (synthetic_data.raw_data['method'].iloc[52:60] == ControlMethod.constant_voltage).all()
+    assert (synthetic_data.raw_data['method'].iloc[60:68] == ControlMethod.constant_current).all()
 
 
 def test_substep_detect(synthetic_data):
@@ -88,4 +89,5 @@ def test_substep_detect(synthetic_data):
 
     # The substeps should be the same as the steps because we do not have two charging/rest cycles next to each other
     add_substeps(synthetic_data.raw_data)
-    assert (synthetic_data.raw_data['step_index'] == synthetic_data.raw_data['substep_index']).all()
+    assert (synthetic_data.raw_data['step_index'].iloc[:60] == synthetic_data.raw_data['substep_index'].iloc[:60]).all()
+    assert (synthetic_data.raw_data['substep_index'].iloc[60:] == 7).all()
