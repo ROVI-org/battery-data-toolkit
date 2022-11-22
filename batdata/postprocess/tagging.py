@@ -7,7 +7,7 @@ import numpy as np
 from pandas import DataFrame
 from scipy.signal import find_peaks
 
-from batdata.schemas import ControlMethod
+from batdata.schemas import ControlMethod, ChargingState
 
 logger = logging.getLogger(__name__)
 
@@ -35,23 +35,22 @@ def add_method(df):
     for key, cycle in cycles:
 
         # pull out columns of interest and turn into numpy array
-        # NOTE: (can be streamlined in future?)
         t = cycle["test_time"].values
         V = cycle["voltage"].values
         current = cycle['current'].values
         ind = cycle.index.values
         state = cycle['state'].values
 
-        if len(ind) < 5 and state[0] == 0:
+        if len(ind) < 5 and state[0] == ChargingState.hold:
             # if there's a very short rest (less than 5 points)
             # we label as "anomalous rest"
             df.loc[ind, 'method'] = ControlMethod.short_rest
-        elif state[0] == 0:
+        elif state[0] == ChargingState.hold:
             # if there are 5 or more points it's a
             # standard "rest"
             df.loc[ind, 'method'] = ControlMethod.rest
         elif len(ind) < 5:
-            # if it's a charge or discharage and there
+            # if it's a charge or discharge and there
             # are fewer than 5 points it is an
             # "anomalous charge or discharge"
             df.loc[ind, 'method'] = ControlMethod.short_nonrest
@@ -95,6 +94,7 @@ def add_method(df):
 
                 # Measure the ratio between the change and current and the change in the voltage
                 val = sI / (sI + sV)
+                print(val)
                 if len(r) < 5 or t[high - 1] - t[low] < 10:
                     ind_tmp[r] = ControlMethod.other
 
