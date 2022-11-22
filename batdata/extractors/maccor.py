@@ -1,4 +1,5 @@
 """Extractor for MACCOR (untested!!)"""
+import itertools
 from typing import Union, List, Iterator, Tuple
 
 import pandas as pd
@@ -13,14 +14,26 @@ from batdata.utils import drop_cycles
 class MACCORExtractor(BatteryDataExtractor):
     """Parser for reading from Arbin-format files
 
-    Expects the files to be ASCII files with a .### extension
+    Expects the files to be ASCII files with a .### extension.
+    The :meth:`group` operation will consolidate files such that all with
+    the same prefix (i.e., everything except the numerals in the extension)
+    are treated as part of the same experiment.
     """
 
     def group(self, files: Union[str, List[str]], directories: List[str] = None,
               context: dict = None) -> Iterator[Tuple[str, ...]]:
-        for file in files:
-            if file[-3:].isdigit():
-                yield file
+        if isinstance(files, str):
+            files = [files]
+
+        # Get only the MACCOR-style names
+        valid_names = filter(lambda x: x[-3:].isdigit(), files)
+
+        # Split then sort based on the prefix
+        split_filenames = sorted(name.rsplit(".", maxsplit=1) for name in valid_names)
+
+        # Return groups
+        for prefix, group in itertools.groupby(split_filenames, key=lambda x: x[0]):
+            yield tuple('.'.join(x) for x in group)
 
     def generate_dataframe(self, file: str, file_number: int = 0, start_cycle: int = 0,
                            start_time: int = 0) -> pd.DataFrame:
