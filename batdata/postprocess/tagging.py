@@ -5,6 +5,7 @@ import logging
 
 import numpy as np
 from pandas import DataFrame
+from scipy.interpolate import interp1d
 from scipy.signal import find_peaks, savgol_filter
 
 from batdata.schemas import ControlMethod, ChargingState
@@ -71,19 +72,31 @@ def add_method(df):
             # First see if there are significant changes in the charging behavior
             #  We use a https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter to get smooth
             #  derviatives, which requires even spacing.
-            #  So, our first step will be to make sure that the spacings are relatively even
+            #  So, our first step will be to make sure that the spacings are relatively even,
+            #   and to make an interpolated version if not
             dt = t[1:] - t[:-1]
-            if dt.std() / dt.mean() > 1e-6:
-                raise ValueError('We do not yet support non-even spacing.')
+            noneven = dt.std() / dt.mean() > 1e-6
+            if noneven:
+                t_spaced = np.linspace(t.min(), t.max(), len(t) * 2)
+                voltage_spaced = interp1d(t, voltage)(t_spaced)
+                current_spaced = interp1d(t, current)(t_spaced)
+            else:
+                voltage_spaced = voltage
+                current_spaced = current
 
-            d2v_dt2 = savgol_filter(voltage, 5, 4, deriv=2)
-            d2i_dt2 = savgol_filter(current, 5, 4, deriv=2)
+            d2v_dt2 = savgol_filter(voltage_spaced, 5, 4, deriv=2)
+            d2i_dt2 = savgol_filter(current_spaced, 5, 4, deriv=2)
+
+            #  If we had to interpolate, interpolate again to get the values of the derivative
+            if noneven:
+                d2v_dt2 = interp1d(t_spaced, d2v_dt2)(t)
+                d2i_dt2 = interp1d(t_spaced, d2i_dt2)(t)
+
             current_peaks, _ = find_peaks(d2i_dt2, distance=5, prominence=10 ** -3)
             voltage_peaks, _ = find_peaks(d2v_dt2, distance=5, prominence=10 ** -3)
 
             # Assign a control method to the segment between each of these peaks
-
-            extrema = [0] + list(set(current_peaks).union(set(voltage_peaks))) + [len(voltage)]
+            extrema = [0] + sorted(set(current_peaks).union(set(voltage_peaks))) + [len(voltage)]
 
             methods = []
             for i in range(len(extrema) - 1):
@@ -105,6 +118,7 @@ def add_method(df):
                     method = ControlMethod.other
                 methods.extend([method] * len(r))
 
+            assert len(methods) == len(ind), (len(methods), len(ind))
             df.loc[ind, 'method'] = methods
 
 
