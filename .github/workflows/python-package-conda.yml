@@ -25,4 +25,4 @@ jobs:
     - name: Test with pytest
       run: |
         pip install -r test-requirements.txt
-        pytest
+        pytest batdata
