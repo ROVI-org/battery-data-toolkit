@@ -13,7 +13,7 @@ from batdata.utils import drop_cycles
 class MACCORExtractor(BatteryDataExtractor):
     """Parser for reading from Arbin-format files
 
-    Expects the files to be in .### format to be an ASCII file
+    Expects the files to be ASCII files with a .### extension
     """
 
     def group(self, files: Union[str, List[str]], directories: List[str] = None,
@@ -65,11 +65,11 @@ class MACCORExtractor(BatteryDataExtractor):
         df_out['current'] = df['Amps']
         df_out['current'] = np.where(df['State'] == 'D', -1 * df_out['current'], df_out['current'])
         #   0 is rest, 1 is charge, -1 is discharge
-        df_out['state'].loc[df_out['state'] == 'R'] = ChargingState.hold
-        df_out['state'].loc[df_out['state'] == 'C'] = ChargingState.charging
-        df_out['state'].loc[df_out['state'] == 'D'] = ChargingState.discharging
-        df_out['state'].loc[df_out['state'] == 'O'] = ChargingState.unknown
-        df_out['state'].loc[df_out['state'] == 'S'] = ChargingState.unknown
+        df_out.loc[df_out['state'] == 'R', 'state'] = ChargingState.hold
+        df_out.loc[df_out['state'] == 'C', 'state'] = ChargingState.charging
+        df_out.loc[df_out['state'] == 'D', 'state'] = ChargingState.discharging
+        df_out.loc[df_out['state'] == 'O', 'state'] = ChargingState.unknown
+        df_out.loc[df_out['state'] == 'S', 'state'] = ChargingState.unknown
 
         df_out['voltage'] = df['Volts']
         df_out = drop_cycles(df_out)
