@@ -46,6 +46,7 @@ def synthetic_data() -> BatteryDataset:
         'test_time': t,
         'cycle_number': c
     })
+    data.drop([62, 63, 64], inplace=True)
     return BatteryDataset(raw_data=data)
 
 
