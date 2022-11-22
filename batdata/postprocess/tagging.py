@@ -5,7 +5,7 @@ import logging
 
 import numpy as np
 from pandas import DataFrame
-from scipy.signal import find_peaks
+from scipy.signal import find_peaks, savgol_filter
 
 from batdata.schemas import ControlMethod, ChargingState
 
@@ -13,9 +13,13 @@ logger = logging.getLogger(__name__)
 
 
 def add_method(df):
-    """
-    Tags the various charging, discharging, and rest methods
-    that commonly occur in the raw data files
+    """Adds the various charging, discharging, and rest methods
+    that commonly occur in the raw data files.
+
+    Determines whether a charging step is composed of constant-current, constant-voltage,
+    or mixed steps by first partitioning it into substeps based on the maximum curvature
+    of these points then assigning regions to constant voltage or current if one varied
+    more than twice the other.
 
     Parameters
     ----------
@@ -36,7 +40,7 @@ def add_method(df):
 
         # pull out columns of interest and turn into numpy array
         t = cycle["test_time"].values
-        V = cycle["voltage"].values
+        voltage = cycle["voltage"].values
         current = cycle['current'].values
         ind = cycle.index.values
         state = cycle['state'].values
@@ -59,53 +63,49 @@ def add_method(df):
             # index as "pulse"
             df.loc[ind, 'method'] = ControlMethod.pulse
         else:
-            # otherwise it is CC, CV or in-between
+            # Normalize the voltage and current before determining which one moves "more"
+            for x in [voltage, current]:
+                x -= x.min()
+                x /= max(x.max(), 1e-6)
 
-            # normalize voltage and current for purposes
-            # of determining CC vs CV
-            V = np.divide(max(V) - V, max(max(V) - min(V), 1e-6))
-            current = np.true_divide(current, max(max(abs(current)), 1e-6))
+            # First see if there are significant changes in the charging behavior
+            #  We use a https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter to get smooth
+            #  derviatives, which requires even spacing.
+            #  So, our first step will be to make sure that the spacings are relatively even
+            dt = t[1:] - t[:-1]
+            if dt.std() / dt.mean() > 1e-6:
+                raise ValueError('We do not yet support non-even spacing.')
 
-            # get "differentials"
-            dV = np.diff(V, prepend=1e-6)
-            dI = np.diff(current, prepend=1e-6)
-            dt = np.diff(t, prepend=1e-6)
+            d2v_dt2 = savgol_filter(voltage, 5, 4, deriv=2)
+            d2i_dt2 = savgol_filter(current, 5, 4, deriv=2)
+            current_peaks, _ = find_peaks(d2i_dt2, distance=5, prominence=10 ** -3)
+            voltage_peaks, _ = find_peaks(d2v_dt2, distance=5, prominence=10 ** -3)
 
-            a = dI / dt
-            b = dV / dt
-            a = abs(a / max(abs(a)))
-            b = abs(b / max(abs(b)))
-            a = a ** 2
-            b = b ** 2
-            # d = np.minimum(a, b)
-            d = np.exp(abs(a - b)) - 1
-            peaks, _ = find_peaks(d, distance=5, prominence=10 ** -3)
+            # Assign a control method to the segment between each of these peaks
 
-            extrema = [0] + list(peaks) + [len(d)]
+            extrema = [0] + list(set(current_peaks).union(set(voltage_peaks))) + [len(voltage)]
 
-            ind_tmp = np.array([None] * len(d))
+            methods = []
             for i in range(len(extrema) - 1):
+                # Get the segment between these two peaks
                 low = extrema[i]
                 high = extrema[i + 1]
-                r = range(low, high)
-
-                sI = max(np.std(current[r]), 1e-6)
-                sV = max(np.std(V[r]), 1e-6)
+                r = np.arange(low, high).tolist()
 
                 # Measure the ratio between the change and current and the change in the voltage
-                val = sI / (sI + sV)
-                print(val)
-                if len(r) < 5 or t[high - 1] - t[low] < 10:
-                    ind_tmp[r] = ControlMethod.other
+                s_i = current[r].std()
+                s_v = voltage[r].std()
+                val = s_i / (s_i + s_v)
 
                 if val > 0.66:  # If the change in the current is 2x as large as the change in current
-                    ind_tmp[r] = ControlMethod.constant_voltage
+                    method = ControlMethod.constant_voltage
                 elif val < 0.33:  # If voltage is 2x larger than the voltage
-                    ind_tmp[r] = ControlMethod.constant_current
-                else:  # Indeterminate
-                    ind_tmp[r] = ControlMethod.other
+                    method = ControlMethod.constant_current
+                else:
+                    method = ControlMethod.other
+                methods.extend([method] * len(r))
 
-            df.loc[ind, 'method'] = ind_tmp
+            df.loc[ind, 'method'] = methods
 
 
 def add_steps(df):
