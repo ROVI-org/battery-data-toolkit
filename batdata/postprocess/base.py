@@ -1,6 +1,7 @@
 """Base class and utilities related to post-processing on battery data"""
 from typing import List
 
+import numpy as np
 import pandas as pd
 
 from batdata.data import BatteryDataset
@@ -46,3 +47,38 @@ class RawDataEnhancer(BaseFeatureComputer):
             Raw data to be modified
         """
         ...
+
+
+class CycleSummarizer(BaseFeatureComputer):
+    """Classes which produce a summary of certain cycles given the raw data from a cycle"""
+
+    column_names: List[str] = ...
+
+    def add_summaries(self, data: BatteryDataset):
+        """Add cycle-level summaries to a battery dataset
+
+        Parameters
+        ----------
+        data: BatteryDataset
+            Dataset to be modified
+        """
+
+        # Add a cycle summary if not already available
+        if data.cycle_stats is None:
+            data.cycle_stats = pd.DataFrame({'cycle_ind': np.arange(data.raw_data['cycle_ind'].max())})
+
+        # Perform the update
+        self._summarize(data.raw_data, data.cycle_stats)
+
+    def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
+        """Add additional data to a cycle summary dataframe
+
+        Parameters
+        ----------
+        raw_data: pd.DataFrame
+            Raw data describing the initial cycles. Is not modified
+        cycle_data: pd.DataFrame
+            Cycle data frame to be updated
+        """
+
+

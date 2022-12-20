@@ -5,7 +5,7 @@ import numpy as np
 from pytest import fixture
 
 from batdata.extractors.arbin import ArbinExtractor
-from batdata.postprocess.cycle_stats import CapacityPerCycle, compute_charging_curve
+from batdata.postprocess.integral import CapacityPerCycle, compute_charging_curve
 
 
 @fixture
