@@ -4,7 +4,7 @@ cite howey paper
 
 """
 
-from batdata.extractors.tIVT import tIVT_Extractor
+from batdata.extractors.tIVT import TIVTExtractor
 
 from tqdm import tqdm
 import numpy as np
@@ -12,19 +12,17 @@ import pandas as pd
 
 import shutil
 import os
-import re
 
 from batdata.schemas import BatteryMetadata
 from multiprocessing import Pool
 
-
 root_folder = '/lcrc/project/battdat/npaulson/howey_data/data_files_raw'
 output_folder = '/lcrc/project/battdat/npaulson/howey_data/data_files_processed'
 
-# Metadata for all of the batteries
+# Metadata for all batteries
 test_metadata = {
-    'use case': 'photovoltaic cell with Pb-acid for lighting,' + \
-        'phone charging, and small appliances in sub-Saharan Africa',
+    'use case': ('photovoltaic cell with Pb-acid for lighting,'
+                 'phone charging, and small appliances in sub-Saharan Africa'),
     'manufacturer': 'BBOXX Ltd.',
     'nominal_capacity': 20,
     'nominal_voltage': 12,
@@ -37,7 +35,6 @@ test_metadata = {
 
 
 def process_write(inp):
-
     cell_index, subset = inp
 
     # Get the files to be parsed
@@ -58,7 +55,7 @@ def process_write(inp):
 
 if __name__ == "__main__":
     # Find all of the potential files
-    extractor = tIVT_Extractor()
+    extractor = TIVTExtractor()
     all_files = list(extractor.identify_files(root_folder))
     print(f'Located {len(all_files)} csv files in {root_folder}')
 
@@ -85,7 +82,7 @@ if __name__ == "__main__":
 
     metadata = list(filter(lambda x: x is not None, map(get_metadata, all_files)))
 
-    # Create a dataframe of all of the files
+    # Create a dataframe of all files
     data = pd.DataFrame(metadata)
     print(f'Found {len(data)} total data files')
 
