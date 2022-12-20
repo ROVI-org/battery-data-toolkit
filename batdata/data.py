@@ -7,7 +7,8 @@ from pydantic import BaseModel
 import pandas as pd
 import h5py
 
-from batdata.schemas import BatteryMetadata, CyclingData
+from batdata.schemas import BatteryMetadata
+from batdata.schemas.cycling import CyclingData
 
 
 class BatteryDataset:

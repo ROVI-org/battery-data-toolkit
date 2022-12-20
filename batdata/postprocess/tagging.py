@@ -8,7 +8,7 @@ from pandas import DataFrame
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks, savgol_filter
 
-from batdata.schemas import ControlMethod, ChargingState
+from batdata.schemas.cycling import ChargingState, ControlMethod
 
 logger = logging.getLogger(__name__)
 

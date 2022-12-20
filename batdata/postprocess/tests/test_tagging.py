@@ -5,7 +5,7 @@ from pytest import fixture
 
 from batdata.data import BatteryDataset
 from batdata.postprocess.tagging import add_steps, add_method, add_substeps
-from batdata.schemas import ChargingState, ControlMethod
+from batdata.schemas.cycling import ChargingState, ControlMethod
 
 
 @fixture()

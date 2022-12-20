@@ -1,4 +1,4 @@
-from batdata.schemas import CyclingData
+from batdata.schemas.cycling import CyclingData
 
 from pytest import raises, fixture, mark
 import pandas as pd
