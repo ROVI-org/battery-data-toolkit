@@ -1,4 +1,4 @@
-from batdata.schemas.cycling import CyclingData
+from batdata.schemas.cycling import RawData
 
 from pytest import raises, fixture, mark
 import pandas as pd
@@ -20,7 +20,7 @@ def test_required():
 
     d = pd.DataFrame()
     with raises(ValueError) as exc:
-        CyclingData.validate_dataframe(d)
+        RawData.validate_dataframe(d)
     assert 'missing a required column' in str(exc)
 
 
@@ -29,11 +29,11 @@ def test_extra_cols(example_df):
     example_df['extra'] = [1, 1]
 
     # Passes with extra columns by default
-    CyclingData.validate_dataframe(example_df)
+    RawData.validate_dataframe(example_df)
 
     # Fails when desired
     with raises(ValueError) as exc:
-        CyclingData.validate_dataframe(example_df, allow_extra_columns=False)
+        RawData.validate_dataframe(example_df, allow_extra_columns=False)
     assert 'extra columns' in str(exc)
 
 
@@ -45,7 +45,7 @@ def test_type_failures(example_df, col, values):
     """Columns with the wrong type"""
     example_df[col] = values
     with raises(ValueError) as exc:
-        CyclingData.validate_dataframe(example_df)
+        RawData.validate_dataframe(example_df)
     assert 'is a' in str(exc)
 
 
@@ -53,8 +53,8 @@ def test_monotonic(example_df):
     """Columns that should be monotonic but are not"""
     example_df['cycle_number'] = [2, 1]
     with raises(ValueError) as exc:
-        CyclingData.validate_dataframe(example_df)
+        RawData.validate_dataframe(example_df)
     assert 'monotonic' in str(exc)
 
     example_df['cycle_number'] = [1, 1]
-    CyclingData.validate_dataframe(example_df)
+    RawData.validate_dataframe(example_df)
