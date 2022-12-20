@@ -36,4 +36,4 @@ The `scripts` folder holds code that processes different datasets used by our co
 Any logic that is general enough to warrant re-use is moved into the `batdata` Python package.
 
 The Python package also holds the schemas, which are described in 
-[`schemas.py`](./batdata/schemas.py).
+[`schemas.py`](./batdata/schemas/__init__.py).
