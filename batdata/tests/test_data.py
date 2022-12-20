@@ -89,4 +89,3 @@ def test_validate(test_df):
     test_df.metadata.raw_data_columns['other'] = 'A column I added for testing purposes'
     warnings = test_df.validate()
     assert len(warnings) == 0
-
