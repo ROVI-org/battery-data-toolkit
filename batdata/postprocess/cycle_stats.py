@@ -3,7 +3,6 @@ from scipy.integrate import cumtrapz
 import pandas as pd
 import numpy as np
 
-
 # TODO (wardlt): Add back in features I removed to simplify the code as other functions:
 #   - [ ] Dropping outliers
 #   - [ ] Smoothing with Gaussian Process regression
@@ -61,7 +60,7 @@ class CapacityPerCycle(BaseFeatureComputer):
 
 
 # TODO (wardlt): Move this elsewhere? Does not quite match the API for the BaseFeatureComputer
-def compute_charging_curve(df: BatteryDataset | pd.DataFrame, discharge: bool = True) -> pd.DataFrame:
+def compute_charging_curve(df: BatteryDataset | pd.DataFrame) -> pd.DataFrame:
     """Compute estimates for the battery capacity for each measurement
     of the charging or discharging sections of each cycle.
 
@@ -75,8 +74,6 @@ def compute_charging_curve(df: BatteryDataset | pd.DataFrame, discharge: bool = 
         Must have test_time, voltage and current columns.
         Processing will add "capacity" and "energy" columns with units
         of A-hr and W-hr, respectively.
-    discharge: bool
-        Whether to compute the discharge or charge curve
 
     Returns
     -------
@@ -110,7 +107,7 @@ def compute_charging_curve(df: BatteryDataset | pd.DataFrame, discharge: bool = 
                 data.loc[subcycle.index, 'energy'] = initial_ene
                 continue
 
-            cap = cumtrapz(subcycle['current'], 
+            cap = cumtrapz(subcycle['current'],
                            subcycle['test_time'],
                            initial=0) / 3600  # Computes capacity in A-hr
             ene = cumtrapz(subcycle['current'] * subcycle['voltage'],
@@ -125,59 +122,5 @@ def compute_charging_curve(df: BatteryDataset | pd.DataFrame, discharge: bool = 
 
             initial_cap = cap[-1]
             initial_ene = ene[-1]
-
-    return data
-
-
-def compute_charging_curve(data: BatteryDataset, discharge: bool = True) -> pd.DataFrame:
-    """Compute estimates for the battery capacity for each measurement
-    of the charging or discharging sections of each cycle.
-
-    The capacity for each cycle are determined independently,
-    and is assumed to start at zero at the beginning of the cycle.
-
-    Parameters
-    ----------
-    data: BatteryDataset or dataframe
-        Battery dataset with raw data available, or the raw dataframe itself.
-        Must have test_time, voltage and current columns.
-        Processing will add "capacity" and "energy" columns with units
-        of A-hr and W-hr, respectively.
-    discharge: bool
-        Whether to compute the discharge or charge curve
-
-    Returns
-    -------
-    curves: pd.DataFrame
-        Charge and discharge curves for each cycle in a single dataframe
-    """
-
-    if not isinstance(data, pd.DataFrame):
-        data = data.raw_data
-
-    # Get only the [dis]charging data
-    data = pd.DataFrame(data[data['state'] == (ChargingState.discharging if discharge else ChargingState.charging)])
-
-    # Add columns for the capacity and energy
-    data['capacity'] = 0
-    data['energy'] = 0
-
-    # Compute the capacity and energy for each cycle
-    for cid, cycle in data.groupby('cycle_number'):
-
-        # Compute in segments over each subset (avoid issues with rests)
-        for _, subcycle in cycle.groupby('substep_index'):
-            # Integrate over it
-            cap = cumtrapz(subcycle['current'], subcycle['test_time'], initial=0) / 3600  # Computes capacity in A-hr
-            eng = cumtrapz(subcycle['current'] * subcycle['voltage'],
-                           subcycle['test_time'], initial=0) / 3600  # Energy in A-hr
-
-            # Multiply by -1 for the discharging segment
-            if discharge:
-                cap *= -1
-                eng *= -1
-
-            data.loc[subcycle.index, f'capacity'] = cap
-            data.loc[subcycle.index, f'energy'] = eng
 
     return data
