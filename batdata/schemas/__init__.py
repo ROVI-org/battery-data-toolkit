@@ -1,6 +1,6 @@
 """Schemas for battery data and metadata"""
 from datetime import date
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from pydantic import BaseModel, Field, AnyUrl, Extra
 
@@ -20,7 +20,7 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     name: str = Field(None, description="Name of the cell. Any format for the name is acceptable,"
                                         " as it is intended to be used by the battery data provider.")
     comments: str = Field(None, description="Long form comments describing the test")
-    version: int = Field(__version__, description="Version of this metadata")
+    version: str = Field(__version__, description="Version of this metadata")
 
     # Fields that describe the test protocol
     cycler: str = Field(None, description='Name of the cycling machine')
@@ -29,7 +29,7 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     schedule: str = Field(None, description="Schedule file used for the cycling machine")
 
     # Field that describe the battery assembly
-    battery: BatteryDescription = Field(..., description="Description of the battery being tested")
+    battery: Optional[BatteryDescription] = Field(None, description="Description of the battery being tested")
 
     # Fields that describe the source of data
     source: str = Field(None, description="Organization who created this data")
