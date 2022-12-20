@@ -1,21 +1,23 @@
 """Extractor for .npy tIVT-format files"""
 from typing import Union, List, Iterator, Tuple
+from logging import getLogger
 
 import numpy as np
 import pandas as pd
 
 from batdata.extractors.base import BatteryDataExtractor
-from batdata.schemas import ChargingState
+from batdata.schemas.cycling import ChargingState
 from batdata.utils import drop_cycles
-from batdata.postprocess import add_steps, add_method, add_substeps
+from batdata.postprocess.tagging import add_steps, add_method, add_substeps
 from batdata.postprocess.cycle_stats import compute_capacity_energy
 
 from scipy.interpolate import interp1d
 from scipy.optimize import differential_evolution
-from scipy.signal import medfilt
+
+logger = getLogger(__name__)
 
 
-class tIVT_Extractor(BatteryDataExtractor):
+class TIVTExtractor(BatteryDataExtractor):
     """Parser for reading from .npy tIVT files
 
     Expects the files to be in .npy format
@@ -32,22 +34,20 @@ class tIVT_Extractor(BatteryDataExtractor):
         # load .npy file
         raw = np.load(file)
         t = raw[:, 0] - raw[0, 0]
-        I = raw[:, 1]
-        V = raw[:, 2]
-        T = raw[:, 3]
+        current = raw[:, 1]
+        voltage = raw[:, 2]
+        temp = raw[:, 3]
 
         # create dataframe
         df_out = pd.DataFrame()
         df_out['test_time'] = t
-        df_out['current'] = I
-        df_out['voltage'] = V
-        df_out['temperature'] = T
+        df_out['current'] = current
+        df_out['voltage'] = voltage
+        df_out['temperature'] = temp
 
         # calculate cycles
-        Is = medfilt(I, 101)
         spd = 3600*24
-        days = t.max()/spd
-        f = interp1d(t, I, kind='linear', fill_value='extrapolate')
+        f = interp1d(t, current, kind='linear', fill_value='extrapolate')
 
         def err(offset):
             day_sts = np.arange(0, t.max(), spd)[:-1] + offset
@@ -56,12 +56,11 @@ class tIVT_Extractor(BatteryDataExtractor):
         res = differential_evolution(err, [(0, spd)])
         offset = res.x[0] + 0.25*spd
         day_sts = np.arange(offset, t.max(), spd)
-        print(np.mean(np.diff(day_sts)))
         day_sts_indx = [np.argmin(np.abs(t - day_st)) for day_st in day_sts]
         if np.unique(day_sts_indx).size < day_sts.size:
-            print('repeated index')
+            logger.warning('repeated index')
         day_sts_bool = np.zeros(t.shape)
-        day_sts_bool[day_sts_indx] = 1 
+        day_sts_bool[day_sts_indx] = 1
         df_out['cycle_number'] = np.cumsum(day_sts_bool).astype('int64')
 
         # Drop the duplicate rows

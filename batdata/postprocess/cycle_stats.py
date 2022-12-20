@@ -116,7 +116,7 @@ def compute_capacity_energy(data: BatteryDataset) -> pd.DataFrame:
                 data.loc[subcycle.index, 'energy'] = initial_ene
                 continue
 
-            cap = cumtrapz(subcycle['current'], 
+            cap = cumtrapz(subcycle['current'],
                            subcycle['test_time'],
                            initial=0) / 3600  # Computes capacity in A-hr
             ene = cumtrapz(subcycle['current'] * subcycle['voltage'],
@@ -183,7 +183,7 @@ def compute_charging_curve(data: BatteryDataset, discharge: bool = True) -> pd.D
                 cap *= -1
                 eng *= -1
 
-            data.loc[subcycle.index, f'capacity'] = cap
-            data.loc[subcycle.index, f'energy'] = eng
+            data.loc[subcycle.index, 'capacity'] = cap
+            data.loc[subcycle.index, 'energy'] = eng
 
     return data
