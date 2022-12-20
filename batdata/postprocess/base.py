@@ -1,7 +1,7 @@
 """Base class and utilities realted to post-processing on battery data"""
 import pandas as pd
 
-from batdata.data import BatteryDataFrame
+from batdata.data import BatteryDataset
 
 
 class BaseFeatureComputer:
@@ -10,7 +10,7 @@ class BaseFeatureComputer:
     Features are per-cycle quantities that describe the state of the battery during that cycle
     """
 
-    def compute_features(self, data: BatteryDataFrame) -> pd.DataFrame:
+    def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
         """Compute
 
         Parameters
