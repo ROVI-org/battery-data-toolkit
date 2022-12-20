@@ -60,7 +60,7 @@ class BatteryDataExtractor(BaseParser, metaclass=ABCMeta):
 
         Returns
         -------
-        pd.DataFrame
+        BatteryDataset
             DataFrame containing the information from all files
         """
 

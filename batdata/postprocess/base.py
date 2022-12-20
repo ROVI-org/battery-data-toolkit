@@ -54,6 +54,10 @@ class CycleSummarizer(BaseFeatureComputer):
 
     column_names: List[str] = ...
 
+    def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
+        self.add_summaries(data)
+        return data.cycle_stats[['cycle_number'] + self.column_names]
+
     def add_summaries(self, data: BatteryDataset):
         """Add cycle-level summaries to a battery dataset
 
@@ -65,7 +69,7 @@ class CycleSummarizer(BaseFeatureComputer):
 
         # Add a cycle summary if not already available
         if data.cycle_stats is None:
-            data.cycle_stats = pd.DataFrame({'cycle_ind': np.arange(data.raw_data['cycle_ind'].max())})
+            data.cycle_stats = pd.DataFrame({'cycle_number': sorted(set(data.raw_data['cycle_number']))})
 
         # Perform the update
         self._summarize(data.raw_data, data.cycle_stats)

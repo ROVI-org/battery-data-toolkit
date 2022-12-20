@@ -23,40 +23,53 @@ class CapacityPerCycle(CycleSummarizer):
 
     def __init__(self, states: Sequence[ChargingState] = (ChargingState.charging, ChargingState.discharging)):
         self.states = states
+        assert all(x in [ChargingState.charging, ChargingState.discharging] for x in self.states), 'Only charging and discharging states allowed'
+
+    @property
+    def column_names(self) -> List[str]:
+        output = []
+        for state in self.states:
+            name = state[:-3] + 'e'
+            output.extend([f'{name}_energy', f'{name}_capacity'])
+        return output
 
     def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
-        # Initialize the output arrays
-        energies = []
-        capacities = []
-        cycle_ind = []
 
-        # Loop over each cycle
-        for cyc, cycle_data in raw_data.query("state=='discharging'").groupby('cycle_number'):
-            # Calculate accumulated energy/capacity for each sub-segment
-            ene = 0
-            cap = 0
-            for _, subseg in cycle_data.groupby('substep_index'):
-                # Sort by test time, just in case
-                subseg_sorted = subseg.sort_values('test_time')
+        # Loop over charge and discharge
+        for state in self.states:
+            # Initialize the output arrays
+            energies = []
+            capacities = []
+            cycle_ind = []
 
-                # Use current as always positive convention, opposite of what our standard uses
-                t = subseg_sorted['test_time'].values
-                i = -1 * subseg_sorted['current'].values
-                v = subseg_sorted['voltage'].values
+            # Loop over each cycle
+            for cyc, cycle_subset in raw_data[raw_data['state'] == state].groupby('cycle_number'):
+                # Calculate accumulated energy/capacity for each sub-segment
+                ene = 0
+                cap = 0
+                for _, subseg in cycle_subset.groupby('substep_index'):
+                    # Sort by test time, just in case
+                    subseg_sorted = subseg.sort_values('test_time')
 
-                # integrate for energy and capacity and convert to
-                # Watt/hrs. and Amp/hrs. respectively
-                ene += np.trapz(i * v, t) / 3600
-                cap += np.trapz(i, t) / 3600
+                    # Use current as always positive convention, opposite of what our standard uses
+                    t = subseg_sorted['test_time'].values
+                    i = -1 * subseg_sorted['current'].values
+                    v = subseg_sorted['voltage'].values
 
-            # Append to the list
-            energies.append(ene)
-            capacities.append(cap)
-            cycle_ind.append(cyc)
+                    # integrate for energy and capacity and convert to
+                    # Watt/hrs. and Amp/hrs. respectively
+                    ene += np.trapz(i * v, t) / 3600
+                    cap += np.trapz(i, t) / 3600
 
-        # Update the cycle stats
-        cycle_data['energy'] = energies
-        cycle_data['capacity'] = capacities
+                # Append to the list
+                energies.append(ene)
+                capacities.append(cap)
+                cycle_ind.append(cyc)
+
+            # Update the cycle stats
+            name = state[:-3] + 'e'
+            cycle_data[f'{name}_energy'] = energies
+            cycle_data[f'{name}_capacity'] = capacities
 
 
 class StateOfCharge(RawDataEnhancer):
