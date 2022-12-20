@@ -7,7 +7,7 @@ import numpy as np
 
 from batdata.extractors.base import BatteryDataExtractor
 from batdata.schemas.cycling import ChargingState
-from batdata.postprocess.tagging import add_method, add_steps, add_substeps
+from batdata.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 from batdata.utils import drop_cycles
 
 
@@ -62,10 +62,9 @@ class MACCORExtractor(BatteryDataExtractor):
 
         df_out['voltage'] = df['Volts']
         df_out = drop_cycles(df_out)
-        add_steps(df_out)
-        add_method(df_out)
-        add_substeps(df_out)
-
+        AddSteps().enhance(df_out)
+        AddMethod().enhance(df_out)
+        AddSubSteps().enhance(df_out)
         return df_out
 
     def implementors(self) -> List[str]:

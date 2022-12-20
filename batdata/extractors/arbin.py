@@ -7,8 +7,7 @@ import pandas as pd
 from batdata.extractors.base import BatteryDataExtractor
 from batdata.schemas.cycling import ChargingState
 from batdata.utils import drop_cycles
-from batdata.postprocess.tagging import add_method, add_steps, add_substeps
-
+from batdata.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 
 class ArbinExtractor(BatteryDataExtractor):
     """Parser for reading from Arbin-format files
@@ -79,9 +78,9 @@ class ArbinExtractor(BatteryDataExtractor):
         df_out['state'] = df_out['current'].apply(compute_state)
 
         # Determine the method uses to control charging/discharging
-        add_steps(df_out)
-        add_method(df_out)
-        add_substeps(df_out)
+        AddSteps().enhance(df_out)
+        AddMethod().enhance(df_out)
+        AddSubSteps().enhance(df_out)
         return df_out
 
     def implementors(self) -> List[str]:

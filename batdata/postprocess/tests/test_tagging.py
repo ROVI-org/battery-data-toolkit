@@ -4,7 +4,7 @@ import pandas as pd
 from pytest import fixture
 
 from batdata.data import BatteryDataset
-from batdata.postprocess.tagging import add_steps, add_method, add_substeps
+from batdata.postprocess.tagging import AddSteps, AddMethod, AddSubSteps
 from batdata.schemas.cycling import ChargingState, ControlMethod
 
 
@@ -55,7 +55,7 @@ def test_example_data(synthetic_data):
 
 
 def test_step_detection(synthetic_data):
-    add_steps(synthetic_data.raw_data)
+    AddSteps().enhance(synthetic_data.raw_data)
 
     # Should detect steps
     assert (synthetic_data.raw_data['step_index'].iloc[:16] == 0).all()
@@ -69,10 +69,10 @@ def test_step_detection(synthetic_data):
 
 def test_method_detection(synthetic_data):
     # Start assuming that the step detection worked
-    add_steps(synthetic_data.raw_data)
+    AddSteps().enhance(synthetic_data.raw_data)
 
     # See if we can detect the steps
-    add_method(synthetic_data.raw_data)
+    AddMethod().enhance(synthetic_data.raw_data)
     assert (synthetic_data.raw_data['method'].iloc[:16] == ControlMethod.rest).all()
     assert (synthetic_data.raw_data['method'].iloc[16:32] == ControlMethod.constant_current).all()
     assert (synthetic_data.raw_data['method'].iloc[32:36] == ControlMethod.short_rest).all()
@@ -85,10 +85,10 @@ def test_method_detection(synthetic_data):
 
 def test_substep_detect(synthetic_data):
     # Start assuming that the step and method detection worked
-    add_steps(synthetic_data.raw_data)
-    add_method(synthetic_data.raw_data)
+    AddSteps().enhance(synthetic_data.raw_data)
+    AddMethod().enhance(synthetic_data.raw_data)
 
     # The substeps should be the same as the steps because we do not have two charging/rest cycles next to each other
-    add_substeps(synthetic_data.raw_data)
+    AddSubSteps().enhance(synthetic_data.raw_data)
     assert (synthetic_data.raw_data['step_index'].iloc[:60] == synthetic_data.raw_data['substep_index'].iloc[:60]).all()
     assert (synthetic_data.raw_data['substep_index'].iloc[60:] == 7).all()
