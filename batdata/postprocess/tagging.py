@@ -108,7 +108,7 @@ def add_method(df):
                 # Measure the ratio between the change and current and the change in the voltage
                 s_i = current[r].std()
                 s_v = voltage[r].std()
-                val = s_i / (s_i + s_v)
+                val = s_i / max(s_i + s_v, 1e-6)
 
                 if val > 0.66:  # If the change in the current is 2x as large as the change in current
                     method = ControlMethod.constant_voltage
