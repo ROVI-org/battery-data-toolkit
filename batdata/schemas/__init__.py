@@ -1,11 +1,13 @@
 """Schemas for battery data and metadata"""
 from datetime import date
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Optional
 
-from pydantic import BaseModel, Field, AnyUrl
+from pydantic import BaseModel, Field, AnyUrl, Extra
+
+from batdata.schemas.battery import ElectrodeDescription, ElectrolyteDescription
 
 
-class BatteryMetadata(BaseModel):
+class BatteryMetadata(BaseModel, extra=Extra.allow):
     """Representation for the metadata about a battery
 
     The metadata captures the information about what experiment was run
@@ -26,22 +28,17 @@ class BatteryMetadata(BaseModel):
     schedule: str = Field(None, description="Schedule file used for the cycling machine")
 
     # Field that describe the battery
-    # TODO (wardlt): Needs a more thorough description, see UW's work
     manufacturer: str = Field(None, description="Manufacturer of the battery")
     design: str = Field(None, description="Name of the battery type, such as the battery product ID")
-    anode: str = Field(None, description="Name of the anode material")
-    cathode: str = Field(None, description="Name of the cathode material")
-    electrolyte: str = Field(None, description="Name of the electrolyte material")
-    nominal_capacity: float = Field(None, description="Rated capacity of the battery. Units: Ah")
+    anode: Optional[ElectrodeDescription] = Field(None, description="Name of the anode material")
+    cathode: Optional[ElectrodeDescription] = Field(None, description="Name of the cathode material")
+    electrolyte: ElectrolyteDescription = Field(None, description="Name of the electrolyte material")
+    nominal_capacity: float = Field(None, description="Rated capacity of the battery. Units: A-hr")
 
     # Fields that describe the source of data
-    # TODO (wardlt): Consult Ben about whether we should use DataCite
     source: str = Field(None, description="Organization who created this data")
     dataset_name: str = Field(None, description="Name of a larger dataset this data is associated with")
     authors: List[Tuple[str, str]] = Field(None, description="Name and affiliation of each of the authors of the data")
     associated_ids: List[AnyUrl] = Field(None, description="Any identifiers associated with this data file."
                                                            " Identifiers can be any URI, such as DOIs of associated"
                                                            " paper or HTTP addresses of associated websites")
-
-    # Generic metadata
-    other: Dict = Field(default_factory=dict, help="Any other useful run information")
