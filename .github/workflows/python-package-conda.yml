@@ -25,4 +25,10 @@ jobs:
     - name: Test with pytest
       run: |
         pip install -r test-requirements.txt
-        pytest
+        pytest batdata
+    - name: Coveralls
+      run: |
+        pip install coveralls
+        coveralls --service=github
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

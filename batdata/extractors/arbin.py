@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 
 from batdata.extractors.base import BatteryDataExtractor
-from batdata.schemas import ChargingState
+from batdata.schemas.cycling import ChargingState
 from batdata.utils import drop_cycles
-from batdata.postprocess import add_steps, add_method, add_substeps
+from batdata.postprocess.tagging import add_method, add_steps, add_substeps
 
 
 class ArbinExtractor(BatteryDataExtractor):
