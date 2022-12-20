@@ -1,10 +1,10 @@
 """Schemas for battery data and metadata"""
 from datetime import date
-from typing import List, Tuple, Optional
+from typing import List, Tuple
 
 from pydantic import BaseModel, Field, AnyUrl, Extra
 
-from batdata.schemas.battery import ElectrodeDescription, ElectrolyteDescription, BatteryDescription
+from batdata.schemas.battery import BatteryDescription
 from batdata.version import __version__
 
 
@@ -16,7 +16,6 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     reproduce an experiment.
     """
 
-    # TODO (wardlt): Expand on these fields in consultation with battery data working group
     # Miscellaneous fields
     name: str = Field(None, description="Name of the cell. Any format for the name is acceptable,"
                                         " as it is intended to be used by the battery data provider.")
@@ -35,7 +34,7 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     # Fields that describe the source of data
     source: str = Field(None, description="Organization who created this data")
     dataset_name: str = Field(None, description="Name of a larger dataset this data is associated with")
-    authors: List[Tuple[str, str]] = Field(None, description="Name and affiliation of each of the authors of the data")
+    authors: List[Tuple[str, str]] = Field(None, description="Name and affiliation of each of the authors of the data. First and last names")
     associated_ids: List[AnyUrl] = Field(None, description="Any identifiers associated with this data file."
                                                            " Identifiers can be any URI, such as DOIs of associated"
                                                            " paper or HTTP addresses of associated websites")
