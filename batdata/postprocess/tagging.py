@@ -11,7 +11,6 @@ from scipy.signal import find_peaks, savgol_filter
 
 from batdata.schemas.cycling import ChargingState, ControlMethod
 from .base import RawDataEnhancer
-from batdata.data import BatteryDataset
 
 logger = logging.getLogger(__name__)
 

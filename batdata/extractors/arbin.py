@@ -9,6 +9,7 @@ from batdata.schemas.cycling import ChargingState
 from batdata.utils import drop_cycles
 from batdata.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 
+
 class ArbinExtractor(BatteryDataExtractor):
     """Parser for reading from Arbin-format files
 
@@ -75,6 +76,7 @@ class ArbinExtractor(BatteryDataExtractor):
             if abs(x) < self.eps:
                 return ChargingState.hold
             return ChargingState.charging if x > 0 else ChargingState.discharging
+
         df_out['state'] = df_out['current'].apply(compute_state)
 
         # Determine the method uses to control charging/discharging
