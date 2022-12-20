@@ -3,18 +3,19 @@ import json
 import os
 
 import h5py
+import pandas as pd
 from pandas import HDFStore
 from pytest import fixture
 
-from batdata.data import BatteryDataFrame
+from batdata.data import BatteryDataset
 
 
 @fixture()
 def test_df():
-    return BatteryDataFrame(data={
+    return BatteryDataset(raw_data=pd.DataFrame({
         'current': [1, 0, -1],
         'voltage': [2, 2, 2]
-    }, metadata={'name': 'Test data'})
+    }), metadata={'name': 'Test data'})
 
 
 def test_write_hdf(tmpdir, test_df):
@@ -41,16 +42,16 @@ def test_read_hdf(tmpdir, test_df):
     test_df.to_batdata_hdf(out_path)
 
     # Test reading only the metadata
-    metadata = BatteryDataFrame.get_metadata_from_hdf5(out_path)
+    metadata = BatteryDataset.get_metadata_from_hdf5(out_path)
     assert metadata.name == 'Test data'
 
     # Read it
-    data = BatteryDataFrame.from_batdata_hdf(out_path)
+    data = BatteryDataset.from_batdata_hdf(out_path)
     assert data.metadata.name == 'Test data'
 
     # Test reading from an already-open file
     store = HDFStore(out_path, 'r')
-    data = BatteryDataFrame.from_batdata_hdf(store)
+    data = BatteryDataset.from_batdata_hdf(store)
     assert data.metadata.name == 'Test data'
 
 
@@ -58,9 +59,9 @@ def test_dict(test_df):
     # Test writing it
     d = test_df.to_batdata_dict()
     assert d['metadata']['name'] == 'Test data'
-    assert 'data' in d
+    assert 'raw_data' in d
 
     # Test reading it
-    data = BatteryDataFrame.from_batdata_dict(d)
-    assert len(data) == 3
+    data = BatteryDataset.from_batdata_dict(d)
+    assert len(data.raw_data) == 3
     assert data.metadata.name == 'Test data'

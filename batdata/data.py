@@ -1,5 +1,5 @@
 """Objects that represent battery datasets"""
-from typing import Union
+from typing import Union, Optional
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
@@ -7,20 +7,20 @@ from pydantic import BaseModel
 import pandas as pd
 import h5py
 
-from batdata.schemas import BatteryMetadata, CyclingData
+from batdata.schemas import BatteryMetadata
+from batdata.schemas.cycling import CyclingData
 
 
-# TODO (wardlt): Should I be more specific and call this "BatteryCyclingDataFrame"?
-class BatteryDataFrame(pd.DataFrame):
-    """Representation for battery dataset
+class BatteryDataset:
+    """Holder for all data associated with tests for a battery.
 
-    Subclass of the Pandas DataFrame object with small additions to store
-    metadata about the battery along with the battery measurement data
+    Attributes of this class define different view of the data (e.g., raw time-series, per-cycle statistics)
+    or different types of data (e.g., EIS) along with the metadata for the class
 
     I/O with BatteryDataFrame
     -------------------------
 
-    This data frame provides additional I/O operations that store and retrieve the battery metadata into particular
+    This data frame provides I/O operations that store and retrieve the battery metadata into particular
     formats. The operations are named ``[to|from]_batdata_[format]``, where format could be one of
 
     - ``hdf``: Data is stored the `"table" format from PyTables
@@ -34,14 +34,28 @@ class BatteryDataFrame(pd.DataFrame):
 
     """
 
-    def __init__(self, data=None, index=None, columns=None, dtype=None, copy=False,
-                 metadata: Union[BatteryMetadata, dict] = None):
-        super().__init__(data=data, index=index, columns=columns, dtype=dtype, copy=copy)
+    raw_data: Optional[pd.DataFrame]
+    """Time-series data capturing the state of the battery as a function of time"""
+
+    metadata: BatteryMetadata
+    """Metadata fro the battery construction and testing"""
+
+    def __init__(self, metadata: Union[BatteryMetadata, dict] = None, raw_data: Optional[pd.DataFrame] = None):
+        """
+
+        Parameters
+        ----------
+        metadata: BatteryMetadata or dict
+            Metadata that describe the battery construction, data provenance and testing routines
+        raw_data: pd.DataFrame
+            Time-series data of the battery state
+        """
         if metadata is None:
             metadata = {}
         elif isinstance(metadata, BaseModel):
             metadata = metadata.dict()
         self.metadata = BatteryMetadata(**metadata)
+        self.raw_data = raw_data
 
     def validate_columns(self, allow_extra_columns: bool = True):
         """Determine whether the column types are appropriate
@@ -56,20 +70,18 @@ class BatteryDataFrame(pd.DataFrame):
         ValueError
             If the dataset fails validation
         """
-        CyclingData.validate_dataframe(self)
+        CyclingData.validate_dataframe(self.raw_data, allow_extra_columns)
 
     def to_batdata_hdf(self, path_or_buf, complevel=0, complib='zlib'):
         """Save the data in the standardized HDF5 file format
 
-        This function wraps the :meth:`to_hdf` function of Pandas and supplies fixed values for some of the options
+        This function wraps the ``to_hdf`` function of Pandas and supplies fixed values for some of the options
         so that the data is written in a reproducible format.
 
         Parameters
         ----------
         path_or_buf : str or pandas.HDFStore
             File path or HDFStore object.
-        key : str
-            Identifier for the group in the store.
         complevel : {0-9}, optional
             Specifies a compression level for data.
             A value of 0 disables compression.
@@ -83,11 +95,10 @@ class BatteryDataFrame(pd.DataFrame):
             a ValueError.
         """
 
-        # Cast the data as a DataFrame, as Pandas's HDF I/O logic does not support subclasses
+        # Store the various datasets
         #  Note that we use the "table" format to allow for partial reads / querying
-        data = pd.DataFrame(self)
-        data.to_hdf(path_or_buf, 'raw_data', complevel=complevel, complib=complib,
-                    append=False, format='table', index=False)
+        self.raw_data.to_hdf(path_or_buf, 'raw_data', complevel=complevel, complib=complib,
+                             append=False, format='table', index=False)
 
         # Create logic for adding metadata
         def add_metadata(f: HDFStore):
@@ -106,17 +117,16 @@ class BatteryDataFrame(pd.DataFrame):
             add_metadata(path_or_buf)
 
     @classmethod
-    def from_batdata_hdf(cls, path_or_buf: Union[str, HDFStore], key=None):
+    def from_batdata_hdf(cls, path_or_buf: Union[str, HDFStore]):
         """Read the battery data from an HDF file
 
         Parameters
         ----------
         path_or_buf : str or pandas.HDFStore
             File path or HDFStore object.
-        key : str
-            Identifier for the group in the store.
         """
-        data = pd.read_hdf(path_or_buf, key)
+        # Read the available datasets
+        data = pd.read_hdf(path_or_buf, "raw_data")
 
         # Read out the battery metadata
         if isinstance(path_or_buf, str):
@@ -125,7 +135,7 @@ class BatteryDataFrame(pd.DataFrame):
         else:
             metadata = BatteryMetadata.parse_raw(path_or_buf.root._v_attrs.metadata)
 
-        return cls(data=data, metadata=metadata)
+        return cls(raw_data=data, metadata=metadata)
 
     def to_batdata_dict(self) -> dict:
         """Generate data in dictionary format
@@ -136,13 +146,13 @@ class BatteryDataFrame(pd.DataFrame):
         """
         return {
             'metadata': self.metadata.dict(),
-            'data': self.to_dict('list')
+            'raw_data': self.raw_data.to_dict('list')
         }
 
     @classmethod
     def from_batdata_dict(cls, d):
         """Read battery data and metadata from """
-        return cls(data=d['data'], metadata=d['metadata'])
+        return cls(raw_data=pd.DataFrame(d['raw_data']), metadata=d['metadata'])
 
     @staticmethod
     def get_metadata_from_hdf5(path: str) -> BatteryMetadata:

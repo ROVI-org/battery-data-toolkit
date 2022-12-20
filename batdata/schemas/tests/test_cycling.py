@@ -1,4 +1,4 @@
-from batdata.schemas import CyclingData
+from batdata.schemas.cycling import CyclingData
 
 from pytest import raises, fixture, mark
 import pandas as pd
@@ -58,4 +58,3 @@ def test_monotonic(example_df):
 
     example_df['cycle_number'] = [1, 1]
     CyclingData.validate_dataframe(example_df)
-

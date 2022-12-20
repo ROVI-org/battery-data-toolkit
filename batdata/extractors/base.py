@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
-from typing import Tuple, List, Optional, Union
+from typing import List, Optional, Union
 
 import pandas as pd
 from materials_io.base import BaseParser
 
-from batdata.data import BatteryDataFrame
+from batdata.data import BatteryDataset
 from batdata.schemas import BatteryMetadata
 
 
@@ -48,7 +48,7 @@ class BatteryDataExtractor(BaseParser, metaclass=ABCMeta):
         return df_out.to_batdata_dict()
 
     def parse_to_dataframe(self, group: List[str],
-                           metadata: Optional[Union[BatteryMetadata, dict]] = None) -> BatteryDataFrame:
+                           metadata: Optional[Union[BatteryMetadata, dict]] = None) -> BatteryDataset:
         """Parse a set of  files into a Pandas dataframe
 
         Parameters
@@ -84,4 +84,4 @@ class BatteryDataExtractor(BaseParser, metaclass=ABCMeta):
         df_out = pd.concat(output_dfs, ignore_index=True)
 
         # Attach the metadata and return the data
-        return BatteryDataFrame(data=df_out, metadata=metadata)
+        return BatteryDataset(raw_data=df_out, metadata=metadata)

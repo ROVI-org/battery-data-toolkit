@@ -1,5 +1,8 @@
 # Battery Data Extractor 
 
+[![Python Package using Conda](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package-conda.yml)
+[![Coverage Status](https://coveralls.io/repos/github/materials-data-facility/battery-data-toolkit/badge.svg?branch=add-coverage)](https://coveralls.io/github/materials-data-facility/battery-data-toolkit?branch=master)
+
 This directory contains utilities for converting battery testing data files from native formats
 to a standardized HDF5 file.
 
@@ -33,4 +36,4 @@ The `scripts` folder holds code that processes different datasets used by our co
 Any logic that is general enough to warrant re-use is moved into the `batdata` Python package.
 
 The Python package also holds the schemas, which are described in 
-[`schemas.py`](./batdata/schemas.py).
+[`schemas.py`](./batdata/schemas/__init__.py).
