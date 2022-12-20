@@ -4,7 +4,8 @@ cite howey paper
 
 """
 
-from batdata.extractors.tIVT import tIVT_Extractor
+from batdata.extractors.tIVT import TIVTExtractor
+from batdata.schemas import BatteryMetadata
 
 from tqdm import tqdm
 import numpy as np
@@ -12,18 +13,17 @@ import pandas as pd
 
 import shutil
 import os
-import re
 
 # Hard code root directory of data
-from batdata.schemas import BatteryMetadata
+
 
 root_folder = '/lcrc/project/battdat/npaulson/howey_data/data_files_raw'
 output_folder = '/lcrc/project/battdat/npaulson/howey_data/data_files_processed'
 
-# Metadata for all of the batteries
+# Metadata for all batteries
 test_metadata = {
-    'use case': 'photovoltaic cell with Pb-acid for lighting,' + \
-        'phone charging, and small appliances in sub-Saharan Africa',
+    'use case': ('photovoltaic cell with Pb-acid for lighting,'
+                 'phone charging, and small appliances in sub-Saharan Africa'),
     'manufacturer': 'BBOXX Ltd.',
     'nominal_capacity': 20,
     'nominal_voltage': 12,
@@ -34,10 +34,9 @@ test_metadata = {
     ]
 }
 
-
 if __name__ == "__main__":
     # Find all of the potential files
-    extractor = tIVT_Extractor()
+    extractor = TIVTExtractor()
     all_files = list(extractor.identify_files(root_folder))
     print(f'Located {len(all_files)} csv files in {root_folder}')
 
