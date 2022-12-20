@@ -1,7 +1,5 @@
 """Utility functions for computing properties of certain cycles"""
 from scipy.integrate import cumtrapz
-
-from batdata.data import BatteryDataset
 import pandas as pd
 import numpy as np
 
@@ -9,7 +7,8 @@ import numpy as np
 # TODO (wardlt): Add back in features I removed to simplify the code as other functions:
 #   - [ ] Dropping outliers
 #   - [ ] Smoothing with Gaussian Process regression
-from batdata.schemas import ChargingState
+from batdata.schemas.cycling import ChargingState
+from batdata.data import BatteryDataset
 
 
 def compute_energy_per_cycle(data: BatteryDataset):
