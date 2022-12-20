@@ -1,7 +1,6 @@
 """Base class and utilities related to post-processing on battery data"""
 from typing import List
 
-import numpy as np
 import pandas as pd
 
 from batdata.data import BatteryDataset
@@ -84,5 +83,3 @@ class CycleSummarizer(BaseFeatureComputer):
         cycle_data: pd.DataFrame
             Cycle data frame to be updated
         """
-
-

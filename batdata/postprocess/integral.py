@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import cumtrapz
 
-from batdata.data import BatteryDataset
 from batdata.postprocess.base import RawDataEnhancer, CycleSummarizer
 from batdata.schemas.cycling import ChargingState
 
