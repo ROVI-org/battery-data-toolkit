@@ -112,8 +112,7 @@ class CyclingData(BaseModel):
                                                   "charging. Units: A")
     state: List[ChargingState] = Field(None, description="Determination of whether the battery is being charged, "
                                                          "discharged or held at a constant charge")
-    method: List[ControlMethod] = Field(None, description="List of the method used to control "
-                                                          "the battery system")
+    method: List[ControlMethod] = Field(None, description="List of the method used to control the battery system")
     temperature: List[float] = Field(None, description="Temperature of the battery. Units: C")
     internal_resistance: List[float] = Field(None, description="Internal resistance of the battery. Units: ohm")
     substep_index: List[int] = Field(None, description="Index of the substep within a testing cycle. A substep"

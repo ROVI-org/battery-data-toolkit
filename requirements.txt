@@ -2,6 +2,7 @@ pandas>=1.0
 scipy>=1.3
 pydantic>=1.7
 tables>=3.6
-h5py==2.10.0
+h5py>2.10
+tqdm
 xlrd
 git+https://github.com/materials-data-facility/MaterialsIO.git
