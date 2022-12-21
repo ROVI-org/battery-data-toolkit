@@ -39,7 +39,7 @@ class MACCORExtractor(BatteryDataExtractor):
                            start_time: int = 0) -> pd.DataFrame:
 
         # Read in the ASCII file (I found this notation works)
-        df = pd.read_csv(file, skiprows=1, engine='python', sep='\t', index_col=False)
+        df = pd.read_csv(file, skiprows=1, engine='python', sep='\t', index_col=False, encoding="ISO-8859-1")
         df = df.rename(columns={'DateTime': 'test_time'})
 
         # create fresh dataframe
