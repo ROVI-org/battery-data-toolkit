@@ -34,12 +34,13 @@ class CapacityPerCycle(CycleSummarizer):
 
     def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
 
-        # Loop over charge and discharge
+        # Loop over any charge states the user wants
         for state in self.states:
             # Initialize the output arrays
-            energies = []
-            capacities = []
-            cycle_ind = []
+            cycle_data.set_index('cycle_number', drop=False)
+            name = state[:-3] + 'e'
+            cycle_data[f'{name}_energy'] = np.nan
+            cycle_data[f'{name}_capacity'] = np.nan
 
             # Loop over each cycle
             for cyc, cycle_subset in raw_data[raw_data['state'] == state].groupby('cycle_number'):
@@ -60,15 +61,8 @@ class CapacityPerCycle(CycleSummarizer):
                     ene += np.trapz(i * v, t) / 3600
                     cap += np.trapz(i, t) / 3600
 
-                # Append to the list
-                energies.append(ene)
-                capacities.append(cap)
-                cycle_ind.append(cyc)
-
-            # Update the cycle stats
-            name = state[:-3] + 'e'
-            cycle_data[f'{name}_energy'] = energies
-            cycle_data[f'{name}_capacity'] = capacities
+                cycle_data.loc[cyc, f'{name}_energy'] = ene
+                cycle_data.loc[cyc, f'{name}_capacity'] = cap
 
 
 class StateOfCharge(RawDataEnhancer):
