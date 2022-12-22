@@ -12,7 +12,7 @@ from batdata.schemas.cycling import ChargingState
 class CapacityPerCycle(CycleSummarizer):
     """Compute the capacity and energy at each time point
 
-    Capacity is computed by integrating the discharge segments of the battery
+    Capacity is computed by integrating the charge or discharge segments of the battery.
 
     Output dataframe has 3 columns:
         - ``cycle_ind``: Index of the cycle
@@ -51,9 +51,9 @@ class CapacityPerCycle(CycleSummarizer):
                     # Sort by test time, just in case
                     subseg_sorted = subseg.sort_values('test_time')
 
-                    # Use current as always positive convention, opposite of what our standard uses
+                    # Extract the test time, current and voltage
                     t = subseg_sorted['test_time'].values
-                    i = -1 * subseg_sorted['current'].values
+                    i = subseg_sorted['current'].values
                     v = subseg_sorted['voltage'].values
 
                     # integrate for energy and capacity and convert to
