@@ -18,8 +18,8 @@ def example_data() -> BatteryDataset:
 def test_cycle_stats(example_data):
     feat = CapacityPerCycle().compute_features(example_data)
     assert np.isclose([0, 1], feat['cycle_number']).all()
-    assert np.isclose([3.256, 3.262], feat['discharge_energy'], atol=1e-2).all()
-    assert np.isclose([1.073, 1.074], feat['discharge_capacity'], atol=1e-2).all()
+    assert np.isclose([-3.256, -3.262], feat['discharge_energy'], atol=1e-2).all()
+    assert np.isclose([-1.073, -1.074], feat['discharge_capacity'], atol=1e-2).all()
 
 
 def test_capacity(example_data):

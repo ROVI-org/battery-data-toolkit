@@ -2,13 +2,13 @@ from abc import ABCMeta, abstractmethod
 from typing import List, Optional, Union
 
 import pandas as pd
-from materials_io.base import BaseParser
+from scythe.base import BaseExtractor
 
 from batdata.data import BatteryDataset
 from batdata.schemas import BatteryMetadata
 
 
-class BatteryDataExtractor(BaseParser, metaclass=ABCMeta):
+class BatteryDataExtractor(BaseExtractor, metaclass=ABCMeta):
     def __init__(self, eps: float = 1e-10):
         """
         Args:
@@ -41,7 +41,7 @@ class BatteryDataExtractor(BaseParser, metaclass=ABCMeta):
         """
         pass
 
-    def parse(self, group: List[str], context: dict = None) -> dict:
+    def extract(self, group: List[str], context: dict = None) -> dict:
         if context is None:
             context = {}
         df_out = self.parse_to_dataframe(group, context.get('metadata', None))
