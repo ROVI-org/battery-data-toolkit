@@ -12,12 +12,16 @@ from batdata.data import BatteryDataset
 
 @fixture()
 def test_df():
-    return BatteryDataset(raw_data=pd.DataFrame({
+    raw_data = pd.DataFrame({
         'test_time': [0, 1, 2.],
         'current': [1., 0., -1.],
         'voltage': [2., 2., 2.],
-        'other': [1, 2, 3]
-    }), metadata={'name': 'Test data'})
+        'other': [1, 2, 3],
+    })
+    cycle_stats = pd.DataFrame({
+        'cycle_number': [0],
+    })
+    return BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, metadata={'name': 'Test data'})
 
 
 def test_write_hdf(tmpdir, test_df):
@@ -50,6 +54,8 @@ def test_read_hdf(tmpdir, test_df):
     # Read it
     data = BatteryDataset.from_batdata_hdf(out_path)
     assert data.metadata.name == 'Test data'
+    assert data.raw_data is not None
+    assert data.cycle_stats is not None
 
     # Test reading from an already-open file
     with HDFStore(out_path, 'r') as store:
@@ -62,6 +68,8 @@ def test_read_hdf(tmpdir, test_df):
     assert 'bad)_!~' in str(exc)
 
     # Test reading an absent field
+    test_df.cycle_stats = None
+    test_df.to_batdata_hdf(out_path)
     with raises(ValueError) as exc:
         BatteryDataset.from_batdata_hdf(out_path, subsets=('cycle_stats',))
     assert 'File does not contain' in str(exc)

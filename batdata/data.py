@@ -46,7 +46,9 @@ class BatteryDataset:
     metadata: BatteryMetadata
     """Metadata for the battery construction and testing"""
 
-    def __init__(self, metadata: Union[BatteryMetadata, dict] = None, raw_data: Optional[pd.DataFrame] = None):
+    def __init__(self, metadata: Union[BatteryMetadata, dict] = None,
+                 raw_data: Optional[pd.DataFrame] = None,
+                 cycle_stats: Optional[pd.DataFrame] = None):
         """
 
         Parameters
@@ -55,6 +57,8 @@ class BatteryDataset:
             Metadata that describe the battery construction, data provenance and testing routines
         raw_data: pd.DataFrame
             Time-series data of the battery state
+        cycle_stats: pd.DataFrame
+            Summaries of each cycle
         """
         if metadata is None:
             metadata = {}
@@ -62,6 +66,7 @@ class BatteryDataset:
             metadata = metadata.dict()
         self.metadata = BatteryMetadata(**metadata)
         self.raw_data = raw_data
+        self.cycle_stats = cycle_stats
 
     def validate_columns(self, allow_extra_columns: bool = True):
         """Determine whether the column types are appropriate
@@ -79,7 +84,7 @@ class BatteryDataset:
         if self.raw_data is not None:
             RawData.validate_dataframe(self.raw_data, allow_extra_columns)
         if self.cycle_stats is not None:
-            CycleLevelData.validate_dataframe(self.raw_data, allow_extra_columns)
+            CycleLevelData.validate_dataframe(self.cycle_stats, allow_extra_columns)
 
     def validate(self) -> List[str]:
         """Validate the data stored in this object
@@ -123,7 +128,7 @@ class BatteryDataset:
     def to_batdata_hdf(self, path_or_buf: Union[str, Path, HDFStore], complevel=0, complib='zlib'):
         """Save the data in the standardized HDF5 file format
 
-        This function wraps the ``to_hdf`` function of Pandas and supplies fixed values for some of the options
+        This function wraps the ``to_hdf`` function of Pandas and supplies fixed values for some options
         so that the data is written in a reproducible format.
 
         Parameters
@@ -142,6 +147,10 @@ class BatteryDataset:
             Specifying a compression library which is not available issues
             a ValueError.
         """
+
+        # Delete the old file if present
+        if isinstance(path_or_buf, (str, Path)) and Path(path_or_buf).is_file():
+            Path(path_or_buf).unlink()
 
         # Store the various datasets
         #  Note that we use the "table" format to allow for partial reads / querying
@@ -228,7 +237,7 @@ class BatteryDataset:
     def from_batdata_dict(cls, d):
         """Read battery data and metadata from a dictionary format"""
 
-        return cls(raw_data=pd.DataFrame(d['raw_data']), metadata=d['metadata'])
+        return cls(raw_data=pd.DataFrame(d['raw_data']), cycle_stats=pd.DataFrame(d['cycle_stats']), metadata=d['metadata'])
 
     @staticmethod
     def get_metadata_from_hdf5(path: Union[str, Path]) -> BatteryMetadata:
