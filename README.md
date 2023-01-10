@@ -1,33 +1,18 @@
-# Battery Data Extractor 
+# Battery Data Toolkit
 
-[![Python Package using Conda](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package-conda.yml/badge.svg)](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package-conda.yml)
+[![Python Package](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package.yml/badge.svg)](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package.yml)
 [![Coverage Status](https://coveralls.io/repos/github/materials-data-facility/battery-data-toolkit/badge.svg?branch=add-coverage)](https://coveralls.io/github/materials-data-facility/battery-data-toolkit?branch=master)
+[![PyPI version](https://badge.fury.io/py/battery-data-toolkit.svg)](https://badge.fury.io/py/battery-data-toolkit)
 
-This directory contains utilities for converting battery testing data files from native formats
-to a standardized HDF5 file.
+The battery-data-toolkit, `batdata`, converts battery testing data from native formats to a standardized HDF5 file.
+These HDF5 files contain the metadata needed to understand the source of the data, 
+and can be easily manipulated by common analysis libraries (e.g., Pandas).
 
-It also contains some scripts that run these utilities on datasets available to the ASOH project.
+This repository also contains [example scripts](./scripts) for converting datasets to the HDF5 format.
 
 ## Installation
 
-The package can be installed with pip,
-which will install the minimal amount of packages needed for this library
-to function:
-
-```bash
-pip install -r requirements.txt
-pip install -e .
-```
-
-For development purposes, we recommend installing the library and 
-all requirements
-using Anaconda rather than pip. 
-Anaconda reliably gathers compatible 
-versions of all libraries and we have the versions of the libraries
-fixed in that development environment.
-Install the environment using: 
-
-`conda env create --file environment.yml --force`
+The package can be installed with pip: `pip install battery-data-toolkit`
 
 ## Project Organization
 
