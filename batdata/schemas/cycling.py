@@ -161,19 +161,19 @@ class CycleLevelData(ColumnSchema):
     cycle_number: List[int] = Field(..., description='Index of the cycle', monotonic=True)
 
     # Related to the total amount of energy or electrons moved
-    discharge_capacity: List[float] = Field(..., description='Total amount of electrons moved during discharge. Units: A-hr')
-    discharge_energy: List[float] = Field(..., description='Total amount of energy released during discharge. Units: A-hr')
-    charge_capacity: List[float] = Field(..., description='Total amount of electrons moved during charge. Units: J')
-    charge_energy: List[float] = Field(..., description='Total amount of energy stored during charge. Units: J')
-    coulomb_efficiency: List[float] = Field(..., description='Fraction of electrons that are lost during charge and recharge. Units: %')
-    energy_efficiency: List[float] = Field(..., description='Amount of energy lost during charge and discharge')
+    discharge_capacity: List[float] = Field(None, description='Total amount of electrons moved during discharge. Units: A-hr')
+    discharge_energy: List[float] = Field(None, description='Total amount of energy released during discharge. Units: A-hr')
+    charge_capacity: List[float] = Field(None, description='Total amount of electrons moved during charge. Units: J')
+    charge_energy: List[float] = Field(None, description='Total amount of energy stored during charge. Units: J')
+    coulomb_efficiency: List[float] = Field(None, description='Fraction of electrons that are lost during charge and recharge. Units: %')
+    energy_efficiency: List[float] = Field(None, description='Amount of energy lost during charge and discharge')
 
     # Related to voltage
-    discharge_V_average: List[float] = Field(..., description='Average voltage during discharging. Units: V')
-    charge_V_average: List[float] = Field(..., description='Average voltage during charge. Units: V')
-    V_maximum: List[float] = Field(..., description='Maximum voltage during cycle. Units: V')
-    V_minimum: List[float] = Field(..., description='Minimum voltage during cycle. Units: V')
+    discharge_V_average: List[float] = Field(None, description='Average voltage during discharging. Units: V')
+    charge_V_average: List[float] = Field(None, description='Average voltage during charge. Units: V')
+    V_maximum: List[float] = Field(None, description='Maximum voltage during cycle. Units: V')
+    V_minimum: List[float] = Field(None, description='Minimum voltage during cycle. Units: V')
 
     # Related to current
-    discharge_I_average: List[float] = Field(..., description='Average current during discharge. Units: A')
-    charge_I_average: List[float] = Field(..., description='Average current during charge. Units: A')
+    discharge_I_average: List[float] = Field(None, description='Average current during discharge. Units: A')
+    charge_I_average: List[float] = Field(None, description='Average current during charge. Units: A')
