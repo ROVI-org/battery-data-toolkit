@@ -1,4 +1,5 @@
 """Objects that represent battery datasets"""
+from pathlib import Path
 from typing import Union, Optional, Collection, List
 
 from pandas import HDFStore
@@ -119,7 +120,7 @@ class BatteryDataset:
 
         return output
 
-    def to_batdata_hdf(self, path_or_buf, complevel=0, complib='zlib'):
+    def to_batdata_hdf(self, path_or_buf: Union[str, Path, HDFStore], complevel=0, complib='zlib'):
         """Save the data in the standardized HDF5 file format
 
         This function wraps the ``to_hdf`` function of Pandas and supplies fixed values for some of the options
@@ -127,7 +128,7 @@ class BatteryDataset:
 
         Parameters
         ----------
-        path_or_buf : str or pandas.HDFStore
+        path_or_buf : str or Path or pandas.HDFStore
             File path or HDFStore object.
         complevel : {0-9}, optional
             Specifies a compression level for data.
@@ -158,7 +159,7 @@ class BatteryDataset:
 
         # Apply the metadata addition function
         path_or_buf = stringify_path(path_or_buf)
-        if isinstance(path_or_buf, str):
+        if isinstance(path_or_buf, (str, Path)):
             with HDFStore(
                     path_or_buf, mode='a', complevel=complevel, complib=complib
             ) as store:
@@ -168,12 +169,12 @@ class BatteryDataset:
             add_metadata(path_or_buf)
 
     @classmethod
-    def from_batdata_hdf(cls, path_or_buf: Union[str, HDFStore], subsets: Optional[Collection[str]] = None):
+    def from_batdata_hdf(cls, path_or_buf: Union[str, Path, HDFStore], subsets: Optional[Collection[str]] = None):
         """Read the battery data from an HDF file
 
         Parameters
         ----------
-        path_or_buf : str or pandas.HDFStore
+        path_or_buf : str or pandas.HDFStore or Path
             File path or HDFStore object.
         subsets : List of strings
             Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
@@ -199,7 +200,7 @@ class BatteryDataset:
                     raise ValueError(f'File does not contain {key}') from exc
 
         # Read out the battery metadata
-        if isinstance(path_or_buf, str):
+        if isinstance(path_or_buf, (str, Path)):
             with h5py.File(path_or_buf, 'r') as f:
                 metadata = BatteryMetadata.parse_raw(f.attrs['metadata'])
         else:
@@ -230,12 +231,12 @@ class BatteryDataset:
         return cls(raw_data=pd.DataFrame(d['raw_data']), metadata=d['metadata'])
 
     @staticmethod
-    def get_metadata_from_hdf5(path: str) -> BatteryMetadata:
+    def get_metadata_from_hdf5(path: Union[str, Path]) -> BatteryMetadata:
         """Open an HDF5 file and read only the metadata
 
         Parameters
         ----------
-        path: str
+        path: str, Path
             Path to an HDF5 file
 
         Returns
