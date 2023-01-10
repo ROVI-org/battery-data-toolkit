@@ -54,6 +54,8 @@ def test_read_hdf(tmpdir, test_df):
     # Read it
     data = BatteryDataset.from_batdata_hdf(out_path)
     assert data.metadata.name == 'Test data'
+    assert data.raw_data is not None
+    assert data.cycle_stats is not None
 
     # Test reading from an already-open file
     with HDFStore(out_path, 'r') as store:
@@ -66,6 +68,8 @@ def test_read_hdf(tmpdir, test_df):
     assert 'bad)_!~' in str(exc)
 
     # Test reading an absent field
+    test_df.cycle_stats = None
+    test_df.to_batdata_hdf(out_path)
     with raises(ValueError) as exc:
         BatteryDataset.from_batdata_hdf(out_path, subsets=('cycle_stats',))
     assert 'File does not contain' in str(exc)
