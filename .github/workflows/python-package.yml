@@ -16,15 +16,13 @@ jobs:
           python-version: 3.9
       - name: Install package
         run: |
-          pip install -e .
+          pip install -e .[test]
       - name: Lint with flake8
         run: |
-          pip install flake8
-          flake8 batdata/ scripts/
+          flake8 batdata/ scripts/ tests
       - name: Test with pytest
         run: |
-          pip install -r test-requirements.txt
-          pytest batdata
+          pytest --cov=batdata tests
       - name: Coveralls
         run: |
           pip install coveralls

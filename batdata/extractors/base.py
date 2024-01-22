@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+"""Base class for a battery data extractor"""
 from typing import List, Optional, Union
 
 import pandas as pd
@@ -8,15 +8,26 @@ from batdata.data import BatteryDataset
 from batdata.schemas import BatteryMetadata
 
 
-class BatteryDataExtractor(BaseExtractor, metaclass=ABCMeta):
+class BatteryDataExtractor(BaseExtractor):
+    """Base class for a data extractors
+
+    **Implementation Instructions**
+
+    The minimum is to define the `generate_dataframe` method, which produces
+    a data-frame containing the time-series data with standardized column names.
+
+    If the data format contains additional metadata or cycle-level features,
+    override the :meth:`parse_to_dataframe` such that it adds such data
+    after parsing the time-series results.
+
+    Parameters
+    ----------
+    eps : float
+        Tolerance for the CC vs CV identification
+    """
     def __init__(self, eps: float = 1e-10):
-        """
-        Args:
-             eps (float): Tolerance for the CC vs CV identification
-        """
         self.eps = eps
 
-    @abstractmethod
     def generate_dataframe(self, file: str, file_number: int = 0, start_cycle: int = 0,
                            start_time: int = 0) -> pd.DataFrame:
         """Generate a DataFrame containing the data in this file
