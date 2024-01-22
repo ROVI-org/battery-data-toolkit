@@ -10,8 +10,8 @@ from batdata.postprocess.integral import CapacityPerCycle, StateOfCharge
 
 
 @fixture
-def example_data() -> BatteryDataset:
-    ex_file = os.path.join(os.path.dirname(__file__), '..', '..', 'extractors', 'tests', 'files', 'arbin_example.csv')
+def example_data(file_path) -> BatteryDataset:
+    ex_file = file_path / 'arbin_example.csv'
     return ArbinExtractor().parse_to_dataframe([ex_file])
 
 

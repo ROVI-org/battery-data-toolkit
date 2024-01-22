@@ -1,12 +1,12 @@
 """Tests related to the MACCOR parser"""
-
-import os
-
 from pytest import fixture
 
 from batdata.extractors.maccor import MACCORExtractor
 
-test_file = os.path.join(os.path.dirname(__file__), 'files', 'maccor_example.001')
+
+@fixture()
+def test_file(file_path):
+    return file_path / 'maccor_example.001'
 
 
 @fixture()
@@ -14,7 +14,7 @@ def extractor():
     return MACCORExtractor()
 
 
-def test_validation(extractor):
+def test_validation(extractor, test_file):
     """Make sure the parser generates valid outputs"""
     data = extractor.parse_to_dataframe([test_file])
     data.validate_columns(allow_extra_columns=False)
