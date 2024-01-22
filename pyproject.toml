@@ -26,6 +26,10 @@ scythe-extractors = "^0.1"
 tqdm = "*"
 xlrd = "*"
 
+[tool.poetry.group.test.dependencies]
+pytest = "^6.0.0"
+pytest-cov = "*"
+
 [tool.poetry.scripts]
 batdata-convert = "batdata.cli:main"
 
