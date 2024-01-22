@@ -1,4 +1,3 @@
-import os
 from math import isclose
 
 import numpy as np
