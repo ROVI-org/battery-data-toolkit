@@ -1,0 +1,11 @@
+# Conda environment file
+name: batdata
+channels:
+  - defaults
+dependencies:
+  - python==3.9.*
+
+  # For now, use Pip for everything
+  - pip
+  - pip:
+    - -e ..[test]
