@@ -36,8 +36,8 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     dataset_name: Optional[str] = Field(None, description="Name of a larger dataset this data is associated with")
     authors: Optional[List[Tuple[str, str]]] = Field(None, description="Name and affiliation of each of the authors of the data. First and last names")
     associated_ids: Optional[List[AnyUrl]] = Field(None, description="Any identifiers associated with this data file."
-                                                           " Identifiers can be any URI, such as DOIs of associated"
-                                                           " paper or HTTP addresses of associated websites")
+                                                                     " Identifiers can be any URI, such as DOIs of associated"
+                                                                     " paper or HTTP addresses of associated websites")
 
     # Description of additional columns
     raw_data_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the raw data')
