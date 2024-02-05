@@ -87,7 +87,7 @@ class ColumnSchema(BaseModel):
             # Get the data type for the column
             if '$ref' in col_schema['items']:
                 ref_name = col_schema['items']['$ref'].split("/")[-1]
-                col_type = schema['definitions'][ref_name]['type']
+                col_type = schema['$defs'][ref_name]['type']
             else:
                 col_type = col_schema['items']['type']
 
@@ -134,7 +134,7 @@ class RawData(ColumnSchema):
                                                     " or resting.")
     file_number: List[int] = Field(None, description="Used if test data is stored in multiple files. Number represents "
                                                      "the index of the file. All indices should be nonnegative and "
-                                                     "monotonically increasing", ge=0, monotonic=True)
+                                                     "monotonically increasing", monotonic=True)
     test_time: List[float] = Field(..., description="Time from the beginning of the cycling test. Times must be "
                                                     "nonnegative and monotonically increasing. Units: s",
                                    monotonic=True)

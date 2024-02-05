@@ -17,25 +17,25 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     """
 
     # Miscellaneous fields
-    name: str = Field(None, description="Name of the cell. Any format for the name is acceptable,"
-                                        " as it is intended to be used by the battery data provider.")
-    comments: str = Field(None, description="Long form comments describing the test")
+    name: Optional[str] = Field(None, description="Name of the cell. Any format for the name is acceptable,"
+                                                  " as it is intended to be used by the battery data provider.")
+    comments: Optional[str] = Field(None, description="Long form comments describing the test")
     version: str = Field(__version__, description="Version of this metadata")
 
     # Fields that describe the test protocol
-    cycler: str = Field(None, description='Name of the cycling machine')
-    start_date: date = Field(None, description="Date the initial test on the cell began")
-    set_temperature: float = Field(None, description="Set temperature for the battery testing equipment. Units: C")
-    schedule: str = Field(None, description="Schedule file used for the cycling machine")
+    cycler: Optional[str] = Field(None, description='Name of the cycling machine')
+    start_date: Optional[date] = Field(None, description="Date the initial test on the cell began")
+    set_temperature: Optional[float] = Field(None, description="Set temperature for the battery testing equipment. Units: C")
+    schedule: Optional[str] = Field(None, description="Schedule file used for the cycling machine")
 
     # Field that describe the battery assembly
     battery: Optional[BatteryDescription] = Field(None, description="Description of the battery being tested")
 
     # Fields that describe the source of data
-    source: str = Field(None, description="Organization who created this data")
-    dataset_name: str = Field(None, description="Name of a larger dataset this data is associated with")
-    authors: List[Tuple[str, str]] = Field(None, description="Name and affiliation of each of the authors of the data. First and last names")
-    associated_ids: List[AnyUrl] = Field(None, description="Any identifiers associated with this data file."
+    source: Optional[str] = Field(None, description="Organization who created this data")
+    dataset_name: Optional[str] = Field(None, description="Name of a larger dataset this data is associated with")
+    authors: Optional[List[Tuple[str, str]]] = Field(None, description="Name and affiliation of each of the authors of the data. First and last names")
+    associated_ids: Optional[List[AnyUrl]] = Field(None, description="Any identifiers associated with this data file."
                                                            " Identifiers can be any URI, such as DOIs of associated"
                                                            " paper or HTTP addresses of associated websites")
 
