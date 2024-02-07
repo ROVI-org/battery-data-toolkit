@@ -5,6 +5,7 @@ from pathlib import Path
 from warnings import warn
 from dataclasses import dataclass
 from collections import defaultdict
+from datetime import datetime, timedelta
 from typing import Union, List, Iterator, Tuple, Optional
 
 import pandas as pd
@@ -17,6 +18,8 @@ _fname_match = re.compile(r'(?P<name>[-\w]+)-(?P<type>summary|raw)\.csv')
 
 logger = logging.getLogger(__name__)
 
+# TODO (wardlt): Columns that yet to have a home in the schema:
+#  - Cell2
 _name_map = {
     'Cycle_Index': 'cycle_index',
     'Step': 'step_index',
@@ -24,6 +27,7 @@ _name_map = {
     'Current_A': 'current',
     'Voltage_V': 'voltage',
     'Cell_Temperature_C': 'temperature',
+    'Datenum_d': 'time'
 }
 
 
@@ -45,9 +49,16 @@ def convert_raw_signal_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd
     # Decrement the indices from 1-indexed to 0-indexed
     output[['cycle_index', 'step_index']] -= 1
 
+    # Convert the date to POSIX timestamp (ease of use in Python) from days from 1/1/0000
+    begin_time = datetime(year=1, month=1, day=1)
+    output['time'] = output['time'].apply(lambda x: (timedelta(days=x - 366) + begin_time).timestamp())
+
+    # Reverse the sign of current
+    output['current'] *= -1
+
     # Add all other columns as-is
     if store_all:
-        for col in input_df.columns():
+        for col in input_df.columns:
             if col not in _name_map:
                 output[col] = input_df[col]
 
