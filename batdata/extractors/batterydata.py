@@ -2,7 +2,6 @@
 import re
 import logging
 from pathlib import Path
-from warnings import warn
 from dataclasses import dataclass
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -20,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 # TODO (wardlt): Columns that yet to have a home in the schema:
 #  - Cell2
-_name_map = {
+_name_map_raw = {
     'Cycle_Index': 'cycle_index',
     'Step': 'step_index',
     'Time_s': 'test_time',
@@ -43,7 +42,7 @@ def convert_raw_signal_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd
     output = pd.DataFrame()
 
     # Rename columns that are otherwise the same
-    for orig, new in _name_map.items():
+    for orig, new in _name_map_raw.items():
         output[new] = input_df[orig]
 
     # Decrement the indices from 1-indexed to 0-indexed
@@ -59,7 +58,47 @@ def convert_raw_signal_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd
     # Add all other columns as-is
     if store_all:
         for col in input_df.columns:
-            if col not in _name_map:
+            if col not in _name_map_raw:
+                output[col] = input_df[col]
+
+    return output
+
+
+_name_map_summary = {
+    'Cycle_Index': 'cycle_index',
+    'Q_chg': 'charge_capacity',
+    'E_chg': 'charge_energy',
+    'Q_dis': 'discharge_capacity',
+    'E_dis': 'discharge_energy',
+    'CE': 'coulomb_efficiency',
+    'EE': 'energy_efficiency',
+}
+
+
+def convert_summary_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd.DataFrame:
+    """Convert the summary dataframe to a format using batdata names and conventions
+
+    Args:
+        input_df: Initial NREL-format dataframe
+        store_all: Whether to store columns even we have not defined their names
+    Returns:
+        DataFrame in the batdata format
+    """
+
+    output = pd.DataFrame()
+
+    # Rename columns that are otherwise the same
+    for orig, new in _name_map_summary.items():
+        output[new] = input_df[orig]
+
+    # Convert charge and discharge energy from W-hr to J
+    for c in ['charge_energy', 'discharge_energy']:
+        output[c] /= 3600
+
+    # Add all other columns as-is
+    if store_all:
+        for col in input_df.columns:
+            if col not in _name_map_summary:
                 output[col] = input_df[col]
 
     return output
@@ -108,7 +147,7 @@ class BDExtractor(BatteryDataExtractor):
             # Different parsing logic by type
             data_type = match.group('type')
             if data_type == 'summary':
-                warn('We do not yet support parsing cycle summary statistics')
+                cycle_stats = convert_summary_to_batdata(pd.read_csv(path), self.store_all)
             elif data_type == 'raw':
                 raw_data = convert_raw_signal_to_batdata(pd.read_csv(path), self.store_all)
             else:

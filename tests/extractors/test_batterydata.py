@@ -27,4 +27,3 @@ def test_detect_then_convert(test_files):
 
     # Ensure it validates
     data.validate()
-
