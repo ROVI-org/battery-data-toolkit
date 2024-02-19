@@ -138,6 +138,7 @@ class RawData(ColumnSchema):
     test_time: List[float] = Field(..., description="Time from the beginning of the cycling test. Times must be "
                                                     "nonnegative and monotonically increasing. Units: s",
                                    monotonic=True)
+    time: List[float] = Field(None, description="Time as a UNIX timestamp. Assumed to be in UTC")
     voltage: List[float] = Field(..., description="Measured voltage of the system. Units: V")
     current: List[float] = Field(..., description="Measured current of the system. Positive current represents "
                                                   "the battery discharging and negative represents the battery"
@@ -159,11 +160,13 @@ class CycleLevelData(ColumnSchema):
 
     # Related to time
     cycle_number: List[int] = Field(..., description='Index of the cycle', monotonic=True)
+    cycle_start: List[float] = Field(None, description='Time since the first data point recorded for this battery for the start of this cycle. Units: s')
+    cycle_duration: List[float] = Field(None, description='Duration of this cycle. Units: s')
 
     # Related to the total amount of energy or electrons moved
     discharge_capacity: List[float] = Field(None, description='Total amount of electrons moved during discharge. Units: A-hr')
-    discharge_energy: List[float] = Field(None, description='Total amount of energy released during discharge. Units: A-hr')
-    charge_capacity: List[float] = Field(None, description='Total amount of electrons moved during charge. Units: J')
+    discharge_energy: List[float] = Field(None, description='Total amount of energy released during discharge. Units: J')
+    charge_capacity: List[float] = Field(None, description='Total amount of electrons moved during charge. Units: A-hr')
     charge_energy: List[float] = Field(None, description='Total amount of energy stored during charge. Units: J')
     coulomb_efficiency: List[float] = Field(None, description='Fraction of electrons that are lost during charge and recharge. Units: %')
     energy_efficiency: List[float] = Field(None, description='Amount of energy lost during charge and discharge')
@@ -177,3 +180,8 @@ class CycleLevelData(ColumnSchema):
     # Related to current
     discharge_I_average: List[float] = Field(None, description='Average current during discharge. Units: A')
     charge_I_average: List[float] = Field(None, description='Average current during charge. Units: A')
+
+    # Temperature
+    temperature_minimum: List[float] = Field(None, description='Minimum observed battery temperature during cycle. Units: C')
+    temperature_maximum: List[float] = Field(None, description='Maximum observed battery temperature during cycle. Units: C')
+    temperature_average: List[float] = Field(None, description='Average observed battery temperature during cycle. Units: C')

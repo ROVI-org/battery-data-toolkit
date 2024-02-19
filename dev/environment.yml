@@ -5,7 +5,10 @@ channels:
 dependencies:
   - python==3.9.*
 
-  # For now, use Pip for everything
+
+  # For now, use Pip for everything major
   - pip
   - pip:
+    # Install jupyter
+    - jupyterlab
     - -e ..[test]
