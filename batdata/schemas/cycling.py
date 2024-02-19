@@ -160,6 +160,8 @@ class CycleLevelData(ColumnSchema):
 
     # Related to time
     cycle_number: List[int] = Field(..., description='Index of the cycle', monotonic=True)
+    cycle_start: List[float] = Field(None, description='Time since the first data point recorded for this battery for the start of this cycle. Units: s')
+    cycle_duration: List[float] = Field(None, description='Duration of this cycle. Units: s')
 
     # Related to the total amount of energy or electrons moved
     discharge_capacity: List[float] = Field(None, description='Total amount of electrons moved during discharge. Units: A-hr')
@@ -178,3 +180,8 @@ class CycleLevelData(ColumnSchema):
     # Related to current
     discharge_I_average: List[float] = Field(None, description='Average current during discharge. Units: A')
     charge_I_average: List[float] = Field(None, description='Average current during charge. Units: A')
+
+    # Temperature
+    temperature_minimum: List[float] = Field(None, description='Minimum observed battery temperature during cycle. Units: C')
+    temperature_maximum: List[float] = Field(None, description='Maximum observed battery temperature during cycle. Units: C')
+    temperature_average: List[float] = Field(None, description='Average observed battery temperature during cycle. Units: C')

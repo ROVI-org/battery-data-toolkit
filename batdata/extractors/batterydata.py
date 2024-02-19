@@ -72,6 +72,11 @@ _name_map_summary = {
     'E_dis': 'discharge_energy',
     'CE': 'coulomb_efficiency',
     'EE': 'energy_efficiency',
+    'tsecs_start': 'cycle_start',
+    'tsecs_cycle': 'cycle_duration',
+    'T_min': 'temperature_minimum',
+    'T_max': 'temperature_maximum',
+    'T_avg': 'temperature_average',
 }
 
 
