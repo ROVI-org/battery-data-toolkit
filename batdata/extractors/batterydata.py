@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # TODO (wardlt): Columns that yet to have a home in the schema:
 #  - Cell2
 _name_map_raw = {
-    'Cycle_Index': 'cycle_index',
+    'Cycle_Index': 'cycle_number',
     'Step': 'step_index',
     'Time_s': 'test_time',
     'Current_A': 'current',
@@ -46,7 +46,7 @@ def convert_raw_signal_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd
         output[new] = input_df[orig]
 
     # Decrement the indices from 1-indexed to 0-indexed
-    output[['cycle_index', 'step_index']] -= 1
+    output[['cycle_number', 'step_index']] -= 1
 
     # Convert the date to POSIX timestamp (ease of use in Python) from days from 1/1/0000
     begin_time = datetime(year=1, month=1, day=1)
