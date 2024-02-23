@@ -1,7 +1,7 @@
 # Battery Data Toolkit
 
-[![Python Package](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package.yml/badge.svg)](https://github.com/materials-data-facility/battery-data-toolkit/actions/workflows/python-package.yml)
-[![Coverage Status](https://coveralls.io/repos/github/materials-data-facility/battery-data-toolkit/badge.svg)](https://coveralls.io/github/materials-data-facility/battery-data-toolkit?branch=master)
+[![Python Package](https://github.com/rovi-org/battery-data-toolkit/actions/workflows/python-package.yml/badge.svg)](https://github.com/rovi-org/battery-data-toolkit/actions/workflows/python-package.yml)
+[![Coverage Status](https://coveralls.io/repos/github/ROVI-org/battery-data-toolkit/badge.svg?branch=main)](https://coveralls.io/github/ROVI-org/battery-data-toolkit?branch=main)
 [![PyPI version](https://badge.fury.io/py/battery-data-toolkit.svg)](https://badge.fury.io/py/battery-data-toolkit)
 
 The battery-data-toolkit, `batdata`, converts battery testing data from native formats to a standardized HDF5 file.
