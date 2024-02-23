@@ -221,9 +221,9 @@ class BatteryDataset:
         # Read out the battery metadata
         if isinstance(path_or_buf, (str, Path)):
             with h5py.File(path_or_buf, 'r') as f:
-                metadata = BatteryMetadata.parse_raw(f.attrs['metadata'])
+                metadata = BatteryMetadata.model_validate_json(f.attrs['metadata'])
         else:
-            metadata = BatteryMetadata.parse_raw(path_or_buf.root._v_attrs.metadata)
+            metadata = BatteryMetadata.model_validate_json(path_or_buf.root._v_attrs.metadata)
 
         return cls(**data, metadata=metadata)
 
@@ -330,18 +330,40 @@ class BatteryDataset:
 
     @staticmethod
     def get_metadata_from_hdf5(path: Union[str, Path]) -> BatteryMetadata:
-        """Open an HDF5 file and read only the metadata
+        """Get battery metadata from a directory of parquet files without reading them
 
-        Parameters
-        ----------
-        path: str, Path
-            Path to an HDF5 file
+        Args:
+            path: Path to the HDF5 file
 
-        Returns
-        -------
-        metadata: BatteryMetadata
+        Returns:
             Metadata from this file
         """
 
         with h5py.File(path, 'r') as f:
-            return BatteryMetadata.parse_raw(f.attrs['metadata'])
+            return BatteryMetadata.model_validate_json(f.attrs['metadata'])
+
+    @staticmethod
+    def get_metadata_from_parquet(path: Union[str, Path]) -> BatteryMetadata:
+        """Get battery metadata from a directory of parquet files without reading them
+
+        Args:
+            path: Path to the directory of Parquet files
+
+        Returns:
+            Metadata from the files
+        """
+
+        # Get a parquet file
+        path = Path(path)
+        if path.is_file():
+            pq_path = path
+        else:
+            pq_path = next(path.glob('*.parquet'), None)
+            if pq_path is None:
+                raise ValueError(f'No parquet files in {path}')
+
+        # Read the metadata from the schema
+        schema = pq.read_schema(pq_path)
+        if b'battery_metadata' not in schema.metadata:
+            raise ValueError(f'No metadata in {pq_path}')
+        return BatteryMetadata.model_validate_json(schema.metadata[b'battery_metadata'])

@@ -123,3 +123,11 @@ def test_parquet(test_df, tmpdir):
     with raises(ValueError) as e:
         BatteryDataset.from_batdata_parquet(tmpdir)
     assert 'No data available' in str(e)
+
+    # Test reading only metadata
+    metadata = BatteryDataset.get_metadata_from_parquet(write_dir)
+    assert metadata == test_df.metadata
+    BatteryDataset.get_metadata_from_parquet(write_dir / 'cycle_stats.parquet')
+    with raises(ValueError) as e:
+        BatteryDataset.get_metadata_from_parquet(tmpdir)
+    assert 'No parquet files' in str(e)
