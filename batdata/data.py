@@ -1,10 +1,15 @@
 """Objects that represent battery datasets"""
+import shutil
+import logging
 from pathlib import Path
-from typing import Union, Optional, Collection, List
+from datetime import datetime
+from typing import Union, Optional, Collection, List, Dict
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
 from pydantic import BaseModel
+from pyarrow import parquet as pq
+from pyarrow import Table
 import pandas as pd
 import h5py
 
@@ -12,6 +17,8 @@ from batdata.schemas import BatteryMetadata
 from batdata.schemas.cycling import RawData, CycleLevelData, ColumnSchema
 
 _subsets = ('raw_data', 'cycle_stats')
+
+logger = logging.getLogger(__name__)
 
 
 class BatteryDataset:
@@ -31,6 +38,8 @@ class BatteryDataset:
      Metadata are stored as an attribute to the
     - ``dict``: Data as a Python dictionary object with two keys: "metadata" for the battery metadata
         and "data" with the cycling data in "list" format ({"column"->["values"]})
+    - ``parquet``: Data into a directory of `Parquet <https://parquet.apache.org/>`
+        files for each types of data. The metadata for the dataset will be saved as well
 
     Many of methods use existing Pandas implementations of I/O operations, but with slight modifications
     to encode the metadata and to ensure a standardized format.
@@ -238,6 +247,44 @@ class BatteryDataset:
         """Read battery data and metadata from a dictionary format"""
 
         return cls(raw_data=pd.DataFrame(d['raw_data']), cycle_stats=pd.DataFrame(d['cycle_stats']), metadata=d['metadata'])
+
+    def to_batdata_parquet(self, path: Union[Path, str], overwrite: bool = True) -> Dict[str, Path]:
+        """Write battery data to a directory of Parquet files
+
+        Args:
+            path: Path in which to write to
+            overwrite: Whether to overwrite an existing directory
+        Returns:
+            Map of the name of the subset to
+        """
+        # Handle existing paths
+        path = Path(path)
+        if path.exists():
+            if not overwrite:
+                raise ValueError(f'Path already exists and overwrite is disabled: {path}')
+            logger.info(f'Deleting existing directory at {path}')
+            shutil.rmtree(path)
+
+        # Make the output directory, then write each Parquet file
+        path.mkdir(parents=True, exist_ok=False)
+        my_metadata = {
+            'battery_metadata': self.metadata.json(exclude_defaults=True),
+            'write_date': datetime.now().isoformat()
+        }
+        written = {}
+        for key in _subsets:
+            if (data := getattr(self, key)) is None:
+                continue
+            # Put the metadata for the battery into the table's schema
+            #  TODO (wardlt): Figure out if it can go in the file-metadata
+            data_path = path / f'{key}.parquet'
+            table = Table.from_pandas(data, preserve_index=False)
+            new_schema = table.schema.with_metadata({**my_metadata, **table.schema.metadata})
+            table = table.cast(new_schema)
+            pq.write_table(table, where=data_path)
+
+            written[key] = data_path
+        return written
 
     @staticmethod
     def get_metadata_from_hdf5(path: Union[str, Path]) -> BatteryMetadata:

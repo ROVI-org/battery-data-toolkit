@@ -5,6 +5,7 @@ import os
 import h5py
 import pandas as pd
 from pandas import HDFStore
+import pyarrow.parquet as pq
 from pytest import fixture, raises
 
 from batdata.data import BatteryDataset
@@ -97,3 +98,11 @@ def test_validate(test_df):
     test_df.metadata.raw_data_columns['other'] = 'A column I added for testing purposes'
     warnings = test_df.validate()
     assert len(warnings) == 0
+
+
+def test_parquet(test_df, tmpdir):
+    written = test_df.to_batdata_parquet(tmpdir / 'parquet-test')
+    assert len(written) == 2
+    for file in written.values():
+        metadata = pq.read_schema(file).metadata
+        assert b'battery_metadata' in metadata
