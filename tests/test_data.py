@@ -5,6 +5,7 @@ import os
 import h5py
 import pandas as pd
 from pandas import HDFStore
+import pyarrow.parquet as pq
 from pytest import fixture, raises
 
 from batdata.data import BatteryDataset
@@ -97,3 +98,36 @@ def test_validate(test_df):
     test_df.metadata.raw_data_columns['other'] = 'A column I added for testing purposes'
     warnings = test_df.validate()
     assert len(warnings) == 0
+
+
+def test_parquet(test_df, tmpdir):
+    write_dir = tmpdir / 'parquet-test'
+    written = test_df.to_batdata_parquet(write_dir)
+    assert len(written) == 2
+    for file in written.values():
+        metadata = pq.read_schema(file).metadata
+        assert b'battery_metadata' in metadata
+
+    # Read it back in, ensure data are recovered
+    read_df = BatteryDataset.from_batdata_parquet(write_dir)
+    assert (read_df.cycle_stats['cycle_number'] == test_df.cycle_stats['cycle_number']).all()
+    assert (read_df.raw_data['voltage'] == test_df.raw_data['voltage']).all()
+    assert read_df.metadata == test_df.metadata
+
+    # Test reading subsets
+    read_df = BatteryDataset.from_batdata_parquet(write_dir, subsets=('cycle_stats',))
+    assert read_df.metadata is not None
+    assert read_df.raw_data is None
+    assert read_df.cycle_stats is not None
+
+    with raises(ValueError) as e:
+        BatteryDataset.from_batdata_parquet(tmpdir)
+    assert 'No data available' in str(e)
+
+    # Test reading only metadata
+    metadata = BatteryDataset.get_metadata_from_parquet(write_dir)
+    assert metadata == test_df.metadata
+    BatteryDataset.get_metadata_from_parquet(write_dir / 'cycle_stats.parquet')
+    with raises(ValueError) as e:
+        BatteryDataset.get_metadata_from_parquet(tmpdir)
+    assert 'No parquet files' in str(e)
