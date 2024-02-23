@@ -101,8 +101,25 @@ def test_validate(test_df):
 
 
 def test_parquet(test_df, tmpdir):
-    written = test_df.to_batdata_parquet(tmpdir / 'parquet-test')
+    write_dir = tmpdir / 'parquet-test'
+    written = test_df.to_batdata_parquet(write_dir)
     assert len(written) == 2
     for file in written.values():
         metadata = pq.read_schema(file).metadata
         assert b'battery_metadata' in metadata
+
+    # Read it back in, ensure data are recovered
+    read_df = BatteryDataset.from_batdata_parquet(write_dir)
+    assert (read_df.cycle_stats['cycle_number'] == test_df.cycle_stats['cycle_number']).all()
+    assert (read_df.raw_data['voltage'] == test_df.raw_data['voltage']).all()
+    assert read_df.metadata == test_df.metadata
+
+    # Test reading subsets
+    read_df = BatteryDataset.from_batdata_parquet(write_dir, subsets=('cycle_stats',))
+    assert read_df.metadata is not None
+    assert read_df.raw_data is None
+    assert read_df.cycle_stats is not None
+
+    with raises(ValueError) as e:
+        BatteryDataset.from_batdata_parquet(tmpdir)
+    assert 'No data available' in str(e)

@@ -1,6 +1,7 @@
 """Objects that represent battery datasets"""
 import shutil
 import logging
+import warnings
 from pathlib import Path
 from datetime import datetime
 from typing import Union, Optional, Collection, List, Dict
@@ -285,6 +286,47 @@ class BatteryDataset:
 
             written[key] = data_path
         return written
+
+    @classmethod
+    def from_batdata_parquet(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None):
+        """Read the battery data from an HDF file
+
+        Args:
+            path: Path to a directory containing parquet files for a specific batter
+            subsets: Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
+        """
+
+        # Find the parquet files, if no specification is listed
+        path = Path(path)
+        if subsets is None:
+            subsets = [p.with_suffix('').name for p in path.glob('*.parquet')]
+
+        if len(subsets) == 0:
+            raise ValueError(f'No data available for {path}')
+
+        # Load each subset
+        metadata = None
+        data = {}
+        for subset in subsets:
+            data_path = path / f'{subset}.parquet'
+            table = pq.read_table(data_path)
+            data[subset] = table
+
+            # Load or check the metadata
+            if b'battery_metadata' not in table.schema.metadata:
+                warnings.warn(f'Metadata not found in {data_path}')
+                continue
+
+            my_metadata = table.schema.metadata[b'battery_metadata']
+            if metadata is None:
+                metadata = my_metadata
+            elif my_metadata != metadata:
+                warnings.warn(f'Battery data different for files in {path}')
+
+        return cls(
+            metadata=BatteryMetadata.model_validate_json(metadata),
+            **data
+        )
 
     @staticmethod
     def get_metadata_from_hdf5(path: Union[str, Path]) -> BatteryMetadata:
