@@ -8,7 +8,6 @@ from batdata.schemas.eis import EISData
 @fixture()
 def example_df() -> pd.DataFrame:
     output = pd.DataFrame({
-        'test_id': [1, 1],
         'frequency': [5e5, 4e5],
         'z_real': [0.241, 0.237],
         'z_imag': [0.431, 0.327],
@@ -26,7 +25,7 @@ def test_consistency(example_df):
     example_df['z_imag'] *= 2
     with raises(ValueError) as e:
         EISData.validate_dataframe(example_df)
-    assert 'imag' in str(e.value)
+    assert 'imaginary' in str(e.value)
 
     example_df['z_real'] *= 2
     with raises(ValueError) as e:
