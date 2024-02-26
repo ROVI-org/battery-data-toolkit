@@ -12,6 +12,7 @@ from .cycling import ColumnSchema
 class EISData(ColumnSchema):
     """Measurements for a specific EIS test"""
 
+    test_id: List[int] = Field(..., description='Integer used to identify rows belonging to the same experiment.')
     test_time: List[float] = Field(None, description="Time from the beginning of the cycling test. Times must be "
                                                      "nonnegative and monotonically increasing. Units: s",
                                    monotonic=True)
@@ -28,9 +29,11 @@ class EISData(ColumnSchema):
         super().validate_dataframe(data, allow_extra_columns)
 
         # Ensure that the cartesian coordinates for the impedance agree with the magnitude
-        z_real_from_polar = np.multiply(data['z_mag'], np.cos(np.deg2rad(data['z_phase'])))
-        z_imag_from_polar = np.multiply(data['z_mag'], np.sin(np.deg2rad(data['z_phase'])))
-        if not np.isclose(z_real_from_polar, data['z_real'], rtol=0.01).all():
-            raise ValueError('Polar and cartesian forms of impedance disagree for real component')
-        if not np.isclose(z_imag_from_polar, data['z_imag'], rtol=0.01).all():
-            raise ValueError('Polar and cartesian forms of impedance disagree for imaginary component')
+        cart = {
+            'real': np.multiply(data['z_mag'], np.cos(np.deg2rad(data['z_phase']))),
+            'imag': np.multiply(data['z_mag'], np.sin(np.deg2rad(data['z_phase'])))
+        }
+        for k, values in cart.items():
+            largest_diff = (np.abs(values - data[f'z_{k}']) / np.clip(values, a_min=1e-6, a_max=None)).max()
+            if largest_diff > 0.01:
+                raise ValueError(f'Polar and cartesian forms of impedance disagree for {k} component. Largest difference: {largest_diff * 100:.1f}%')

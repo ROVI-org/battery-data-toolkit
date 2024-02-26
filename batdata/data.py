@@ -4,7 +4,7 @@ import logging
 import warnings
 from pathlib import Path
 from datetime import datetime
-from typing import Union, Optional, Collection, List, Dict
+from typing import Union, Optional, Collection, List, Dict, Type
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
@@ -16,8 +16,14 @@ import h5py
 
 from batdata.schemas import BatteryMetadata
 from batdata.schemas.cycling import RawData, CycleLevelData, ColumnSchema
+from batdata.schemas.eis import EISData
 
-_subsets = ('raw_data', 'cycle_stats')
+_subsets: Dict[str, Type[ColumnSchema]] = {
+    'raw_data': RawData,
+    'cycle_stats': CycleLevelData,
+    'eis_data': EISData
+}
+"""Mapping between subset and schema"""
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +59,16 @@ class BatteryDataset:
     cycle_stats: Optional[pd.DataFrame] = None
     """Summary statistics of each cycle"""
 
+    eis_data: Optional[pd.DataFrame] = None
+    """Electrochemical Impedance Spectroscopy (EIS) data"""
+
     metadata: BatteryMetadata
     """Metadata for the battery construction and testing"""
 
     def __init__(self, metadata: Union[BatteryMetadata, dict] = None,
                  raw_data: Optional[pd.DataFrame] = None,
-                 cycle_stats: Optional[pd.DataFrame] = None):
+                 cycle_stats: Optional[pd.DataFrame] = None,
+                 eis_data: Optional[pd.DataFrame] = None):
         """
 
         Parameters
@@ -69,6 +79,8 @@ class BatteryDataset:
             Time-series data of the battery state
         cycle_stats: pd.DataFrame
             Summaries of each cycle
+        eis_data: pd.DataFrame
+            EIS data taken at multiple times
         """
         if metadata is None:
             metadata = {}
@@ -77,6 +89,7 @@ class BatteryDataset:
         self.metadata = BatteryMetadata(**metadata)
         self.raw_data = raw_data
         self.cycle_stats = cycle_stats
+        self.eis_data = eis_data
 
     def validate_columns(self, allow_extra_columns: bool = True):
         """Determine whether the column types are appropriate
@@ -91,10 +104,10 @@ class BatteryDataset:
         ValueError
             If the dataset fails validation
         """
-        if self.raw_data is not None:
-            RawData.validate_dataframe(self.raw_data, allow_extra_columns)
-        if self.cycle_stats is not None:
-            CycleLevelData.validate_dataframe(self.cycle_stats, allow_extra_columns)
+        for attr_name, schema in _subsets.items():
+            data = getattr(self, attr_name)
+            if data is not None:
+                schema.validate_dataframe(data, allow_extra_columns)
 
     def validate(self) -> List[str]:
         """Validate the data stored in this object
@@ -111,26 +124,20 @@ class BatteryDataset:
         self.validate_columns()
         output = []
 
-        # Mapping between subset and schema
-        _schemas = {
-            'raw_data': RawData,
-            'cycle_stats': CycleLevelData
-        }
-
         # Check whether there are undocumented columns
-        def _find_undefined_columns(data: pd.DataFrame, column_schema: ColumnSchema) -> List[str]:
+        def _find_undefined_columns(data: pd.DataFrame, column_schema: Type[ColumnSchema]) -> List[str]:
             """Get the list of columns which are not defined in the schema"""
 
-            cols = set(data.columns).difference(column_schema.__fields__)
+            cols = set(data.columns).difference(column_schema.model_fields)
             return list(cols)
 
-        for subset in _subsets:
-            data = getattr(self, subset)
-            defined_columns = getattr(self.metadata, f'{subset}_columns')
+        for attr_name, schema in _subsets.items():
+            data = getattr(self, attr_name)
+            defined_columns = getattr(self.metadata, f'{attr_name}_columns')
             if data is not None:
-                new_cols = _find_undefined_columns(data, _schemas[subset])
+                new_cols = _find_undefined_columns(data, schema)
                 undefined = set(new_cols).difference(defined_columns.keys())
-                output.extend([f'Undefined column, {u}, in {subset}. Add a description into metadata.{subset}_columns'
+                output.extend([f'Undefined column, {u}, in {attr_name}. Add a description into metadata.{attr_name}_columns'
                                for u in undefined])
 
         return output
@@ -164,12 +171,11 @@ class BatteryDataset:
 
         # Store the various datasets
         #  Note that we use the "table" format to allow for partial reads / querying
-        if self.raw_data is not None:
-            self.raw_data.to_hdf(path_or_buf, 'raw_data', complevel=complevel, complib=complib,
-                                 append=False, format='table', index=False)
-        if self.cycle_stats is not None:
-            self.cycle_stats.to_hdf(path_or_buf, 'cycle_stats', complevel=complevel, complib=complib,
-                                    append=False, format='table', index=False)
+        for subset in _subsets:
+            data = getattr(self, subset)
+            if data is not None:
+                self.raw_data.to_hdf(path_or_buf, subset, complevel=complevel, complib=complib,
+                                     append=False, format='table', index=False)
 
         # Create logic for adding metadata
         def add_metadata(f: HDFStore):
@@ -247,7 +253,12 @@ class BatteryDataset:
     def from_batdata_dict(cls, d):
         """Read battery data and metadata from a dictionary format"""
 
-        return cls(raw_data=pd.DataFrame(d['raw_data']), cycle_stats=pd.DataFrame(d['cycle_stats']), metadata=d['metadata'])
+        # Convert the keys to a dataframe
+        inputs = d.copy()
+        for k in _subsets:
+            if k in inputs:
+                inputs[k] = pd.DataFrame(d[k])
+        return cls(**inputs)
 
     def to_batdata_parquet(self, path: Union[Path, str], overwrite: bool = True) -> Dict[str, Path]:
         """Write battery data to a directory of Parquet files
