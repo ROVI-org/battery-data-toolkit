@@ -118,6 +118,9 @@ def convert_eis_data_to_batdata(input_df: pd.DataFrame) -> pd.DataFrame:
         EIS data in batdata format
     """
 
+    # Filter out the non-EIS data
+    input_df = input_df[~input_df['Frequency_Hz'].isnull()]
+
     # Use the cycle index as a test index
     output = pd.DataFrame()
     output['test_id'] = input_df['Cycle_Index']
