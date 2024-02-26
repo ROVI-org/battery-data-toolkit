@@ -118,9 +118,9 @@ def convert_eis_data_to_batdata(input_df: pd.DataFrame) -> pd.DataFrame:
         EIS data in batdata format
     """
 
-    # Store frequency
+    # Use the cycle index as a test index
     output = pd.DataFrame()
-    output['frequency'] = input_df['Frequency_Hz']
+    output['test_id'] = input_df['Cycle_Index']
 
     # Drop units off and make lower case
     cols = ['Frequency_Hz', 'Z_Imag_Ohm', 'Z_Real_Ohm', 'Z_Mag_Ohm', 'Z_Phase_Degree']

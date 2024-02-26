@@ -12,6 +12,7 @@ from .cycling import ColumnSchema
 class EISData(ColumnSchema):
     """Measurements for a specific EIS test"""
 
+    test_id: List[int] = Field(..., description='Integer used to identify rows belonging to the same experiment.')
     test_time: List[float] = Field(None, description="Time from the beginning of the cycling test. Times must be "
                                                      "nonnegative and monotonically increasing. Units: s",
                                    monotonic=True)
