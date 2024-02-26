@@ -109,6 +109,27 @@ def convert_summary_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd.Da
     return output
 
 
+def convert_eis_data_to_batdata(input_df: pd.DataFrame) -> pd.DataFrame:
+    """Rename the columns from an NREL-standard set of EIS data to our names and conventions
+
+    Args:
+        input_df: NREL-format raw data
+    Returns:
+        EIS data in batdata format
+    """
+
+    # Store frequency
+    output = pd.DataFrame()
+    output['frequency'] = input_df['Frequency_Hz']
+
+    # Drop units off and make lower case
+    cols = ['Frequency_Hz', 'Z_Imag_Ohm', 'Z_Real_Ohm', 'Z_Mag_Ohm', 'Z_Phase_Degree']
+    for col in cols:
+        my_name = "_".join(col.lower().split("_")[:-1])
+        output[my_name] = input_df[col]
+    return output
+
+
 @dataclass
 class BDExtractor(BatteryDataExtractor):
     """Read data from the batterydata.energy.gov CSV format
@@ -139,7 +160,7 @@ class BDExtractor(BatteryDataExtractor):
             metadata = BatteryMetadata()
 
         # Process each file
-        raw_data = cycle_stats = None
+        raw_data = cycle_stats = eis_data = None
         for path in group:
             match = _fname_match.match(Path(path).name)
             if match is None:
@@ -154,11 +175,18 @@ class BDExtractor(BatteryDataExtractor):
             if data_type == 'summary':
                 cycle_stats = convert_summary_to_batdata(pd.read_csv(path), self.store_all)
             elif data_type == 'raw':
-                raw_data = convert_raw_signal_to_batdata(pd.read_csv(path), self.store_all)
+                nrel_data = pd.read_csv(path)
+                raw_data = convert_raw_signal_to_batdata(nrel_data, self.store_all)
+
+                # Get EIS data, if available
+                if not (nrel_data['Z_Imag_Ohm'].isna()).all():
+                    eis_data = convert_eis_data_to_batdata(nrel_data)
             else:
                 raise ValueError(f'Data type unrecognized: {data_type}')
 
-        return BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, metadata=metadata)
+        # Separate out the EIS data, if possible
+
+        return BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, eis_data=eis_data, metadata=metadata)
 
     def implementors(self) -> List[str]:
         return ['Logan Ward <lward@anl.gov>']

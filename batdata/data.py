@@ -67,7 +67,8 @@ class BatteryDataset:
 
     def __init__(self, metadata: Union[BatteryMetadata, dict] = None,
                  raw_data: Optional[pd.DataFrame] = None,
-                 cycle_stats: Optional[pd.DataFrame] = None):
+                 cycle_stats: Optional[pd.DataFrame] = None,
+                 eis_data: Optional[pd.DataFrame] = None):
         """
 
         Parameters
@@ -78,6 +79,8 @@ class BatteryDataset:
             Time-series data of the battery state
         cycle_stats: pd.DataFrame
             Summaries of each cycle
+        eis_data: pd.DataFrame
+            EIS data taken at multiple times
         """
         if metadata is None:
             metadata = {}
@@ -86,6 +89,7 @@ class BatteryDataset:
         self.metadata = BatteryMetadata(**metadata)
         self.raw_data = raw_data
         self.cycle_stats = cycle_stats
+        self.eis_data = eis_data
 
     def validate_columns(self, allow_extra_columns: bool = True):
         """Determine whether the column types are appropriate
