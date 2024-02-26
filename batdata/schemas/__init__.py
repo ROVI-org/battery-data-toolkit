@@ -42,3 +42,4 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     # Description of additional columns
     raw_data_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the raw data')
     cycle_stats_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the cycle stats')
+    eis_data_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the EIS data')
