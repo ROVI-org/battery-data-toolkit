@@ -25,7 +25,7 @@ def test_consistency(example_df):
     example_df['z_imag'] *= 2
     with raises(ValueError) as e:
         EISData.validate_dataframe(example_df)
-    assert 'imaginary' in str(e.value)
+    assert 'imag' in str(e.value)
 
     example_df['z_real'] *= 2
     with raises(ValueError) as e:
