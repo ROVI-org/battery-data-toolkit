@@ -19,12 +19,12 @@ class CapacityPerCycle(CycleSummarizer):
        by computing the integral of the capacity over time.
        We refer to this integral as the dSOC.
     2. Determine whether the battery started from a charged state
-       by determining if the largest capacity change is negative
+       by determining if the largest capacity change is positive
        (i.e., if the point most different state of charge from the
        start is _more discharged_ than the starting point).
        The code will raise a warning if the quantities are similar.
     3. If starting from a charged state, the discharge capacity
-       is the maximum change in state of charge (``-dSOC.min()``).
+       is the maximum change in state of charge (``dSOC.max()``).
        The charge capacity is the amount of charge transferred to the
        battery between this maximally-discharged state and the end
        the of the cycle (``dSOC[-1] - dSOC.min()``)
@@ -74,8 +74,8 @@ class CapacityPerCycle(CycleSummarizer):
             energy_change = cumulative_simpson(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
 
             # Estimate if the battery starts as charged or discharged
-            max_discharge = -capacity_change.min()
-            max_charge = capacity_change.max()
+            max_charge = -capacity_change.min()
+            max_discharge = capacity_change.max()
             starts_charged = max_discharge > max_charge
             if np.isclose(max_discharge, max_charge, rtol=0.01):
                 warnings.warn('Unable to clearly detect if battery started charged or discharged. '
@@ -86,14 +86,14 @@ class CapacityPerCycle(CycleSummarizer):
             #  Whether the measured capacities are
             if starts_charged:
                 discharge_cap = max_discharge
-                charge_cap = discharge_cap - capacity_change[-1]
-                discharge_eng = -energy_change.min()
-                charge_eng = energy_change[-1] + discharge_eng
+                charge_cap = max_discharge - capacity_change[-1]
+                discharge_eng = energy_change.max()
+                charge_eng = discharge_eng - energy_change[-1]
             else:
                 charge_cap = max_charge
-                discharge_cap = charge_cap - capacity_change[-1]
-                charge_eng = energy_change.max()
-                discharge_eng = charge_eng - energy_change[-1]
+                discharge_cap = capacity_change[-1] + max_charge
+                charge_eng = -energy_change.min()
+                discharge_eng = energy_change[-1] + charge_eng
 
             cycle_data.loc[cyc, 'discharge_energy'] = discharge_eng
             cycle_data.loc[cyc, 'charge_energy'] = charge_eng
@@ -111,8 +111,8 @@ class StateOfCharge(RawDataEnhancer):
     of current and voltage.
 
     Output dataframe has 4 new columns:
-        - ``cycle_capacity``: Amount of charge added to the battery over the cycle, in A-hr
-        - ``cycle_energy``: Amount of energy added to the battery over the cycle, in J
+        - ``cycle_capacity``: Amount of charge dispersed from the battery over the cycle, in A-hr
+        - ``cycle_energy``: Amount of energy dispersed from the battery over the cycle, in J
     """
 
     column_names = ['cycle_capacity', 'cycle_energy']
