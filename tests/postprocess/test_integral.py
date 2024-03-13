@@ -53,6 +53,8 @@ def test_capacity(file_path, from_charged):
     #  charging = I * \int_0^t (2.1 + t/3600) = I * (2.1t + t^2/7200)
     if from_charged:
         answer = current * (2.9 * first_steps['test_time'] - first_steps['test_time'] ** 2 / 7200)
+        assert (answer[1:] > 0).all()
     else:
         answer = current * (2.1 * first_steps['test_time'] + first_steps['test_time'] ** 2 / 7200)
+        assert (answer[1:] < 0).all()
     assert np.isclose(first_steps['cycle_energy'], answer, rtol=1e-3).all()
