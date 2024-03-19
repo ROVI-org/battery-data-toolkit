@@ -27,7 +27,7 @@ class CapacityPerCycle(CycleSummarizer):
        is the maximum change in state of charge (``dSOC.max()``).
        The charge capacity is the amount of charge transferred to the
        battery between this maximally-discharged state and the end
-       the of the cycle (``dSOC[-1] - dSOC.min()``)
+       the of the cycle (``dSOC.max() - dSOC[-1]``)
     4. If starting from a discharged state, the charge capacity
        is the maximum change in state of charge and the discharge capacity
        is the amount transferred from the battery into the end of the cycle.
