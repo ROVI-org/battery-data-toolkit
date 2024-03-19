@@ -154,6 +154,16 @@ class RawData(ColumnSchema):
                                                        " method, such as change from constant voltage to"
                                                        " constant current")
 
+    # Derived quantities
+    cycle_capacity: List[float] = Field(None,
+                                        description="Cumulative change in amount of charge transferred from a battery since the start of a cycle. "
+                                                    "Positive values indicate the battery has discharged since the start of the cycle."
+                                        )
+    cycle_energy: List[float] = Field(None,
+                                      description="Cumulative change in amount of energy transferred from a battery the start of a cycle. "
+                                                  "Positive values indicate the battery has discharged more than since the start of the cycle."
+                                      )
+
 
 class CycleLevelData(ColumnSchema):
     """Statistics about the performance of a cell over a certain cycle"""
