@@ -177,9 +177,6 @@ class BatteryDataset:
                 data.to_hdf(path_or_buf, subset, complevel=complevel, 
                             complib=complib, append=False, format='table', 
                             index=False)
-                # self.raw_data.to_hdf(path_or_buf, subset, complevel=complevel,
-                #                      complib=complib, append=False,
-                #                      format='table', index=False
 
         # Create logic for adding metadata
         def add_metadata(f: HDFStore):
