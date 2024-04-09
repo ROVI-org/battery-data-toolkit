@@ -5,7 +5,8 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from scipy.integrate import cumulative_simpson
+# from scipy.integrate import cumulative_simpson
+from scipy.integrate import cumtrapz
 
 from batdata.postprocess.base import RawDataEnhancer, CycleSummarizer
 
@@ -70,12 +71,14 @@ class CapacityPerCycle(CycleSummarizer):
 
             # Perform the integration
             # TODO (wardlt): Re-use columns from raw data if available
-            capacity_change = cumulative_simpson(cycle_subset['current'], x=cycle_subset['test_time'])
-            energy_change = cumulative_simpson(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
+            capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'])
+            energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
+            # capacity_change = cumulative_simpson(cycle_subset['current'], x=cycle_subset['test_time'])
+            # energy_change = cumulative_simpson(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
 
             # Estimate if the battery starts as charged or discharged
-            max_charge = -capacity_change.min()
-            max_discharge = capacity_change.max()
+            max_charge = capacity_change.max()
+            max_discharge = -capacity_change.min()
             starts_charged = max_discharge > max_charge
             if np.isclose(max_discharge, max_charge, rtol=0.01):
                 warnings.warn('Unable to clearly detect if battery started charged or discharged. '
@@ -86,19 +89,20 @@ class CapacityPerCycle(CycleSummarizer):
             #  Whether the measured capacities are
             if starts_charged:
                 discharge_cap = max_discharge
-                charge_cap = max_discharge - capacity_change[-1]
-                discharge_eng = energy_change.max()
-                charge_eng = discharge_eng - energy_change[-1]
+                charge_cap = capacity_change[-1] + max_discharge
+                discharge_eng = -energy_change.min() 
+                charge_eng = energy_change[-1] + discharge_eng
             else:
                 charge_cap = max_charge
-                discharge_cap = capacity_change[-1] + max_charge
-                charge_eng = -energy_change.min()
-                discharge_eng = energy_change[-1] + charge_eng
+                discharge_cap = max_charge - capacity_change[-1]
+                charge_eng = energy_change.max()
+                discharge_eng = charge_eng - energy_change[-1]
 
-            cycle_data.loc[cyc, 'discharge_energy'] = discharge_eng
-            cycle_data.loc[cyc, 'charge_energy'] = charge_eng
-            cycle_data.loc[cyc, 'discharge_capacity'] = discharge_cap / 3600.  # To A-hr
-            cycle_data.loc[cyc, 'charge_capacity'] = charge_cap / 3600.
+            cycle_data.loc[cyc, 'charge_energy'] = charge_eng / 3600. # To W-hr
+            cycle_data.loc[cyc, 'discharge_energy'] = discharge_eng / 3600. 
+            cycle_data.loc[cyc, 'charge_capacity'] = charge_cap / 3600. # To A-hr
+            cycle_data.loc[cyc, 'discharge_capacity'] = discharge_cap / 3600.  
+            
 
 
 class StateOfCharge(RawDataEnhancer):
