@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_simpson
 
 
 from batdata.postprocess.base import RawDataEnhancer, CycleSummarizer
