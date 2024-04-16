@@ -5,8 +5,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from scipy.integrate import cumulative_simpson
-
+from scipy.integrate import cumtrapz
 
 from batdata.postprocess.base import RawDataEnhancer, CycleSummarizer
 
@@ -89,7 +88,7 @@ class CapacityPerCycle(CycleSummarizer):
             if starts_charged:
                 discharge_cap = max_discharge
                 charge_cap = capacity_change[-1] + max_discharge
-                discharge_eng = -energy_change.min() 
+                discharge_eng = -energy_change.min()
                 charge_eng = energy_change[-1] + discharge_eng
             else:
                 charge_cap = max_charge
@@ -97,10 +96,10 @@ class CapacityPerCycle(CycleSummarizer):
                 charge_eng = energy_change.max()
                 discharge_eng = charge_eng - energy_change[-1]
 
-            cycle_data.loc[cyc, 'charge_energy'] = charge_eng / 3600. # To W-hr
-            cycle_data.loc[cyc, 'discharge_energy'] = discharge_eng / 3600. 
-            cycle_data.loc[cyc, 'charge_capacity'] = charge_cap / 3600. # To A-hr
-            cycle_data.loc[cyc, 'discharge_capacity'] = discharge_cap / 3600.  
+            cycle_data.loc[cyc, 'charge_energy'] = charge_eng / 3600.  # To W-hr
+            cycle_data.loc[cyc, 'discharge_energy'] = discharge_eng / 3600.
+            cycle_data.loc[cyc, 'charge_capacity'] = charge_cap / 3600.  # To A-hr
+            cycle_data.loc[cyc, 'discharge_capacity'] = discharge_cap / 3600.
 
 
 class StateOfCharge(RawDataEnhancer):
@@ -133,8 +132,8 @@ class StateOfCharge(RawDataEnhancer):
             cycle_subset = ordered_copy.iloc[start_ind:stop_ind]
 
             # Perform the integration
-            capacity_change = cumulative_simpson(cycle_subset['current'], x=cycle_subset['test_time'], initial=0)
-            energy_change = cumulative_simpson(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
+            capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'], initial=0)
+            energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
 
             # Store them in the raw data
             data.loc[cycle_subset['index'], 'cycle_capacity'] = capacity_change / 3600
