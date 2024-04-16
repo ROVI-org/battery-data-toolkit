@@ -80,11 +80,10 @@ class CapacityPerCycle(CycleSummarizer):
             starts_charged = max_discharge > max_charge
             if np.isclose(max_discharge, max_charge, rtol=0.01):
                 warnings.warn('Unable to clearly detect if battery started charged or discharged. '
-                              f'Amount discharged is {max_discharge:.2f} A-s, charged is {max_charge:.2f} A-s')
+                              f'Amount discharged is {max_discharge:.2e} A-s, charged is {max_charge:.2e} A-s')
 
             # Assign the charge and discharge capacity
             #  One capacity is beginning to maximum change, the other is maximum change to end
-            #  Whether the measured capacities are
             if starts_charged:
                 discharge_cap = max_discharge
                 charge_cap = capacity_change[-1] + max_discharge

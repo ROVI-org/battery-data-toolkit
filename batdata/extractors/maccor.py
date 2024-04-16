@@ -51,7 +51,7 @@ class MACCORExtractor(BatteryDataExtractor):
         df_out['file_number'] = file_number  # df_out['cycle_number']*0
         df_out['test_time'] = df['Test (Min)'] * 60 - df['Test (Min)'].iloc[0] * 60 + start_time
         df_out['state'] = df['State']
-        df_out['current'] = df['Amps']
+        df_out['current'] = -df['Amps']
         df_out['current'] = np.where(df['State'] == 'D', -1 * df_out['current'], df_out['current'])
         #   0 is rest, 1 is charge, -1 is discharge
         df_out.loc[df_out['state'] == 'R', 'state'] = ChargingState.hold

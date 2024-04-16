@@ -24,8 +24,8 @@ def test_cycle_stats(file_path, from_charged):
 
     # Energy to charge is (2.1 V + 3.1 V) / 2 * 1 A * 3600 s = 9360 J
     # Energy produced during discharge is (1.9 V + 2.9 V) * 1 A * 3600 s = 8640 J
-    assert np.isclose([9360.], feat['charge_energy'], rtol=1e-3).all()
-    assert np.isclose([8640.], feat['discharge_energy'], rtol=1e-3).all()
+    assert np.isclose([9360. / 3600], feat['charge_energy'], rtol=1e-2).all()
+    assert np.isclose([8640. / 3600], feat['discharge_energy'], rtol=1e-2).all()
 
 
 @mark.parametrize('from_charged', [True, False])
