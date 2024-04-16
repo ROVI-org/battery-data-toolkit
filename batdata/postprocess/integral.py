@@ -135,5 +135,5 @@ class StateOfCharge(RawDataEnhancer):
             energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
 
             # Store them in the raw data
-            data.loc[cycle_subset['index'], 'cycle_capacity'] = capacity_change / 3600
-            data.loc[cycle_subset['index'], 'cycle_energy'] = energy_change
+            data.loc[cycle_subset['index'], 'cycle_capacity'] = capacity_change / 3600  # To A-hr
+            data.loc[cycle_subset['index'], 'cycle_energy'] = energy_change / 3600  # To W-hr
