@@ -5,8 +5,8 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-# from scipy.integrate import cumulative_simpson
 from scipy.integrate import cumtrapz
+
 
 from batdata.postprocess.base import RawDataEnhancer, CycleSummarizer
 
@@ -73,12 +73,11 @@ class CapacityPerCycle(CycleSummarizer):
             # TODO (wardlt): Re-use columns from raw data if available
             capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'])
             energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
-            # capacity_change = cumulative_simpson(cycle_subset['current'], x=cycle_subset['test_time'])
-            # energy_change = cumulative_simpson(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
 
             # Estimate if the battery starts as charged or discharged
             max_charge = capacity_change.max()
             max_discharge = -capacity_change.min()
+
             starts_charged = max_discharge > max_charge
             if np.isclose(max_discharge, max_charge, rtol=0.01):
                 warnings.warn('Unable to clearly detect if battery started charged or discharged. '
@@ -102,7 +101,6 @@ class CapacityPerCycle(CycleSummarizer):
             cycle_data.loc[cyc, 'discharge_energy'] = discharge_eng / 3600. 
             cycle_data.loc[cyc, 'charge_capacity'] = charge_cap / 3600. # To A-hr
             cycle_data.loc[cyc, 'discharge_capacity'] = discharge_cap / 3600.  
-            
 
 
 class StateOfCharge(RawDataEnhancer):
