@@ -4,6 +4,7 @@ from pytest import mark
 import numpy as np
 
 from batdata.data import BatteryDataset
+from batdata.extractors.batterydata import BDExtractor
 from batdata.postprocess.integral import CapacityPerCycle, StateOfCharge
 
 
@@ -58,3 +59,18 @@ def test_capacity(file_path, from_charged):
         answer = current * (2.1 * first_steps['test_time'] + first_steps['test_time'] ** 2 / 7200)
         assert (answer[1:] > 0).all()
     assert np.isclose(first_steps['cycle_energy'], answer / 3600, rtol=1e-3).all()
+
+
+def test_against_battery_data_gov(file_path):
+    """See if our capacities are similar to those computed in BatteryData.Energy.Gov"""
+
+    cyc_id = 8
+    data = BDExtractor().parse_to_dataframe(list((file_path / 'batterydata').glob('p492*')))
+    orig_data = data.cycle_stats[['discharge_capacity', 'charge_capacity', 'discharge_energy', 'charge_energy']].copy().iloc[cyc_id]
+
+    # Recompute
+    CapacityPerCycle().compute_features(data)
+    new_data = data.cycle_stats[['discharge_capacity', 'charge_capacity', 'discharge_energy', 'charge_energy']].iloc[cyc_id]
+    diff = np.abs(orig_data.values - new_data.values)
+    agree = diff < 1e-3
+    assert agree.all(), diff
