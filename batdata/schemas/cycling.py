@@ -174,11 +174,11 @@ class CycleLevelData(ColumnSchema):
     cycle_duration: List[float] = Field(None, description='Duration of this cycle. Units: s')
 
     # Related to the total amount of energy or electrons moved
-    discharge_capacity: List[float] = Field(None, description='Total amount of electrons moved during discharge. Units: A-hr')
-    discharge_energy: List[float] = Field(None, description='Total amount of energy released during discharge. Units: W-hr')
-    charge_capacity: List[float] = Field(None, description='Total amount of electrons moved during charge. Units: A-hr')
-    charge_energy: List[float] = Field(None, description='Total amount of energy stored during charge. Units: W-hr')
-    coulomb_efficiency: List[float] = Field(None, description='Fraction of electrons that are lost during charge and recharge. Units: %')
+    capacity_discharge: List[float] = Field(None, description='Total amount of electrons released during discharge. Units: A-hr')
+    energy_discharge: List[float] = Field(None, description='Total amount of energy released during discharge. Units: W-hr')
+    capacity_charge: List[float] = Field(None, description='Total amount of electrons stored during charge. Units: A-hr')
+    energy_charge: List[float] = Field(None, description='Total amount of energy stored during charge. Units: W-hr')
+    coulomb_efficiency: List[float] = Field(None, description='Fraction of electric charge that is lost during charge and recharge. Units: %')
     energy_efficiency: List[float] = Field(None, description='Amount of energy lost during charge and discharge')
 
     # Related to voltage

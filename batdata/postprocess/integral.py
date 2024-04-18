@@ -40,18 +40,19 @@ class CapacityPerCycle(CycleSummarizer):
         Measurements of capacity and energy assume a cycle returns
         the battery to the same state as it started the cycle.
 
-    Output dataframe has 4 new columns:
-        - ``discharge_capacity``: Discharge energy per cycle in A-hr
-        - ``charge_capacity``: Charge energy per the cycle in A-hr
-        - ``discharge_energy``: Discharge energy per cycle in J
-        - ``charge_energy``: Charge energy per the cycle in J
+    Output dataframe has 4 new columns.
+        - ``capacity_discharge``: Discharge capacity per cycle in A-hr
+        - ``capacity_charge``: Charge capacity per the cycle in A-hr
+        - ``energy_charge``: Discharge energy per cycle in J
+        - ``energy_discharge``: Charge energy per the cycle in J
+    The full definitions are provided in the :class:`~batdata.schemas.cycling.CycleLevelData` schema
     """
 
     @property
     def column_names(self) -> List[str]:
         output = []
         for name in ['charge', 'discharge']:
-            output.extend([f'{name}_energy', f'{name}_capacity'])
+            output.extend([f'energy_{name}', f'capacity_{name}'])
         return output
 
     def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
@@ -95,10 +96,10 @@ class CapacityPerCycle(CycleSummarizer):
                 charge_eng = energy_change.max()
                 discharge_eng = charge_eng - energy_change[-1]
 
-            cycle_data.loc[cyc, 'charge_energy'] = charge_eng / 3600.  # To W-hr
-            cycle_data.loc[cyc, 'discharge_energy'] = discharge_eng / 3600.
-            cycle_data.loc[cyc, 'charge_capacity'] = charge_cap / 3600.  # To A-hr
-            cycle_data.loc[cyc, 'discharge_capacity'] = discharge_cap / 3600.
+            cycle_data.loc[cyc, 'energy_charge'] = charge_eng / 3600.  # To W-hr
+            cycle_data.loc[cyc, 'energy_discharge'] = discharge_eng / 3600.
+            cycle_data.loc[cyc, 'capacity_charge'] = charge_cap / 3600.  # To A-hr
+            cycle_data.loc[cyc, 'capacity_discharge'] = discharge_cap / 3600.
 
 
 class StateOfCharge(RawDataEnhancer):
