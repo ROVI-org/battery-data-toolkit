@@ -63,10 +63,10 @@ def convert_raw_signal_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd
 
 _name_map_summary = {
     'Cycle_Index': 'cycle_number',
-    'Q_chg': 'charge_capacity',
-    'E_chg': 'charge_energy',
-    'Q_dis': 'discharge_capacity',
-    'E_dis': 'discharge_energy',
+    'Q_chg': 'capacity_charge',
+    'E_chg': 'energy_charge',
+    'Q_dis': 'capacity_discharge',
+    'E_dis': 'energy_discharge',
     'CE': 'coulomb_efficiency',
     'EE': 'energy_efficiency',
     'tsecs_start': 'cycle_start',

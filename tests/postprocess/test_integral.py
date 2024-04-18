@@ -66,11 +66,29 @@ def test_against_battery_data_gov(file_path):
 
     cyc_id = 8
     data = BDExtractor().parse_to_dataframe(list((file_path / 'batterydata').glob('p492*')))
-    orig_data = data.cycle_stats[['discharge_capacity', 'charge_capacity', 'discharge_energy', 'charge_energy']].copy().iloc[cyc_id]
+    orig_data = data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy().iloc[cyc_id]
 
     # Recompute
     CapacityPerCycle().compute_features(data)
-    new_data = data.cycle_stats[['discharge_capacity', 'charge_capacity', 'discharge_energy', 'charge_energy']].iloc[cyc_id]
+    new_data = data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].iloc[cyc_id]
     diff = np.abs(orig_data.values - new_data.values)
     agree = diff < 1e-3
     assert agree.all(), diff
+
+
+def test_reuse_integrals(file_path):
+    example_data = get_example_data(file_path, True)
+
+    # Get a baseline capacity
+    CapacityPerCycle(reuse_integrals=False).compute_features(example_data)
+    initial_data = example_data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
+
+    # Compute the integrals then intentionally increase capacity and energy 2x
+    StateOfCharge().compute_features(example_data)
+    for c in ['cycle_energy', 'cycle_capacity']:
+        example_data.raw_data[c] *= 2
+
+    # Recompute capacity and energy measurements, which should have increased by 2x
+    CapacityPerCycle(reuse_integrals=True).compute_features(example_data)
+    final_data = example_data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
+    assert np.isclose(initial_data.values * 2, final_data.values, atol=1e-3).all()

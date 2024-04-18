@@ -48,6 +48,14 @@ class CapacityPerCycle(CycleSummarizer):
     The full definitions are provided in the :class:`~batdata.schemas.cycling.CycleLevelData` schema
     """
 
+    def __init__(self, reuse_integrals: bool = True):
+        """
+
+        Args:
+            reuse_integrals: Whether to reuse the ``cycle_capacity`` and ``cycle_energy`` if they are available
+        """
+        self.reuse_integrals = reuse_integrals
+
     @property
     def column_names(self) -> List[str]:
         output = []
@@ -70,9 +78,12 @@ class CapacityPerCycle(CycleSummarizer):
             cycle_subset = raw_data.iloc[start_ind:stop_ind]
 
             # Perform the integration
-            # TODO (wardlt): Re-use columns from raw data if available
-            capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'])
-            energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
+            if self.reuse_integrals and 'cycle_energy' in cycle_subset.columns and 'cycle_capacity' in cycle_subset.columns:
+                capacity_change = cycle_subset['cycle_capacity'].values * 3600  # To A-s
+                energy_change = cycle_subset['cycle_energy'].values * 3600  # To J
+            else:
+                capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'])
+                energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
 
             # Estimate if the battery starts as charged or discharged
             max_charge = capacity_change.max()
