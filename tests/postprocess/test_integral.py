@@ -4,6 +4,7 @@ from pytest import mark
 import numpy as np
 
 from batdata.data import BatteryDataset
+from batdata.extractors.batterydata import BDExtractor
 from batdata.postprocess.integral import CapacityPerCycle, StateOfCharge
 
 
@@ -19,13 +20,13 @@ def test_cycle_stats(file_path, from_charged):
     assert np.isclose([0], feat['cycle_number']).all()
 
     # Capacity is the 1 A-hr
-    assert np.isclose([1.0], feat['discharge_capacity'], rtol=1e-2).all()
-    assert np.isclose([1.0], feat['charge_capacity'], rtol=1e-2).all()
+    assert np.isclose([1.0], feat['capacity_discharge'], rtol=1e-2).all()
+    assert np.isclose([1.0], feat['capacity_charge'], rtol=1e-2).all()
 
     # Energy to charge is (2.1 V + 3.1 V) / 2 * 1 A * 3600 s = 9360 J
     # Energy produced during discharge is (1.9 V + 2.9 V) * 1 A * 3600 s = 8640 J
-    assert np.isclose([9360.], feat['charge_energy'], rtol=1e-3).all()
-    assert np.isclose([8640.], feat['discharge_energy'], rtol=1e-3).all()
+    assert np.isclose([9360. / 3600], feat['energy_charge'], rtol=1e-2).all()
+    assert np.isclose([8640. / 3600], feat['energy_discharge'], rtol=1e-2).all()
 
 
 @mark.parametrize('from_charged', [True, False])
@@ -53,8 +54,41 @@ def test_capacity(file_path, from_charged):
     #  charging = I * \int_0^t (2.1 + t/3600) = I * (2.1t + t^2/7200)
     if from_charged:
         answer = current * (2.9 * first_steps['test_time'] - first_steps['test_time'] ** 2 / 7200)
-        assert (answer[1:] > 0).all()
+        assert (answer[1:] < 0).all()
     else:
         answer = current * (2.1 * first_steps['test_time'] + first_steps['test_time'] ** 2 / 7200)
-        assert (answer[1:] < 0).all()
-    assert np.isclose(first_steps['cycle_energy'], answer, rtol=1e-3).all()
+        assert (answer[1:] > 0).all()
+    assert np.isclose(first_steps['cycle_energy'], answer / 3600, rtol=1e-3).all()
+
+
+def test_against_battery_data_gov(file_path):
+    """See if our capacities are similar to those computed in BatteryData.Energy.Gov"""
+
+    cyc_id = 8
+    data = BDExtractor().parse_to_dataframe(list((file_path / 'batterydata').glob('p492*')))
+    orig_data = data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy().iloc[cyc_id]
+
+    # Recompute
+    CapacityPerCycle().compute_features(data)
+    new_data = data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].iloc[cyc_id]
+    diff = np.abs(orig_data.values - new_data.values)
+    agree = diff < 1e-3
+    assert agree.all(), diff
+
+
+def test_reuse_integrals(file_path):
+    example_data = get_example_data(file_path, True)
+
+    # Get a baseline capacity
+    CapacityPerCycle(reuse_integrals=False).compute_features(example_data)
+    initial_data = example_data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
+
+    # Compute the integrals then intentionally increase capacity and energy 2x
+    StateOfCharge().compute_features(example_data)
+    for c in ['cycle_energy', 'cycle_capacity']:
+        example_data.raw_data[c] *= 2
+
+    # Recompute capacity and energy measurements, which should have increased by 2x
+    CapacityPerCycle(reuse_integrals=True).compute_features(example_data)
+    final_data = example_data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
+    assert np.isclose(initial_data.values * 2, final_data.values, atol=1e-3).all()

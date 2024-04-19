@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from scipy.integrate import cumulative_simpson
+from scipy.integrate import cumtrapz
 
 from batdata.postprocess.base import RawDataEnhancer, CycleSummarizer
 
@@ -40,18 +40,27 @@ class CapacityPerCycle(CycleSummarizer):
         Measurements of capacity and energy assume a cycle returns
         the battery to the same state as it started the cycle.
 
-    Output dataframe has 4 new columns:
-        - ``discharge_capacity``: Discharge energy per cycle in A-hr
-        - ``charge_capacity``: Charge energy per the cycle in A-hr
-        - ``discharge_energy``: Discharge energy per cycle in J
-        - ``charge_energy``: Charge energy per the cycle in J
+    Output dataframe has 4 new columns.
+        - ``capacity_discharge``: Discharge capacity per cycle in A-hr
+        - ``capacity_charge``: Charge capacity per the cycle in A-hr
+        - ``energy_charge``: Discharge energy per cycle in J
+        - ``energy_discharge``: Charge energy per the cycle in J
+    The full definitions are provided in the :class:`~batdata.schemas.cycling.CycleLevelData` schema
     """
+
+    def __init__(self, reuse_integrals: bool = True):
+        """
+
+        Args:
+            reuse_integrals: Whether to reuse the ``cycle_capacity`` and ``cycle_energy`` if they are available
+        """
+        self.reuse_integrals = reuse_integrals
 
     @property
     def column_names(self) -> List[str]:
         output = []
         for name in ['charge', 'discharge']:
-            output.extend([f'{name}_energy', f'{name}_capacity'])
+            output.extend([f'energy_{name}', f'capacity_{name}'])
         return output
 
     def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
@@ -69,36 +78,39 @@ class CapacityPerCycle(CycleSummarizer):
             cycle_subset = raw_data.iloc[start_ind:stop_ind]
 
             # Perform the integration
-            # TODO (wardlt): Re-use columns from raw data if available
-            capacity_change = cumulative_simpson(cycle_subset['current'], x=cycle_subset['test_time'])
-            energy_change = cumulative_simpson(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
+            if self.reuse_integrals and 'cycle_energy' in cycle_subset.columns and 'cycle_capacity' in cycle_subset.columns:
+                capacity_change = cycle_subset['cycle_capacity'].values * 3600  # To A-s
+                energy_change = cycle_subset['cycle_energy'].values * 3600  # To J
+            else:
+                capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'])
+                energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
 
             # Estimate if the battery starts as charged or discharged
-            max_charge = -capacity_change.min()
-            max_discharge = capacity_change.max()
+            max_charge = capacity_change.max()
+            max_discharge = -capacity_change.min()
+
             starts_charged = max_discharge > max_charge
             if np.isclose(max_discharge, max_charge, rtol=0.01):
-                warnings.warn('Unable to clearly detect if battery started charged or discharged. '
-                              f'Amount discharged is {max_discharge:.2f} A-s, charged is {max_charge:.2f} A-s')
+                warnings.warn(f'Unable to clearly detect if battery started charged or discharged in cycle {cyc}. '
+                              f'Amount discharged is {max_discharge:.2e} A-s, charged is {max_charge:.2e} A-s')
 
             # Assign the charge and discharge capacity
             #  One capacity is beginning to maximum change, the other is maximum change to end
-            #  Whether the measured capacities are
             if starts_charged:
                 discharge_cap = max_discharge
-                charge_cap = max_discharge - capacity_change[-1]
-                discharge_eng = energy_change.max()
-                charge_eng = discharge_eng - energy_change[-1]
+                charge_cap = capacity_change[-1] + max_discharge
+                discharge_eng = -energy_change.min()
+                charge_eng = energy_change[-1] + discharge_eng
             else:
                 charge_cap = max_charge
-                discharge_cap = capacity_change[-1] + max_charge
-                charge_eng = -energy_change.min()
-                discharge_eng = energy_change[-1] + charge_eng
+                discharge_cap = max_charge - capacity_change[-1]
+                charge_eng = energy_change.max()
+                discharge_eng = charge_eng - energy_change[-1]
 
-            cycle_data.loc[cyc, 'discharge_energy'] = discharge_eng
-            cycle_data.loc[cyc, 'charge_energy'] = charge_eng
-            cycle_data.loc[cyc, 'discharge_capacity'] = discharge_cap / 3600.  # To A-hr
-            cycle_data.loc[cyc, 'charge_capacity'] = charge_cap / 3600.
+            cycle_data.loc[cyc, 'energy_charge'] = charge_eng / 3600.  # To W-hr
+            cycle_data.loc[cyc, 'energy_discharge'] = discharge_eng / 3600.
+            cycle_data.loc[cyc, 'capacity_charge'] = charge_cap / 3600.  # To A-hr
+            cycle_data.loc[cyc, 'capacity_discharge'] = discharge_cap / 3600.
 
 
 class StateOfCharge(RawDataEnhancer):
@@ -131,9 +143,9 @@ class StateOfCharge(RawDataEnhancer):
             cycle_subset = ordered_copy.iloc[start_ind:stop_ind]
 
             # Perform the integration
-            capacity_change = cumulative_simpson(cycle_subset['current'], x=cycle_subset['test_time'], initial=0)
-            energy_change = cumulative_simpson(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
+            capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'], initial=0)
+            energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
 
             # Store them in the raw data
-            data.loc[cycle_subset['index'], 'cycle_capacity'] = capacity_change / 3600
-            data.loc[cycle_subset['index'], 'cycle_energy'] = energy_change
+            data.loc[cycle_subset['index'], 'cycle_capacity'] = capacity_change / 3600  # To A-hr
+            data.loc[cycle_subset['index'], 'cycle_energy'] = energy_change / 3600  # To W-hr

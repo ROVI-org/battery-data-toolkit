@@ -20,7 +20,7 @@ def test_detect_then_convert(test_files):
     assert data.metadata.name == 'p492-13'
 
     # Test a few of columns which require conversion
-    assert data.raw_data['cycle_number'].max() == 7
+    assert data.raw_data['cycle_number'].max() == 8
     first_measurement = datetime.fromtimestamp(data.raw_data['time'].iloc[0])
     assert first_measurement.year == 2020
     assert first_measurement.day == 3

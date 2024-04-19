@@ -52,9 +52,6 @@ def convert_raw_signal_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd
     begin_time = datetime(year=1, month=1, day=1)
     output['time'] = output['time'].apply(lambda x: (timedelta(days=x - 366) + begin_time).timestamp())
 
-    # Reverse the sign of current
-    output['current'] *= -1
-
     # Add all other columns as-is
     if store_all:
         for col in input_df.columns:
@@ -66,10 +63,10 @@ def convert_raw_signal_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd
 
 _name_map_summary = {
     'Cycle_Index': 'cycle_number',
-    'Q_chg': 'charge_capacity',
-    'E_chg': 'charge_energy',
-    'Q_dis': 'discharge_capacity',
-    'E_dis': 'discharge_energy',
+    'Q_chg': 'capacity_charge',
+    'E_chg': 'energy_charge',
+    'Q_dis': 'capacity_discharge',
+    'E_dis': 'energy_discharge',
     'CE': 'coulomb_efficiency',
     'EE': 'energy_efficiency',
     'tsecs_start': 'cycle_start',
@@ -95,10 +92,6 @@ def convert_summary_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd.Da
     # Rename columns that are otherwise the same
     for orig, new in _name_map_summary.items():
         output[new] = input_df[orig]
-
-    # Convert charge and discharge energy from W-hr to J
-    for c in ['charge_energy', 'discharge_energy']:
-        output[c] /= 3600
 
     # Add all other columns as-is
     if store_all:
