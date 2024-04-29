@@ -3,6 +3,7 @@ import json
 import os
 
 import h5py
+import numpy as np
 import pandas as pd
 from pandas import HDFStore
 import pyarrow.parquet as pq
@@ -74,6 +75,24 @@ def test_read_hdf(tmpdir, test_df):
     with raises(ValueError) as exc:
         BatteryDataset.from_batdata_hdf(out_path, subsets=('cycle_stats',))
     assert 'File does not contain' in str(exc)
+
+
+def test_multi_cell_hdf5(tmpdir, test_df):
+    out_path = os.path.join(tmpdir, 'test.h5')
+
+    # Save the cell once, then multiply the current by 2
+    test_df.to_batdata_hdf(out_path, 'a')
+    test_df.raw_data['current'] *= 2
+    test_df.to_batdata_hdf(out_path, 'b', append=True)
+
+    # Make sure we can count two cells
+    _, names = BatteryDataset.inspect_batdata_hdf(out_path)
+    assert names == {'a', 'b'}
+
+    # Load both
+    test_a = BatteryDataset.from_batdata_hdf(out_path, prefix='a')
+    test_b = BatteryDataset.from_batdata_hdf(out_path, prefix='b')
+    assert np.isclose(test_a.raw_data['current'] * 2, test_b.raw_data['current']).all()
 
 
 def test_dict(test_df):
