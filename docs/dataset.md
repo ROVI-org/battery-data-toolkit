@@ -40,6 +40,13 @@ Load a specific cell by providing the prefix on load
 test_a = BatteryDataset.from_batdata_hdf('test.h5', prefix='a')
 ```
 
+Load all cells by iterating over them:
+
+```python
+for name, cell in BatteryDataset.all_cells_from_batdata_hdf('test.h5'):
+    do_some_processing(cell)
+```
+
 ### Parquet
 
 TBD.

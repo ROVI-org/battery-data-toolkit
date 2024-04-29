@@ -4,7 +4,7 @@ import logging
 import warnings
 from pathlib import Path
 from datetime import datetime
-from typing import Union, Optional, Collection, List, Dict, Type, Set
+from typing import Union, Optional, Collection, List, Dict, Type, Set, Iterator, Tuple
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
@@ -239,6 +239,25 @@ class BatteryDataset:
             metadata = BatteryMetadata.model_validate_json(path_or_buf.root._v_attrs.metadata)
 
         return cls(**data, metadata=metadata)
+
+    @classmethod
+    def all_cells_from_batdata_hdf(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None) -> Iterator[Tuple[str, 'BatteryDataset']]:
+        """Iterate over all cells in an HDF file
+
+        Args:
+            path: Path to the HDF file
+            subsets : Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
+        Yields:
+            - Name of the cell
+            - Cell data
+        """
+
+        # Start by gathering all names of the cells
+        _, names = cls.inspect_batdata_hdf(path)
+
+        with HDFStore(path, mode='r') as fp:  # Only open once
+            for name in names:
+                yield name, cls.from_batdata_hdf(fp, prefix=name, subsets=subsets)
 
     @staticmethod
     def inspect_batdata_hdf(path: Union[str, Path]) -> tuple[BatteryMetadata, Set[Optional[str]]]:

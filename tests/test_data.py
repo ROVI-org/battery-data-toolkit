@@ -94,6 +94,12 @@ def test_multi_cell_hdf5(tmpdir, test_df):
     test_b = BatteryDataset.from_batdata_hdf(out_path, prefix='b')
     assert np.isclose(test_a.raw_data['current'] * 2, test_b.raw_data['current']).all()
 
+    # Iterate over all
+    keys = dict(BatteryDataset.all_cells_from_batdata_hdf(out_path))
+    assert len(keys)
+    assert np.isclose(keys['a'].raw_data['current'] * 2,
+                      keys['b'].raw_data['current']).all()
+
 
 def test_dict(test_df):
     # Test writing it
