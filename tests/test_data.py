@@ -3,6 +3,7 @@ import json
 import os
 
 import h5py
+import pytest
 import numpy as np
 import pandas as pd
 from pandas import HDFStore
@@ -99,6 +100,16 @@ def test_multi_cell_hdf5(tmpdir, test_df):
     assert len(keys)
     assert np.isclose(keys['a'].raw_data['current'] * 2,
                       keys['b'].raw_data['current']).all()
+
+
+def test_multicell_metadata_warning(tmpdir, test_df):
+    out_path = os.path.join(tmpdir, 'test.h5')
+
+    # Save the cell once, then multiply the current by 2
+    test_df.to_batdata_hdf(out_path, 'a')
+    test_df.metadata.name = 'Not test data'
+    with pytest.warns(UserWarning, match='differs from new metadata'):
+        test_df.to_batdata_hdf(out_path, 'b', append=True)
 
 
 def test_dict(test_df):

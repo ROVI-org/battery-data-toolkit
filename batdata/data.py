@@ -179,7 +179,11 @@ class BatteryDataset:
         # Create logic for adding metadata
         def add_metadata(f: HDFStore):
             """Put the metadata in a standard location at the root of the HDF file"""
-            f.root._v_attrs.metadata = self.metadata.json()
+            metadata = self.metadata.json()
+            if append and (existing_metadata := f.root._v_attrs.metadata) is not None:
+                if metadata != existing_metadata:
+                    warnings.warn('Metadata already in HDF5 differs from new metadata')
+            f.root._v_attrs.metadata = metadata
 
         # Apply the metadata addition function
         path_or_buf = stringify_path(path_or_buf)
