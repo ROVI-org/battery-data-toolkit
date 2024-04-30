@@ -171,7 +171,7 @@ class BatteryDataset:
             data = getattr(self, key)
             if data is not None:
                 if prefix is not None:
-                    key = f'{prefix}-{key}'
+                    key = f'{prefix}_{key}'
                 data.to_hdf(path_or_buf, key, complevel=complevel,
                             complib=complib, append=False, format='table',
                             index=False)
@@ -224,7 +224,7 @@ class BatteryDataset:
 
             # Prepend the prefix
             if prefix is not None:
-                key = f'{prefix}-{subset}'
+                key = f'{prefix}_{subset}'
             else:
                 key = subset
 
@@ -281,10 +281,13 @@ class BatteryDataset:
             # Get the names by gathering all names before the "-" in group names
             names = set()
             for key in f.keys():
-                if '-' not in key:  # From the "default" group
-                    names.add(None)
-                name, _ = key.rsplit("-", 1)
-                names.add(name)
+                for subset in _subsets:
+                    if key.endswith(subset):
+                        name = key[:-len(subset) - 1]
+                        if len(name) == 0:
+                            names.add(None)  # From the default group
+                        else:
+                            names.add(name)
             return metadata, names
 
     @staticmethod
