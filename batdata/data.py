@@ -236,6 +236,11 @@ class BatteryDataset:
                 else:
                     raise ValueError(f'File does not contain {key}') from exc
 
+        # If no data with this prefix is found, report which ones are found in the file
+        if len(data) == 0:
+            raise ValueError(f'No data available for prefix "{prefix}". '
+                             'Call `BatteryDataset.inspect_batdata_hdf` to gather a list of available prefixes.')
+
         # Read out the battery metadata
         if isinstance(path_or_buf, (str, Path)):
             with h5py.File(path_or_buf, 'r') as f:
@@ -265,30 +270,36 @@ class BatteryDataset:
                 yield name, cls.from_batdata_hdf(fp, prefix=name, subsets=subsets)
 
     @staticmethod
-    def inspect_batdata_hdf(path: Union[str, Path]) -> tuple[BatteryMetadata, Set[Optional[str]]]:
-        """Extract the battery data and the names of cells contained within an HDF5 file
+    def inspect_batdata_hdf(path_or_buf: Union[str, Path, HDFStore]) -> tuple[BatteryMetadata, Set[Optional[str]]]:
+        """Extract the battery data and the prefixes of cells contained within an HDF5 file
 
         Args:
-            path: Path to the HDF5 file
+            path: Path to the HDF5 file, or HDFStore object
         Returns:
             - Metadata from this file
             - List of names of batteries stored within the file
         """
 
-        with h5py.File(path, 'r') as f:
-            metadata = BatteryMetadata.model_validate_json(f.attrs['metadata'])
+        # Get the metadata and list of keys
+        if isinstance(path_or_buf, (str, Path)):
+            with h5py.File(path_or_buf, 'r') as f:
+                metadata = BatteryMetadata.model_validate_json(f.attrs['metadata'])
+                keys = list(f.keys())
+        else:
+            metadata = BatteryMetadata.model_validate_json(path_or_buf.root._v_attrs.metadata)
+            keys = [k[1:] for k in path_or_buf.keys()]  # First char is always "/"
 
-            # Get the names by gathering all names before the "-" in group names
-            names = set()
-            for key in f.keys():
-                for subset in _subsets:
-                    if key.endswith(subset):
-                        name = key[:-len(subset) - 1]
-                        if len(name) == 0:
-                            names.add(None)  # From the default group
-                        else:
-                            names.add(name)
-            return metadata, names
+        # Get the names by gathering all names before the "-" in group names
+        names = set()
+        for key in keys:
+            for subset in _subsets:
+                if key.endswith(subset):
+                    name = key[:-len(subset) - 1]
+                    if len(name) == 0:
+                        names.add(None)  # From the default group
+                    else:
+                        names.add(name)
+        return metadata, names
 
     @staticmethod
     def get_metadata_from_hdf5(path: Union[str, Path]) -> BatteryMetadata:

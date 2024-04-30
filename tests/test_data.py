@@ -90,6 +90,10 @@ def test_multi_cell_hdf5(tmpdir, test_df):
     _, names = BatteryDataset.inspect_batdata_hdf(out_path)
     assert names == {'a', 'b'}
 
+    with pd.HDFStore(out_path) as h:
+        _, names = BatteryDataset.inspect_batdata_hdf(h)
+        assert names == {'a', 'b'}
+
     # Load both
     test_a = BatteryDataset.from_batdata_hdf(out_path, prefix='a')
     test_b = BatteryDataset.from_batdata_hdf(out_path, prefix='b')
@@ -102,10 +106,21 @@ def test_multi_cell_hdf5(tmpdir, test_df):
                       keys['b'].raw_data['current']).all()
 
 
+def test_missing_prefix_warning(tmpdir, test_df):
+    out_path = os.path.join(tmpdir, 'test.h5')
+
+    test_df.to_batdata_hdf(out_path, 'a', append=True)
+
+    # Error if prefix not found
+    with pytest.raises(ValueError) as e:
+        BatteryDataset.from_batdata_hdf(out_path, prefix='b')
+    assert 'No data available for prefix "b"' in str(e)
+
+
 def test_multicell_metadata_warning(tmpdir, test_df):
     out_path = os.path.join(tmpdir, 'test.h5')
 
-    # Save the cell once, then multiply the current by 2
+    # Save the cell once, then alter metadata
     test_df.to_batdata_hdf(out_path, 'a', append=True)
     test_df.metadata.name = 'Not test data'
     with pytest.warns(UserWarning, match='differs from new metadata'):
