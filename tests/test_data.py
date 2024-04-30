@@ -106,7 +106,7 @@ def test_multicell_metadata_warning(tmpdir, test_df):
     out_path = os.path.join(tmpdir, 'test.h5')
 
     # Save the cell once, then multiply the current by 2
-    test_df.to_batdata_hdf(out_path, 'a')
+    test_df.to_batdata_hdf(out_path, 'a', append=True)
     test_df.metadata.name = 'Not test data'
     with pytest.warns(UserWarning, match='differs from new metadata'):
         test_df.to_batdata_hdf(out_path, 'b', append=True)
