@@ -201,13 +201,18 @@ class BatteryDataset:
     def from_batdata_hdf(cls,
                          path_or_buf: Union[str, Path, HDFStore],
                          subsets: Optional[Collection[str]] = None,
-                         prefix: Optional[str] = None):
+                         prefix: Union[str, None, int] = None) -> 'BatteryDataset':
         """Read the battery data from an HDF file
+
+        Use :meth:`all_cells_from_batdata_hdf` to read all datasets from a file.
 
         Args:
             path_or_buf: File path or HDFStore object
             subsets : Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
-            prefix: Prefix designating which battery extract from this file, if there are multiple datasets
+            prefix: (``str``) Prefix designating which battery extract from this file,
+                or (``int``) index within the list of available prefixes, sorted alphabetically.
+                The default is to read the default prefix (``None``).
+
         """
 
         # Determine which datasets to read
@@ -215,6 +220,11 @@ class BatteryDataset:
         if subsets is None:
             subsets = _subsets
             read_all = True
+
+        # Determine which prefix to read, if an int is provided
+        if isinstance(prefix, int):
+            _, prefixes = cls.inspect_batdata_hdf(path_or_buf)
+            prefix = sorted(prefixes)[prefix]
 
         data = {}
         for subset in subsets:

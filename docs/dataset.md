@@ -34,10 +34,16 @@ test_a.to_batdata_hdf('test.h5', prefix='a')
 test_b.to_batdata_hdf('test.h5', prefix='b', append=True)  # Append is mandatory
 ```
 
-Load a specific cell by providing the prefix on load
+Load a specific cell by providing a specific prefix on load
 
 ```python
 test_a = BatteryDataset.from_batdata_hdf('test.h5', prefix='a')
+```
+
+or load any of the included cells by providing an index
+
+```python
+test_a = BatteryDataset.from_batdata_hdf('test.h5', prefix=0)
 ```
 
 Load all cells by iterating over them:

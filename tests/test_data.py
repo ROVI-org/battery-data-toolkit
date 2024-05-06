@@ -99,6 +99,11 @@ def test_multi_cell_hdf5(tmpdir, test_df):
     test_b = BatteryDataset.from_batdata_hdf(out_path, prefix='b')
     assert np.isclose(test_a.raw_data['current'] * 2, test_b.raw_data['current']).all()
 
+    # Test reading by index
+    test_0 = BatteryDataset.from_batdata_hdf(out_path, prefix=0)
+    assert np.isclose(test_0.raw_data['current'],
+                      test_a.raw_data['current']).all()
+
     # Iterate over all
     keys = dict(BatteryDataset.all_cells_from_batdata_hdf(out_path))
     assert len(keys)
