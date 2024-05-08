@@ -1,7 +1,7 @@
 """Tools used for linking terms in our data format to the BattINFO ontology"""
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Type, List, Optional
+from typing import Type, List, Optional, Union
 
 from ontopy import World
 from owlready2 import Thing
@@ -61,14 +61,41 @@ def cross_reference_terms(model: Type[BaseModel]) -> dict[str, TermInfo]:
     return terms
 
 
-def gather_descendants(term: Type[Thing]) -> List[TermInfo]:
+def resolve_term(name_or_iri: str) -> Thing:
+    """Resolve the Term object associated with a string
+
+    Args:
+        name_or_iri: The preferred label or the IRI of a term in the ontology
+    Returns:
+        Thing matching the term
+    """
+
+    # Attempt to find it
+    bi = load_battinfo()
+    if name_or_iri.startswith('https://'):
+        term = bi.search_one(iri=name_or_iri)
+        t = 'IRI'
+    else:
+        term = bi.search_one(prefLabel=name_or_iri)
+        t = 'name'
+
+    if term is None:
+        raise ValueError(f'Could not find the {t}={name_or_iri}')
+    return term
+
+
+def gather_descendants(term: Union[Type[Thing], str]) -> List[TermInfo]:
     """Get descriptions of the descendants of a certain base type
 
     Args:
-        term: Term for which to gather all descendants
+        term: Term for which to gather all descendants. Either the class object itself or its preferred label or IRI
     Returns:
         List of descriptions of the descendants
     """
+
+    # Resolve the term object, if needed
+    if isinstance(term, str):
+        term = resolve_term(term)
 
     return [
         TermInfo.from_thing(d) for d in term.descendants(include_self=False)
