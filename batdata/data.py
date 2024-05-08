@@ -8,7 +8,7 @@ from typing import Union, Optional, Collection, List, Dict, Type, Set, Iterator,
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from pyarrow import parquet as pq
 from pyarrow import Table
 import pandas as pd
@@ -17,6 +17,7 @@ import h5py
 from batdata.schemas import BatteryMetadata
 from batdata.schemas.cycling import RawData, CycleLevelData, ColumnSchema
 from batdata.schemas.eis import EISData
+from batdata import __version__
 
 _subsets: Dict[str, Type[ColumnSchema]] = {
     'raw_data': RawData,
@@ -71,22 +72,29 @@ class BatteryDataset:
                  eis_data: Optional[pd.DataFrame] = None):
         """
 
-        Parameters
-        ----------
-        metadata: BatteryMetadata or dict
-            Metadata that describe the battery construction, data provenance and testing routines
-        raw_data: pd.DataFrame
-            Time-series data of the battery state
-        cycle_stats: pd.DataFrame
-            Summaries of each cycle
-        eis_data: pd.DataFrame
-            EIS data taken at multiple times
+        Args:
+            metadata: Metadata that describe the battery construction, data provenance and testing routines
+            raw_data: Time-series data of the battery state
+            cycle_stats: Summaries of each cycle
+            eis_data: EIS data taken at multiple times
         """
         if metadata is None:
             metadata = {}
         elif isinstance(metadata, BaseModel):
-            metadata = metadata.dict()
-        self.metadata = BatteryMetadata(**metadata)
+            metadata = metadata.model_dump()
+
+        # Warn if the version of the metadata is different
+        version_mismatch = False
+        if (supplied_version := metadata.get('version', __version__)) != __version__:
+            version_mismatch = True
+            warnings.warn(f'Metadata was created in a different version of batdata. supplied={supplied_version}, current={__version__}.')
+
+        try:
+            self.metadata = BatteryMetadata(**metadata)
+        except ValidationError:
+            if version_mismatch:
+                warnings.warn('Metadata failed to validate, probably due to version mismatch. Discarding until we support backwards compatibility')
+                self.metadata = BatteryMetadata()
         self.raw_data = raw_data
         self.cycle_stats = cycle_stats
         self.eis_data = eis_data
@@ -333,7 +341,7 @@ class BatteryDataset:
             (dict) Data in dictionary format
         """
 
-        output = {'metadata': self.metadata.dict()}
+        output = {'metadata': self.metadata.model_dump()}
         for key in _subsets:
             data = getattr(self, key)
             if data is not None:
