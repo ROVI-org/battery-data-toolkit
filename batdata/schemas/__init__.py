@@ -2,14 +2,14 @@
 from datetime import date
 from typing import List, Tuple, Optional, Dict
 
-from pydantic import BaseModel, Field, AnyUrl, Extra
+from pydantic import BaseModel, Field, AnyUrl
 
 from batdata.schemas.modeling import ModelMetadata
 from batdata.schemas.battery import BatteryDescription
 from batdata.version import __version__
 
 
-class BatteryMetadata(BaseModel, extra=Extra.allow):
+class BatteryMetadata(BaseModel, extra='allow'):
     """Representation for the metadata about a battery
 
     The metadata captures the information about what experiment was run
@@ -35,7 +35,7 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     battery: Optional[BatteryDescription] = Field(None, description="Description of the battery being tested")
 
     # Fields that describe source of synthetic data
-    modeling: ModelMetadata = Field(None, description="Description of simulation approach")
+    modeling: Optional[ModelMetadata] = Field(None, description="Description of simulation approach")
 
     # Fields that describe the source of data
     source: Optional[str] = Field(None, description="Organization who created this data")

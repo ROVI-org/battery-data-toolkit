@@ -26,7 +26,7 @@ class ModelTypes(str, Enum):
     IRI: https://w3id.org/emmo#EMMO_67c70dcd_2adf_4e6c_b3f8_f33dd1512487"""
 
 
-class ModelMetadata(BaseModel):
+class ModelMetadata(BaseModel, extra='allow'):
     """Describe the type and version of a computational tool used to generate battery data"""
 
     # High-level information about the code
