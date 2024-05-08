@@ -21,6 +21,8 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
                                                   " as it is intended to be used by the battery data provider.")
     comments: Optional[str] = Field(None, description="Long form comments describing the test")
     version: str = Field(__version__, description="Version of this metadata")
+    is_measurement: bool = Field(True, description="Whether the data was created observationally as opposed to a computer simulation",
+                                 iri="https://w3id.org/emmo#EMMO_463bcfda_867b_41d9_a967_211d4d437cfb")
 
     # Fields that describe the test protocol
     cycler: Optional[str] = Field(None, description='Name of the cycling machine')
