@@ -48,7 +48,7 @@ class BatteryDescription(BaseModel, extra='allow'):
     # Materials description
     anode: Optional[ElectrodeDescription] = Field(None, description="Name of the anode material")
     cathode: Optional[ElectrodeDescription] = Field(None, description="Name of the cathode material")
-    electrolyte: ElectrolyteDescription = Field(None, description="Name of the electrolyte material")
+    electrolyte: Optional[ElectrolyteDescription] = Field(None, description="Name of the electrolyte material")
 
     # Performance information
     nominal_capacity: float = Field(None, description="Rated capacity of the battery. Units: A-hr",
