@@ -13,13 +13,13 @@ class ModelTypes(str, Enum):
     providing a identifiable analogy with the original object.
 
     IRI: https://w3id.org/emmo#EMMO_8d4962d7_9608_44f7_a2f1_82a4bb173f4a"""
-    data: 'data'
+    data = 'data'
     """A computational application that uses existing data to predict the behaviour of a system
     without providing a identifiable analogy with the original object.
 
     IRI: https://w3id.org/emmo#EMMO_a4b14b83_9392_4a5f_a2e8_b2b58793f59b"""
 
-    empirical: 'empirical'
+    empirical = 'empirical'
     """A computational application that uses an empiric equation to predict the behaviour of a system
     without relying on the knowledge of the actual physical phenomena occurring in the object.
 
