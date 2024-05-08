@@ -19,7 +19,7 @@ dependencies = [
     "h5py == 3.*",
     "scythe-extractors >= 0.1",
     "pyarrow >= 15",
-    "ontopy",
+    "EMMOntoPy",
     "xlrd"
 ]
 
