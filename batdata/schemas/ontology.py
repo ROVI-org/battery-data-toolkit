@@ -31,7 +31,7 @@ class TermInfo:
         # Retrieve the description, as provided by EMMO
         eluc = thing.get_annotations().get('elucidation')
         if eluc is not None:
-            eluc = str(eluc)
+            eluc = str(eluc[0])
         return TermInfo(name=str(thing), iri=thing.iri, elucidation=eluc)
 
 

@@ -33,12 +33,12 @@ class ModelMetadata(BaseModel, extra='allow'):
     name: str = Field(..., description='Name of the software')
     version: Optional[str] = Field(..., description='Version of the software if known')
     type: Optional[ModelTypes] = Field(None, description='Type of the computational method it implements.')
-    reference: Optional[List[AnyUrl]] = Field(None, description='List of references associated with the software')
+    references: Optional[List[AnyUrl]] = Field(None, description='List of references associated with the software')
 
     # Details for physics based simulation
-    model_type: Optional[List[str]] = Field(None, description='Type of mathematical model(s) being used in physics simulation.'
-                                                              'Use terms defined in BattINFO, such as "BatteryEquivalentCircuitModel".',
-                                            root_iri='https://w3id.org/emmo#EMMO_f7ed665b_c2e1_42bc_889b_6b42ed3a36f0')
+    models: Optional[List[str]] = Field(None, description='Type of mathematical model(s) being used in physics simulation.'
+                                                          'Use terms defined in BattINFO, such as "BatteryEquivalentCircuitModel".',
+                                        root_iri='https://w3id.org/emmo#EMMO_f7ed665b_c2e1_42bc_889b_6b42ed3a36f0')
     simulation_type: Optional[str] = Field(None, description='Type of simulation being performed. '
                                                              'Use terms defined in BattINFO, such as "TightlyCoupledModelsSimulation"',
                                            root_iri='https://w3id.org/emmo#EMMO_e97af6ec_4371_4bbc_8936_34b76e33302f')

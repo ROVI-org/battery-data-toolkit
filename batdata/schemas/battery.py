@@ -51,4 +51,5 @@ class BatteryDescription(BaseModel, extra='allow'):
     electrolyte: ElectrolyteDescription = Field(None, description="Name of the electrolyte material")
 
     # Performance information
-    nominal_capacity: float = Field(None, description="Rated capacity of the battery. Units: A-hr")
+    nominal_capacity: float = Field(None, description="Rated capacity of the battery. Units: A-hr",
+                                    iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_9b3b4668_0795_4a35_9965_2af383497a26")
