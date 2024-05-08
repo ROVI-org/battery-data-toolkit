@@ -9,4 +9,4 @@ def test_crossref():
     assert 'is_measurement' in terms
     assert terms['is_measurement'].name == 'emmo.Measurement'
     assert 'EMMO' in terms['is_measurement'].iri
-    assert 'well defined mesurement procedure.' in terms['is_measurement'].iri
+    assert 'well defined mesurement procedure.' in terms['is_measurement'].elucidation

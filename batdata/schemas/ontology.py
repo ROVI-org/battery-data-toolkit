@@ -50,6 +50,6 @@ def cross_reference_terms(model: Type[BaseModel]) -> dict[str, TermInfo]:
 
             anno = term.get_annotations()
             if (eluc := anno.get('elucidation')) is not None:
-                terms[name] = TermInfo(name=str(term), iri=iri, elucidation=eluc)
+                terms[name] = TermInfo(name=str(term), iri=iri, elucidation=str(eluc[0]))
 
     return terms
