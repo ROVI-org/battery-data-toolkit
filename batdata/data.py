@@ -4,7 +4,7 @@ import logging
 import warnings
 from pathlib import Path
 from datetime import datetime
-from typing import Union, Optional, Collection, List, Dict, Type
+from typing import Union, Optional, Collection, List, Dict, Type, Set, Iterator, Tuple
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
@@ -142,46 +142,49 @@ class BatteryDataset:
 
         return output
 
-    def to_batdata_hdf(self, path_or_buf: Union[str, Path, HDFStore], complevel=0, complib='zlib'):
+    def to_batdata_hdf(self,
+                       path_or_buf: Union[str, Path, HDFStore],
+                       prefix: Optional[str] = None,
+                       append: bool = False,
+                       complevel: int = 0,
+                       complib: str = 'zlib'):
         """Save the data in the standardized HDF5 file format
 
         This function wraps the ``to_hdf`` function of Pandas and supplies fixed values for some options
         so that the data is written in a reproducible format.
 
-        Parameters
-        ----------
-        path_or_buf : str or Path or pandas.HDFStore
-            File path or HDFStore object.
-        complevel : {0-9}, optional
-            Specifies a compression level for data.
-            A value of 0 disables compression.
-        complib : {'zlib', 'lzo', 'bzip2', 'blosc'}, default 'zlib'
-            Specifies the compression library to be used.
-            As of v0.20.2 these additional compressors for Blosc are supported
-            (default if no compressor specified: 'blosc:blosclz'):
-            {'blosc:blosclz', 'blosc:lz4', 'blosc:lz4hc', 'blosc:snappy',
-            'blosc:zlib', 'blosc:zstd'}.
-            Specifying a compression library which is not available issues
-            a ValueError.
+        Args:
+            path_or_buf: File path or HDFStore object.
+            prefix: Prefix to use to differentiate this battery from (optionally) others stored in this HDF5 file
+            append: Whether to clear any existing data in the HDF5 file before writing
+            complevel: Specifies a compression level for data. A value of 0 disables compression.
+            complib: Specifies the compression library to be used.
         """
 
         # Delete the old file if present
-        if isinstance(path_or_buf, (str, Path)) and Path(path_or_buf).is_file():
+        if isinstance(path_or_buf, (str, Path)) and (Path(path_or_buf).is_file() and not append):
             Path(path_or_buf).unlink()
 
         # Store the various datasets
         #  Note that we use the "table" format to allow for partial reads / querying
-        for subset in _subsets:
-            data = getattr(self, subset)
+        for key in _subsets:
+            data = getattr(self, key)
             if data is not None:
-                data.to_hdf(path_or_buf, subset, complevel=complevel,
+                if prefix is not None:
+                    key = f'{prefix}_{key}'
+                data.to_hdf(path_or_buf, key, complevel=complevel,
                             complib=complib, append=False, format='table',
                             index=False)
 
         # Create logic for adding metadata
         def add_metadata(f: HDFStore):
             """Put the metadata in a standard location at the root of the HDF file"""
-            f.root._v_attrs.metadata = self.metadata.json()
+            metadata = self.metadata.json()
+            if append and 'metadata' in f.root._v_attrs:
+                existing_metadata = f.root._v_attrs.metadata
+                if metadata != existing_metadata:
+                    warnings.warn('Metadata already in HDF5 differs from new metadata')
+            f.root._v_attrs.metadata = metadata
 
         # Apply the metadata addition function
         path_or_buf = stringify_path(path_or_buf)
@@ -195,15 +198,21 @@ class BatteryDataset:
             add_metadata(path_or_buf)
 
     @classmethod
-    def from_batdata_hdf(cls, path_or_buf: Union[str, Path, HDFStore], subsets: Optional[Collection[str]] = None):
+    def from_batdata_hdf(cls,
+                         path_or_buf: Union[str, Path, HDFStore],
+                         subsets: Optional[Collection[str]] = None,
+                         prefix: Union[str, None, int] = None) -> 'BatteryDataset':
         """Read the battery data from an HDF file
 
-        Parameters
-        ----------
-        path_or_buf : str or pandas.HDFStore or Path
-            File path or HDFStore object.
-        subsets : List of strings
-            Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
+        Use :meth:`all_cells_from_batdata_hdf` to read all datasets from a file.
+
+        Args:
+            path_or_buf: File path or HDFStore object
+            subsets : Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
+            prefix: (``str``) Prefix designating which battery extract from this file,
+                or (``int``) index within the list of available prefixes, sorted alphabetically.
+                The default is to read the default prefix (``None``).
+
         """
 
         # Determine which datasets to read
@@ -212,18 +221,35 @@ class BatteryDataset:
             subsets = _subsets
             read_all = True
 
+        # Determine which prefix to read, if an int is provided
+        if isinstance(prefix, int):
+            _, prefixes = cls.inspect_batdata_hdf(path_or_buf)
+            prefix = sorted(prefixes)[prefix]
+
         data = {}
-        for key in subsets:
-            if key not in _subsets:
-                raise ValueError(f'Unknown subset: {key}')
+        for subset in subsets:
+            # Throw error if user provides an unknown subset name
+            if subset not in _subsets:
+                raise ValueError(f'Unknown subset: {subset}')
+
+            # Prepend the prefix
+            if prefix is not None:
+                key = f'{prefix}_{subset}'
+            else:
+                key = subset
 
             try:
-                data[key] = pd.read_hdf(path_or_buf, key)
+                data[subset] = pd.read_hdf(path_or_buf, key)
             except KeyError as exc:
                 if read_all:
                     continue
                 else:
                     raise ValueError(f'File does not contain {key}') from exc
+
+        # If no data with this prefix is found, report which ones are found in the file
+        if len(data) == 0:
+            raise ValueError(f'No data available for prefix "{prefix}". '
+                             'Call `BatteryDataset.inspect_batdata_hdf` to gather a list of available prefixes.')
 
         # Read out the battery metadata
         if isinstance(path_or_buf, (str, Path)):
@@ -233,6 +259,71 @@ class BatteryDataset:
             metadata = BatteryMetadata.model_validate_json(path_or_buf.root._v_attrs.metadata)
 
         return cls(**data, metadata=metadata)
+
+    @classmethod
+    def all_cells_from_batdata_hdf(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None) -> Iterator[Tuple[str, 'BatteryDataset']]:
+        """Iterate over all cells in an HDF file
+
+        Args:
+            path: Path to the HDF file
+            subsets : Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
+        Yields:
+            - Name of the cell
+            - Cell data
+        """
+
+        # Start by gathering all names of the cells
+        _, names = cls.inspect_batdata_hdf(path)
+
+        with HDFStore(path, mode='r') as fp:  # Only open once
+            for name in names:
+                yield name, cls.from_batdata_hdf(fp, prefix=name, subsets=subsets)
+
+    @staticmethod
+    def inspect_batdata_hdf(path_or_buf: Union[str, Path, HDFStore]) -> tuple[BatteryMetadata, Set[Optional[str]]]:
+        """Extract the battery data and the prefixes of cells contained within an HDF5 file
+
+        Args:
+            path: Path to the HDF5 file, or HDFStore object
+        Returns:
+            - Metadata from this file
+            - List of names of batteries stored within the file
+        """
+
+        # Get the metadata and list of keys
+        if isinstance(path_or_buf, (str, Path)):
+            with h5py.File(path_or_buf, 'r') as f:
+                metadata = BatteryMetadata.model_validate_json(f.attrs['metadata'])
+                keys = list(f.keys())
+        else:
+            metadata = BatteryMetadata.model_validate_json(path_or_buf.root._v_attrs.metadata)
+            keys = [k[1:] for k in path_or_buf.keys()]  # First char is always "/"
+
+        # Get the names by gathering all names before the "-" in group names
+        names = set()
+        for key in keys:
+            for subset in _subsets:
+                if key.endswith(subset):
+                    name = key[:-len(subset) - 1]
+                    if len(name) == 0:
+                        names.add(None)  # From the default group
+                    else:
+                        names.add(name)
+        return metadata, names
+
+    @staticmethod
+    def get_metadata_from_hdf5(path: Union[str, Path]) -> BatteryMetadata:
+        """Get battery metadata from an HDF file without reading the data
+
+        Args:
+            path: Path to the HDF5 file
+
+        Returns:
+            Metadata from this file
+        """
+
+        with h5py.File(path, 'r') as f:
+            return BatteryMetadata.model_validate_json(f.attrs['metadata'])
 
     def to_batdata_dict(self) -> dict:
         """Generate data in dictionary format
@@ -339,20 +430,6 @@ class BatteryDataset:
             metadata=BatteryMetadata.model_validate_json(metadata),
             **data
         )
-
-    @staticmethod
-    def get_metadata_from_hdf5(path: Union[str, Path]) -> BatteryMetadata:
-        """Get battery metadata from a directory of parquet files without reading them
-
-        Args:
-            path: Path to the HDF5 file
-
-        Returns:
-            Metadata from this file
-        """
-
-        with h5py.File(path, 'r') as f:
-            return BatteryMetadata.model_validate_json(f.attrs['metadata'])
 
     @staticmethod
     def get_metadata_from_parquet(path: Union[str, Path]) -> BatteryMetadata:
