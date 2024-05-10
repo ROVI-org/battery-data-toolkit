@@ -2,13 +2,14 @@
 from datetime import date
 from typing import List, Tuple, Optional, Dict
 
-from pydantic import BaseModel, Field, AnyUrl, Extra
+from pydantic import BaseModel, Field, AnyUrl
 
+from batdata.schemas.modeling import ModelMetadata
 from batdata.schemas.battery import BatteryDescription
 from batdata.version import __version__
 
 
-class BatteryMetadata(BaseModel, extra=Extra.allow):
+class BatteryMetadata(BaseModel, extra='allow'):
     """Representation for the metadata about a battery
 
     The metadata captures the information about what experiment was run
@@ -20,7 +21,9 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
     name: Optional[str] = Field(None, description="Name of the cell. Any format for the name is acceptable,"
                                                   " as it is intended to be used by the battery data provider.")
     comments: Optional[str] = Field(None, description="Long form comments describing the test")
-    version: str = Field(__version__, description="Version of this metadata")
+    version: str = Field(__version__, description="Version of this metadata. Set by the battery-data-toolkit")
+    is_measurement: bool = Field(True, description="Whether the data was created observationally as opposed to a computer simulation",
+                                 iri="https://w3id.org/emmo#EMMO_463bcfda_867b_41d9_a967_211d4d437cfb")
 
     # Fields that describe the test protocol
     cycler: Optional[str] = Field(None, description='Name of the cycling machine')
@@ -30,6 +33,9 @@ class BatteryMetadata(BaseModel, extra=Extra.allow):
 
     # Field that describe the battery assembly
     battery: Optional[BatteryDescription] = Field(None, description="Description of the battery being tested")
+
+    # Fields that describe source of synthetic data
+    modeling: Optional[ModelMetadata] = Field(None, description="Description of simulation approach")
 
     # Fields that describe the source of data
     source: Optional[str] = Field(None, description="Organization who created this data")
