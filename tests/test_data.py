@@ -11,6 +11,7 @@ import pyarrow.parquet as pq
 from pytest import fixture, raises
 
 from batdata.data import BatteryDataset
+from batdata import __version__
 
 
 @fixture()
@@ -187,3 +188,22 @@ def test_parquet(test_df, tmpdir):
     with raises(ValueError) as e:
         BatteryDataset.get_metadata_from_parquet(tmpdir)
     assert 'No parquet files' in str(e)
+
+
+def test_version_warnings(test_df):
+    # Alter the version number, then copy using to/from dict
+    test_df.metadata.version = 'super.old.version'
+    with pytest.warns() as w:
+        BatteryDataset.from_batdata_dict(test_df.to_batdata_dict())
+    assert len(w) == 1  # Only the warning about the versions
+    assert 'supplied=super.old.version' in str(w.list[0].message)
+
+    # Make a change that will violate the schema
+    test_df.metadata.name = 1  # Name cannot be an int
+
+    with pytest.warns() as w:
+        recovered = BatteryDataset.from_batdata_dict(test_df.to_batdata_dict())
+    assert len(w) == 3  # Warning during save, warning about mismatch, warning that schema failed
+    assert 'supplied=super.old.version' in str(w.list[1].message)
+    assert 'failed to validate, probably' in str(w.list[2].message)
+    assert recovered.metadata.version == __version__
