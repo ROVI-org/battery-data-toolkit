@@ -22,8 +22,10 @@ class CycleTimes(CycleSummarizer):
     def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
         # Compute the starts and durations
         time_summary = raw_data.groupby('cycle_number')['test_time'].agg(
-            cycle_start=min, cycle_duration=lambda x: max(x) - min(x)
+            cycle_start=min, cycle_duration=lambda x: max(x) - min(x), count=len
         ).reset_index()  # reset_index makes `cycle_number` a regular column
+        if time_summary['count'].min() == 1:
+            warnings.warn('Some cycles have only one measurements.')
 
         # Compute the duration using the start of the next cycle, if known
         time_summary['next_diff'] = time_summary['cycle_number'].diff(-1).iloc[:-1]
