@@ -39,8 +39,8 @@ class BatteryDescription(BaseModel, extra=Extra.allow):
     """Description of the entire battery"""
 
     # Overall design information
-    manufacturer: str = Field(None, description="Manufacturer of the battery")
-    design: str = Field(None, description="Name of the battery type, such as the battery product ID")
+    manufacturer: Optional[str] = Field(None, description="Manufacturer of the battery")
+    design: Optional[str] = Field(None, description="Name of the battery type, such as the battery product ID")
 
     # Geometry information
     layer_count: Optional[int] = Field(None, description="Number of layers within the battery", gt=1)
