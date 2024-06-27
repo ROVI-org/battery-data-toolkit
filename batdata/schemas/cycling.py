@@ -127,7 +127,7 @@ class RawData(ColumnSchema):
     a common definition.
     """
 
-    cycle_number: List[int] = Field(None, description="Index of the testing cycle. All indices should be"
+    cycle_number: List[int] = Field(None, description="Index of the testing cycle, starting at 0. All indices should be"
                                                       " nonnegative and be monotonically increasing", monotonic=True)
     step_index: List[int] = Field(None, description="Index of the step number within a testing cycle. A step change"
                                                     " is defined by a change states between charging, discharging,"
