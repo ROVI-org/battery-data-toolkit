@@ -3,6 +3,7 @@ from typing import Callable, Any, Optional
 from dataclasses import dataclass
 from pathlib import Path
 import logging
+from uuid import uuid4
 
 import numpy as np
 import pandas as pd
@@ -40,10 +41,11 @@ class BatteryArchiveExporter(DatasetExporter):
     chunk_size: int = 100000
     """Maximum number of rows to write to disk in a single CSV file"""
 
-    def write_timeseries(self, data: pd.DataFrame, path: Path):
+    def write_timeseries(self, cell_id: str, data: pd.DataFrame, path: Path):
         """Write the time series dataset
 
         Args:
+            cell_id: Name for the cell, used as a foreign key to map between tables
             data: Time series data to write to disk
             path: Root path for writing cycling data
         """
@@ -59,11 +61,16 @@ class BatteryArchiveExporter(DatasetExporter):
                     if out_fun is not None:
                         out_chunk[out_col] = out_chunk[out_col].apply(out_fun)
 
+            # Add a cell id to the frame
+            out_chunk['cell_id'] = cell_id
+
             # Save to disk
             chunk_path = path / f'cycle-timeseries-{i}.csv'
             out_chunk.to_csv(chunk_path, index=False, encoding='utf-8')
             logger.debug(f'Wrote {len(out_chunk)} rows to {chunk_path}')
 
     def export(self, dataset: BatteryDataset, path: Path):
+        cell_name = dataset.metadata.name or uuid4()  # Use either the user-provided name or a UUID if none provided
+
         if dataset.raw_data is not None:
-            self.write_timeseries(dataset.raw_data, path)
+            self.write_timeseries(cell_name, dataset.raw_data, path)
