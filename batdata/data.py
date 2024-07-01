@@ -102,15 +102,11 @@ class BatteryDataset:
     def validate_columns(self, allow_extra_columns: bool = True):
         """Determine whether the column types are appropriate
 
-        Parameters
-        ----------
-        allow_extra_columns: bool
-            Whether to allow unexpected columns
+        Args:
+            allow_extra_columns: Whether to allow unexpected columns
 
         Raises
-        ------
-        ValueError
-            If the dataset fails validation
+            (ValueError): If the dataset fails validation
         """
         for attr_name, schema in _subsets.items():
             data = getattr(self, attr_name)
@@ -124,9 +120,7 @@ class BatteryDataset:
         makes recommendations of improvements that one could make
         to increase the re-usability of the data.
 
-        Returns
-        -------
-        List of str
+        Returns:
             Recommendations to improve data re-use
         """
         self.validate_columns()
@@ -193,6 +187,7 @@ class BatteryDataset:
                 if metadata != existing_metadata:
                     warnings.warn('Metadata already in HDF5 differs from new metadata')
             f.root._v_attrs.metadata = metadata
+            f.root._v_attrs.schema = self.metadata.model_json_schema()
 
         # Apply the metadata addition function
         path_or_buf = stringify_path(path_or_buf)
@@ -292,7 +287,7 @@ class BatteryDataset:
         """Extract the battery data and the prefixes of cells contained within an HDF5 file
 
         Args:
-            path: Path to the HDF5 file, or HDFStore object
+            path_or_buf: Path to the HDF5 file, or HDFStore object
         Returns:
             - Metadata from this file
             - List of names of batteries stored within the file
