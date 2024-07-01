@@ -1,4 +1,5 @@
 """Tools for streamlining upload to `Battery Archive <https://batteryarchive.org/>`_"""
+import json
 from typing import Callable, Any, Optional
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,6 +11,7 @@ import pandas as pd
 
 from .base import DatasetExporter
 from ..data import BatteryDataset
+from ..schemas import BatteryMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +23,20 @@ _timeseries_reference: dict[str, tuple[str, Optional[Callable[[Any], Any]]]] = {
     'current': ('i', None),
     'voltage': ('v', None),
     'temperature': ('env_temperature', None),  # TODO (wardlt): @ypreger, would you prefer unknown temps as env or cell?
-    'time': ('date_time', None),  # TODO (wardlt): This writes a UNIX timestep in UTC. Is that the form used by BA?
-    'cycle_number': ('cycle_index', None),  # TODO (wardlt): Does BatteryArchive start at 0 or 1?
-    'test_time': ('test_time', None),  # TODO (wardlt): What time units does BA use?
+    'time': ('date_time', None),  # TODO (wardlt): Export into MM/DD/YYYY hh:mm:ss
+    'cycle_number': ('cycle_index', None),  # TODO (wardlt): Does BatteryArchive start at 0 or 1?  (Switch to 1 index)
+    'test_time': ('test_time', None),  # TODO (wardlt): What time units does BA use? (s)
+}
+
+_battery_metadata_reference: dict[str, str] = {
+    'nominal_capacity': 'ah',  # TODO (wardlt): Why is ah an integer?
+    'form_factor': 'form_factor',
+    'mass': 'weight',  # TODO (wardlt): What units does batteryachive use?
+    'dimensions': 'dimensions',  # TODO (wardlt): How do you express shapes for different form factors
+}
+
+_metadata_reference: dict[str, str] = {
+    'source': 'source',
 }
 
 
@@ -69,8 +82,42 @@ class BatteryArchiveExporter(DatasetExporter):
             out_chunk.to_csv(chunk_path, index=False, encoding='utf-8')
             logger.debug(f'Wrote {len(out_chunk)} rows to {chunk_path}')
 
+    def write_metadata(self, cell_id: str, metadata: BatteryMetadata, path: Path):
+        """Write the metadata into a JSON file
+
+        Args:
+            cell_id: ID for the cell
+            metadata: Metadata to be written
+            path: Path in which to write the data
+        """
+
+        output = {'cell_id': cell_id}
+
+        # Write the materials for the anode and cathode as dictionaries
+        for terminal in ['anode', 'cathode']:
+            attr = getattr(metadata.battery, terminal, None)
+            if attr is not None:
+                output[terminal] = attr.model_dump_json(exclude_unset=True)
+
+        # Write the simple fields about the batteries and tester
+        for my_field, ba_field in _battery_metadata_reference.items():
+            attr = getattr(metadata.battery, my_field, None)
+            if attr is not None:
+                output[ba_field] = attr
+
+        for my_field, ba_field in _metadata_reference.items():
+            attr = getattr(metadata, my_field, None)
+            if attr is not None:
+                output[ba_field] = attr
+
+        with open(path / 'metadata.json', 'w') as fp:
+            json.dump(output, fp)
+
     def export(self, dataset: BatteryDataset, path: Path):
-        cell_name = dataset.metadata.name or uuid4()  # Use either the user-provided name or a UUID if none provided
+        cell_name = dataset.metadata.name or str(uuid4())  # Default to UUID if none provided
 
         if dataset.raw_data is not None:
             self.write_timeseries(cell_name, dataset.raw_data, path)
+
+        if dataset.metadata is not None:
+            self.write_metadata(cell_name, dataset.metadata, path)

@@ -17,7 +17,8 @@ class ElectrodeDescription(BaseModel, extra='allow'):
     thickness: Optional[float] = Field(None, description='Thickness of the material (units: μm)', ge=0)
     area: Optional[float] = Field(None, description='Total area of the electrode (units: cm2)', ge=0)
     loading: Optional[float] = Field(None, description='Amount of active material per area (units: mg/cm^2)', ge=0)
-    porosity: Optional[float] = Field(None, description='Relative volume of the electrode occupied by gas (units: %)', ge=0, le=100)
+    porosity: Optional[float] = Field(None, description='Relative volume of the electrode occupied by gas (units: %)',
+                                      ge=0, le=100)
 
 
 class ElectrolyteAdditive(BaseModel, extra='allow'):
@@ -32,7 +33,8 @@ class ElectrolyteDescription(BaseModel, extra='allow'):
     """Description of the electrolyte"""
 
     name: str = Field(..., description='Short description of the electrolyte types')
-    additives: List[ElectrolyteAdditive] = Field(default_factory=list, help='Any additives present in the electrolyte')
+    additives: List[ElectrolyteAdditive] = Field(default_factory=list,
+                                                 description='Any additives present in the electrolyte')
 
 
 class BatteryDescription(BaseModel, extra='allow'):
@@ -44,11 +46,19 @@ class BatteryDescription(BaseModel, extra='allow'):
 
     # Geometry information
     layer_count: Optional[int] = Field(None, description="Number of layers within the battery", gt=1)
+    form_factor: Optional[str] = Field(None, description="The general shape of the battery",
+                                       iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_1586ef26_6d30_49e3_ae32_b4c9fc181941")
+    mass: Optional[float] = Field(None, description="Mass of the entire battery. Units: kg")
+    dimensions: Optional[List[float]] = Field(None, description='Dimensions of the battery in plain text.')
 
     # Materials description
-    anode: Optional[ElectrodeDescription] = Field(None, description="Name of the anode material")
-    cathode: Optional[ElectrodeDescription] = Field(None, description="Name of the cathode material")
-    electrolyte: Optional[ElectrolyteDescription] = Field(None, description="Name of the electrolyte material")
+    anode: Optional[ElectrodeDescription] = Field(None, description="Name of the anode material",
+                                                  iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_b6319c74_d2ce_48c0_a75a_63156776b302")
+    cathode: Optional[ElectrodeDescription] = Field(None, description="Name of the cathode material",
+                                                    iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_35c650ab_3b23_4938_b312_1b0dede2e6d5")
+    electrolyte: Optional[ElectrolyteDescription] = Field(None, description="Name of the electrolyte material",
+                                                          iri=("https://w3id.org/emmo/domain/electrochemistry"
+                                                               "#electrochemistry_fb0d9eef_92af_4628_8814_e065ca255d59"))
 
     # Performance information
     nominal_capacity: float = Field(None, description="Rated capacity of the battery. Units: A-hr",
