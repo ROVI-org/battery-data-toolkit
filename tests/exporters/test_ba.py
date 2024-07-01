@@ -9,7 +9,7 @@ from batdata.schemas import BatteryMetadata, BatteryDescription
 from batdata.schemas.battery import ElectrodeDescription
 
 
-def test_export(example_data):
+def test_export(example_data, tmpdir):
     # Add a datetime
     example_data.raw_data['time'] = example_data.raw_data['test_time'] + datetime(year=2024, month=7, day=1).timestamp()
 
@@ -21,7 +21,7 @@ def test_export(example_data):
         )
     )
 
-    tmpdir = Path('test')
+    tmpdir = Path(tmpdir)
     tmpdir.mkdir(exist_ok=True)
     exporter = BatteryArchiveExporter()
     exporter.export(example_data, tmpdir)

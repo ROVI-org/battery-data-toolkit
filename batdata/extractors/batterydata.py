@@ -183,9 +183,3 @@ class BDExtractor(BatteryDataExtractor):
         # Separate out the EIS data, if possible
 
         return BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, eis_data=eis_data, metadata=metadata)
-
-    def implementors(self) -> List[str]:
-        return ['Logan Ward <lward@anl.gov>']
-
-    def version(self) -> str:
-        return '0.0.1'
