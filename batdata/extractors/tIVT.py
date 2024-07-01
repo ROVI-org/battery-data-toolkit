@@ -84,9 +84,3 @@ class TIVTExtractor(BatteryDataExtractor):
         df_out = compute_capacity_energy(df_out)
 
         return df_out
-
-    def implementors(self) -> List[str]:
-        return ['Noah, Paulson <npaulson@anl.gov>']
-
-    def version(self) -> str:
-        return '0.0.1'

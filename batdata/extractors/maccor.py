@@ -66,9 +66,3 @@ class MACCORExtractor(BatteryDataExtractor):
         AddMethod().enhance(df_out)
         AddSubSteps().enhance(df_out)
         return df_out
-
-    def implementors(self) -> List[str]:
-        return ['Kubal, Joesph <kubal@anl.gov>', 'Ward, Logan <lward@anl.gov>']
-
-    def version(self) -> str:
-        return '0.0.1'
