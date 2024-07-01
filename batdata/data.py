@@ -187,7 +187,7 @@ class BatteryDataset:
         # Create logic for adding metadata
         def add_metadata(f: HDFStore):
             """Put the metadata in a standard location at the root of the HDF file"""
-            metadata = self.metadata.json()
+            metadata = self.metadata.model_dump_json()
             if append and 'metadata' in f.root._v_attrs:
                 existing_metadata = f.root._v_attrs.metadata
                 if metadata != existing_metadata:
@@ -380,7 +380,7 @@ class BatteryDataset:
         # Make the output directory, then write each Parquet file
         path.mkdir(parents=True, exist_ok=False)
         my_metadata = {
-            'battery_metadata': self.metadata.json(exclude_defaults=True),
+            'battery_metadata': self.metadata.model_dump_json(exclude_defaults=True),
             'write_date': datetime.now().isoformat()
         }
         written = {}

@@ -5,7 +5,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 
 from batdata.postprocess.base import RawDataEnhancer, CycleSummarizer
 
@@ -82,8 +82,8 @@ class CapacityPerCycle(CycleSummarizer):
                 capacity_change = cycle_subset['cycle_capacity'].values * 3600  # To A-s
                 energy_change = cycle_subset['cycle_energy'].values * 3600  # To J
             else:
-                capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'])
-                energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
+                capacity_change = cumulative_trapezoid(cycle_subset['current'], x=cycle_subset['test_time'])
+                energy_change = cumulative_trapezoid(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
 
             # Estimate if the battery starts as charged or discharged
             max_charge = capacity_change.max()
@@ -143,8 +143,8 @@ class StateOfCharge(RawDataEnhancer):
             cycle_subset = ordered_copy.iloc[start_ind:stop_ind]
 
             # Perform the integration
-            capacity_change = cumtrapz(cycle_subset['current'], x=cycle_subset['test_time'], initial=0)
-            energy_change = cumtrapz(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
+            capacity_change = cumulative_trapezoid(cycle_subset['current'], x=cycle_subset['test_time'], initial=0)
+            energy_change = cumulative_trapezoid(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
 
             # Store them in the raw data
             data.loc[cycle_subset['index'], 'cycle_capacity'] = capacity_change / 3600  # To A-hr

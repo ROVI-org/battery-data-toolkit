@@ -48,22 +48,8 @@ class ColumnSchema(BaseModel):
 
     @classmethod
     def validate_dataframe(cls, data: DataFrame, allow_extra_columns: bool = True):
-        """Validate whether a DataFrame fits the target schema
-
-        Parameters
-        ----------
-        data: DataFrame
-            DataFrame to be validated
-        allow_extra_columns: bool
-            Whether to allow columns that are not defined in schema
-
-        Raises
-        ------
-        ValueError
-            If the dataset fails to validate
-        """
         # Get the columns from the schema
-        schema = cls.schema()
+        schema = cls.model_json_schema()
         schema_columns = schema['properties']
         required_cols = schema['required']
 
