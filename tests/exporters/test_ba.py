@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 import json
 
 import pandas as pd
@@ -9,6 +10,9 @@ from batdata.schemas.battery import ElectrodeDescription
 
 
 def test_export(example_data):
+    # Add a datetime
+    example_data.raw_data['time'] = example_data.raw_data['test_time'] + datetime(year=2024, month=7, day=1).timestamp()
+
     # Add some metadata to the file
     example_data.metadata = BatteryMetadata(
         battery=BatteryDescription(
@@ -28,6 +32,8 @@ def test_export(example_data):
     timeseries = pd.read_csv(timeseries_path)
     assert 'v' in timeseries  # Make sure a conversion occurred correctly
     assert 'cell_id' in timeseries
+    assert timeseries['date_time'].iloc[0] == '07/01/2024 00:00:00.000000'
+    assert timeseries['cycle_index'].iloc[1] == 1
 
     # Check that metadata was written
     metadata = json.loads(tmpdir.joinpath('metadata.json').read_text())

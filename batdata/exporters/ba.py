@@ -1,10 +1,12 @@
 """Tools for streamlining upload to `Battery Archive <https://batteryarchive.org/>`_"""
-import json
+
 from typing import Callable, Any, Optional
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-import logging
 from uuid import uuid4
+import logging
+import json
 
 import numpy as np
 import pandas as pd
@@ -23,9 +25,9 @@ _timeseries_reference: dict[str, tuple[str, Optional[Callable[[Any], Any]]]] = {
     'current': ('i', None),
     'voltage': ('v', None),
     'temperature': ('env_temperature', None),  # TODO (wardlt): @ypreger, would you prefer unknown temps as env or cell?
-    'time': ('date_time', None),  # TODO (wardlt): Export into MM/DD/YYYY hh:mm:ss
-    'cycle_number': ('cycle_index', None),  # TODO (wardlt): Does BatteryArchive start at 0 or 1?  (Switch to 1 index)
-    'test_time': ('test_time', None),  # TODO (wardlt): What time units does BA use? (s)
+    'time': ('date_time', lambda x: datetime.fromtimestamp(x).strftime('%m/%d/%Y %H:%M:%S.%f')),
+    'cycle_number': ('cycle_index', lambda x: x + 1),  # BA starts indices from 1
+    'test_time': ('test_time', None),
 }
 
 _battery_metadata_reference: dict[str, str] = {
