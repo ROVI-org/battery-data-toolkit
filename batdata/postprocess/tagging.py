@@ -27,8 +27,8 @@ class AddMethod(RawDataEnhancer):
     column_names = ['method']
 
     def enhance(self, df: pd.DataFrame):
-        # Insert a new column into the dataframe
-        df['method'] = df['step_index']
+        # Insert a new column into the dataframe, starting with everything marked as other
+        df['method'] = ControlMethod.other
 
         # array of indexes
         cycles = df.groupby(["cycle_number", "step_index"])
