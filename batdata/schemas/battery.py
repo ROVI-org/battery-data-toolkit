@@ -61,5 +61,5 @@ class BatteryDescription(BaseModel, extra='allow'):
                                                                "#electrochemistry_fb0d9eef_92af_4628_8814_e065ca255d59"))
 
     # Performance information
-    nominal_capacity: float = Field(None, description="Rated capacity of the battery. Units: A-hr",
-                                    iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_9b3b4668_0795_4a35_9965_2af383497a26")
+    nominal_capacity: Optional[float] = Field(None, description="Rated capacity of the battery. Units: A-hr",
+                                              iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_9b3b4668_0795_4a35_9965_2af383497a26")
