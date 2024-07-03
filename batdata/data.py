@@ -95,6 +95,8 @@ class BatteryDataset:
             if version_mismatch:
                 warnings.warn('Metadata failed to validate, probably due to version mismatch. Discarding until we support backwards compatibility')
                 self.metadata = BatteryMetadata()
+            else:
+                raise
         self.raw_data = raw_data
         self.cycle_stats = cycle_stats
         self.eis_data = eis_data
