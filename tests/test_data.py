@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from pandas import HDFStore
 import pyarrow.parquet as pq
+from pydantic import ValidationError
 from pytest import fixture, raises
 
 from batdata.data import BatteryDataset
@@ -207,3 +208,11 @@ def test_version_warnings(test_df):
     assert 'supplied=super.old.version' in str(w.list[1].message)
     assert 'failed to validate, probably' in str(w.list[2].message)
     assert recovered.metadata.version == __version__
+
+
+def test_bad_metadata():
+    """Ensure bad metadata causes an exception"""
+
+    metadata = {'name': 1}
+    with raises(ValidationError):
+        BatteryDataset(metadata=metadata)
