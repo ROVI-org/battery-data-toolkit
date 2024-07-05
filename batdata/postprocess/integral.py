@@ -77,6 +77,10 @@ class CapacityPerCycle(CycleSummarizer):
         for cyc, (start_ind, stop_ind) in enumerate(zip_longest(start_inds, start_inds[1:] + 1, fillvalue=len(raw_data))):
             cycle_subset = raw_data.iloc[start_ind:stop_ind]
 
+            # Skip cycles that are too short to have a capacity measurement
+            if len(cycle_subset) < 3:
+                continue
+
             # Perform the integration
             if self.reuse_integrals and 'cycle_energy' in cycle_subset.columns and 'cycle_capacity' in cycle_subset.columns:
                 capacity_change = cycle_subset['cycle_capacity'].values * 3600  # To A-s
