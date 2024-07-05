@@ -78,7 +78,9 @@ def test_against_battery_data_gov(file_path):
     cyc_id = 8
     data = BDExtractor().parse_to_dataframe(list((file_path / 'batterydata').glob('p492*')))
     orig_data = \
-    data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy().iloc[cyc_id]
+        data.cycle_stats[
+            ['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']
+        ].copy().iloc[cyc_id]
 
     # Recompute
     CapacityPerCycle().compute_features(data)
