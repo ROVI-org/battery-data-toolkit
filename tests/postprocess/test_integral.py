@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import pandas as pd
 from pytest import mark
 import numpy as np
 
@@ -11,6 +12,16 @@ from batdata.postprocess.integral import CapacityPerCycle, StateOfCharge
 def get_example_data(file_path: Path, from_charged: bool) -> BatteryDataset:
     ex_file = file_path / 'example-data' / f'single-resistor-constant-charge_from-{"" if from_charged else "dis"}charged.hdf'
     return BatteryDataset.from_batdata_hdf(ex_file)
+
+
+def test_short_cycles():
+    """Make sure cycles that are too short for capacity measurements do not cause errors"""
+
+    example_data = BatteryDataset(
+        raw_data=pd.DataFrame({'time': range(2), 'current': [1.] * 2, 'voltage': [2.] * 2})
+    )
+    CapacityPerCycle().compute_features(example_data)
+    assert np.isnan(example_data.cycle_stats['capacity_charge']).all()
 
 
 @mark.parametrize('from_charged', [True, False])
@@ -66,11 +77,13 @@ def test_against_battery_data_gov(file_path):
 
     cyc_id = 8
     data = BDExtractor().parse_to_dataframe(list((file_path / 'batterydata').glob('p492*')))
-    orig_data = data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy().iloc[cyc_id]
+    orig_data = \
+    data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy().iloc[cyc_id]
 
     # Recompute
     CapacityPerCycle().compute_features(data)
-    new_data = data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].iloc[cyc_id]
+    new_data = data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].iloc[
+        cyc_id]
     diff = np.abs(orig_data.values - new_data.values)
     agree = diff < 1e-3
     assert agree.all(), diff
@@ -81,7 +94,8 @@ def test_reuse_integrals(file_path):
 
     # Get a baseline capacity
     CapacityPerCycle(reuse_integrals=False).compute_features(example_data)
-    initial_data = example_data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
+    initial_data = example_data.cycle_stats[
+        ['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
 
     # Compute the integrals then intentionally increase capacity and energy 2x
     StateOfCharge().compute_features(example_data)
@@ -90,5 +104,6 @@ def test_reuse_integrals(file_path):
 
     # Recompute capacity and energy measurements, which should have increased by 2x
     CapacityPerCycle(reuse_integrals=True).compute_features(example_data)
-    final_data = example_data.cycle_stats[['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
+    final_data = example_data.cycle_stats[
+        ['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
     assert np.isclose(initial_data.values * 2, final_data.values, atol=1e-3).all()
