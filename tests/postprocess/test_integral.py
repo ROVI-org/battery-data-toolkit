@@ -18,7 +18,7 @@ def test_short_cycles():
     """Make sure cycles that are too short for capacity measurements do not cause errors"""
 
     example_data = BatteryDataset(
-        raw_data=pd.DataFrame({'time': range(2), 'current': [1.] * 2, 'voltage': [2.] * 2})
+        raw_data=pd.DataFrame({'time': range(2), 'current': [1.] * 2, 'voltage': [2.] * 2, 'cycle_number': [0] * 2})
     )
     CapacityPerCycle().compute_features(example_data)
     assert np.isnan(example_data.cycle_stats['capacity_charge']).all()
