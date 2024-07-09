@@ -1,4 +1,4 @@
-"""Utility functions for computing properties of certain cycles"""
+"""Features related to the relative to the start of cycles or the test, etc"""
 import warnings
 
 import numpy as np
@@ -14,7 +14,7 @@ class CycleTimes(CycleSummarizer):
 
     The duration of a cycle is the difference between the start of the next cycle and the start of the cycle.
     If the start time of the next cycle is unavailable, it is the difference between the test time of the
-    last test time in the raw data and the start fo the cycle.
+    last test time in the raw data and the start of the cycle.
     """
 
     column_names = ['cycle_start', 'cycle_duration']

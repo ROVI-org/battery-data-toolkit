@@ -5,7 +5,7 @@ import numpy as np
 from pytest import warns
 
 from batdata.data import BatteryDataset
-from batdata.postprocess.cycle_stats import CycleTimes
+from batdata.postprocess.timing import CycleTimes
 
 
 def test_times():
