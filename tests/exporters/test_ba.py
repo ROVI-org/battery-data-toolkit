@@ -38,3 +38,7 @@ def test_export(example_data, tmpdir):
     # Check that metadata was written
     metadata = json.loads(tmpdir.joinpath('metadata.json').read_text())
     assert metadata['cathode'] == '{"name":"nmc"}'
+
+    # Make sure the cycle statistics are written
+    cycle_stats = pd.read_csv(tmpdir.joinpath('cycle-stats.csv'))
+    assert cycle_stats['cycle_index'].iloc[0] == 1
