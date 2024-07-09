@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # TODO (wardlt): Differentiate the cell temperature from the environment temperature (#76)
 # TODO (wardlt): Compute more derived fields from BatteryArchive (#77)
 _timeseries_reference: dict[str, tuple[str, Optional[Callable[[Any], Any]]]] = {
-    'current': ('i', None),
+    'current': ('i', None),  # TODO (wardlt): Which sign convention does battery archive use?
     'voltage': ('v', None),
     'temperature': ('env_temperature', None),  # TODO (wardlt): @ypreger, would you prefer unknown temps as env or cell?
     'time': ('date_time', lambda x: datetime.fromtimestamp(x).strftime('%m/%d/%Y %H:%M:%S.%f')),
@@ -35,6 +35,21 @@ _battery_metadata_reference: dict[str, str] = {
     'form_factor': 'form_factor',
     'mass': 'weight',  # TODO (wardlt): What units does batteryachive use?
     'dimensions': 'dimensions',  # TODO (wardlt): How do you express shapes for different form factors
+}
+
+_cycle_stats_reference: dict[str, tuple[str, Callable[[Any], Any]]] = {
+    'V_maximum': ('v_max', None),
+    'V_minimum': ('v_min', None),
+    'capacity_discharge': ('ah_d', None),
+    'capacity_charge': ('ah_c', None),
+    'energy_discharge': ('e_d', None),
+    'energy_charge': ('e_c', None),
+    'discharge_V_average': ('v_d_mean', None),
+    'charge_V_average': ('v_c_mean', None),
+    'coulomb_efficiency': ('ah_eff', None),  # TODO (wardlt): Is this correct?
+    'energy_efficiency': ('e_eff', None),
+    'cycle_start': ('test_time', None),  # TODO (wardlt): Is test-time the beginning, duration, something else?
+    'cycle_number': ('cycle_index', lambda x: x + 1),  # BA starts indices from 1
 }
 
 _metadata_reference: dict[str, str] = {
@@ -84,6 +99,28 @@ class BatteryArchiveExporter(DatasetExporter):
             out_chunk.to_csv(chunk_path, index=False, encoding='utf-8')
             logger.debug(f'Wrote {len(out_chunk)} rows to {chunk_path}')
 
+    def write_cycle_stats(self, cell_id: str, data: pd.DataFrame, path: Path):
+        """Write the cycle stats to disk
+
+        Args:
+            cell_id: Name of the cell
+            data: Cycle stats dataframe
+            path: Path to the output directory
+        """
+
+        # Convert the dataframe
+        out_data = pd.DataFrame()
+        for my_col, (out_col, out_fun) in _cycle_stats_reference.items():
+            if my_col in data:
+                out_data[out_col] = data[my_col]
+                if out_fun is not None:
+                    out_data[out_col] = out_data[out_col].apply(out_fun)
+
+        # Write the cell ID in the output
+        out_data['cell_id'] = cell_id
+
+        out_data.to_csv(path / 'cycle-stats.csv', index=False)
+
     def write_metadata(self, cell_id: str, metadata: BatteryMetadata, path: Path):
         """Write the metadata into a JSON file
 
@@ -123,3 +160,6 @@ class BatteryArchiveExporter(DatasetExporter):
 
         if dataset.metadata is not None:
             self.write_metadata(cell_name, dataset.metadata, path)
+
+        if dataset.cycle_stats is not None:
+            self.write_cycle_stats(cell_name, dataset.cycle_stats, path)
