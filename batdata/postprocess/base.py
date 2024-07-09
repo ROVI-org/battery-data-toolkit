@@ -15,17 +15,13 @@ class BaseFeatureComputer:
     def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
         """Compute
 
-        Parameters
-        ----------
-        data: BatteryDataFrame
-            Battery data object
+        Args:
+            data: Battery data object
 
-        Returns
-        -------
-        features: pd.DataFrame
+        Returns:
             A dataframe of features where rows are different cycles or steps, columns are different features
         """
-        pass
+        raise NotImplementedError()
 
 
 class RawDataEnhancer(BaseFeatureComputer):
@@ -40,12 +36,10 @@ class RawDataEnhancer(BaseFeatureComputer):
     def enhance(self, data: pd.DataFrame):
         """Add additional columns to the raw data
 
-        Parameters
-        ----------
-        data: pd.DataFrame
-            Raw data to be modified
+        Args:
+            data: Raw data to be modified
         """
-        ...
+        raise NotImplementedError()
 
 
 class CycleSummarizer(BaseFeatureComputer):
@@ -60,10 +54,8 @@ class CycleSummarizer(BaseFeatureComputer):
     def add_summaries(self, data: BatteryDataset):
         """Add cycle-level summaries to a battery dataset
 
-        Parameters
-        ----------
-        data: BatteryDataset
-            Dataset to be modified
+        Args:
+            data: Dataset to be modified
         """
 
         # Add a cycle summary if not already available
@@ -76,10 +68,8 @@ class CycleSummarizer(BaseFeatureComputer):
     def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
         """Add additional data to a cycle summary dataframe
 
-        Parameters
-        ----------
-        raw_data: pd.DataFrame
-            Raw data describing the initial cycles. Is not modified
-        cycle_data: pd.DataFrame
-            Cycle data frame to be updated
+        Args:
+            raw_data: Raw data describing the initial cycles. Is not modified
+            cycle_data: Cycle data frame to be updated
         """
+        raise NotImplementedError()

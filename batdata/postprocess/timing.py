@@ -4,10 +4,10 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from batdata.postprocess.base import CycleSummarizer
+from batdata.postprocess.base import CycleSummarizer, RawDataEnhancer
 
 
-class CycleTimes(CycleSummarizer):
+class CycleTimesSummarizer(CycleSummarizer):
     """Capture the start time and duration of a cycle
 
     The start of a cycle is the minimum test time for any point in the raw data.
@@ -37,3 +37,22 @@ class CycleTimes(CycleSummarizer):
         # Update the cycle_data accordingly
         cycle_data[self.column_names] = np.nan
         cycle_data.update(time_summary)
+
+
+class TimeEnhancer(RawDataEnhancer):
+    """Compute additional columns describing the time a measurement was taken"""
+
+    column_names = ['test_time', 'cycle_time']
+
+    def enhance(self, data: pd.DataFrame):
+
+        # Compute the test_time from the date_time
+        if 'test_time' not in data.columns:
+            if 'date_time' not in data.columns:
+                raise ValueError('The data must contain a `date_time` column')
+            data['test_time'] = (data['date_time'] - data['date_time'].min()).dt.total_seconds()
+
+        # Compute the cycle_time from the test_time
+        data['cycle_time'] = data['test_time']
+        data['cycle_time'] -= data.groupby('cycle_number')['test_time'].transform("min")
+        return data
