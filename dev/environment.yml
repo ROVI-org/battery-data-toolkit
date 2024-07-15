@@ -5,10 +5,10 @@ channels:
 dependencies:
   - python==3.9.*
 
+
   # For now, use Pip for everything major
   - pip
   - pip:
     # Install jupyter
     - jupyterlab
-    - matplotlib
     - -e ..[test]

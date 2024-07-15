@@ -3,7 +3,7 @@ from pathlib import Path
 from pytest import fixture
 
 from batdata.data import BatteryDataset, BatteryMetadata
-from batdata.postprocess.timing import CycleTimesSummarizer
+from batdata.postprocess.cycle_stats import CycleTimes
 
 
 @fixture()
@@ -21,7 +21,7 @@ def example_data(file_path) -> BatteryDataset:
     data = BatteryDataset.from_batdata_hdf(path)
 
     # Compute basic cycling states
-    for stats in [CycleTimesSummarizer()]:
+    for stats in [CycleTimes()]:
         stats.compute_features(data)
 
     # Give the cell a name, at least

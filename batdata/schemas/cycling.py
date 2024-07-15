@@ -124,7 +124,6 @@ class RawData(ColumnSchema):
     test_time: List[float] = Field(..., description="Time from the beginning of the cycling test. Times must be "
                                                     "nonnegative and monotonically increasing. Units: s",
                                    monotonic=True)
-    cycle_time: List[float] = Field(None, description="Time from the beginning of a cycle. Units: s")
     time: List[float] = Field(None, description="Time as a UNIX timestamp. Assumed to be in UTC")
     voltage: List[float] = Field(..., description="Measured voltage of the system. Units: V")
     current: List[float] = Field(..., description="Measured current of the system. Positive current represents "
