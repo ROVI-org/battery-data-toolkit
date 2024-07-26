@@ -144,12 +144,12 @@ class RawData(ColumnSchema):
     # Derived quantities
     cycle_capacity: List[float] = Field(None,
                                         description="Cumulative change in amount of charge transferred from a battery since the start of a cycle. "
-                                                    "Positive values indicate the battery has discharged since the start of the cycle."
-                                        )
+                                                    "Positive values indicate the battery has discharged since the start of the cycle.")
     cycle_energy: List[float] = Field(None,
                                       description="Cumulative change in amount of energy transferred from a battery the start of a cycle. "
-                                                  "Positive values indicate the battery has discharged more than since the start of the cycle."
-                                      )
+                                                  "Positive values indicate the battery has discharged more than since the start of the cycle.")
+    cycle_capacity_charge: List[float] = Field(None, description="Cycle capacity computed only during the 'charging' phase of a cycle")
+    cycle_capacity_discharge: List[float] = Field(None, description="Cycle capacity computed only during the 'discharging' phase of a cycle")
 
 
 class CycleLevelData(ColumnSchema):
