@@ -1,3 +1,8 @@
 # Documentation
 
-> Under Construction: Need to make a full readthedocs-style page, but started with notebooks explaining key features
+Built using Sphinx and the pydata style
+
+Compile the documentation using Make
+```commandline
+make html
+```

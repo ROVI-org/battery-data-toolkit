@@ -31,6 +31,11 @@ test = [
     'pytest',
     'pytest-cov'
 ]
+docs = [
+    'sphinx',
+    'pydata-sphinx-theme',
+    'nbsphinx'
+]
 
 [project.urls]
 repository = "https://github.com/rovi-org/battery-data-toolkit"
