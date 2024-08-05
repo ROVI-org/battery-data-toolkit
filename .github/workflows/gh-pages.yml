@@ -12,6 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
+        with:
+          python-version: 3.9  # Sphinx 8 requires 3.10, so we'll have to change this eventually
       - name: Install dependencies
         run: |
           pip install -e .[docs]
