@@ -5,17 +5,55 @@ from pathlib import Path
 from dataclasses import dataclass
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Union, List, Iterator, Tuple, Optional
+from typing import Union, List, Iterator, Tuple, Optional, Iterable
 
 import pandas as pd
 
 from .base import BatteryDataExtractor
 from ..data import BatteryDataset
-from ..schemas import BatteryMetadata
+from ..schemas import BatteryMetadata, BatteryDescription
 
 _fname_match = re.compile(r'(?P<name>[-\w]+)-(?P<type>summary|raw)\.csv')
 
 logger = logging.getLogger(__name__)
+
+
+def generate_metadata(desc: dict, associated_ids: Iterable[str] = ()) -> BatteryMetadata:
+    """Assemble the battery metadata for a dataset
+
+    The metadata for a single dataset are all the same and available by querying
+    the ``https://batterydata.energy.gov/api/3/action/package_show?id={dataset_id}``
+    endpoint of `Battery Data Hub <https://batterydata.energy.gov/>`_.
+
+    Args:
+        desc: Data from the CKAN metadata response
+        associated_ids: List of other resources associated with this dataset, such as the DOIs of papers.
+    Returns:
+        Metadata for the cell provenance and construction
+    """
+
+    # Get the "results" pane if users didn't provide it
+    if 'result' in desc:
+        desc = desc['result']
+
+    # Describe the battery
+    battery = BatteryDescription(
+        manufacturer=desc['manufacturer_supplier'],
+        design=", ".join(desc['cell_type']),
+        anode={'name': ", ".join(desc['negative_electrode'])},
+        cathode={'name': ", ".join(desc['positive_electrode'])},
+        electrolyte={'name': ", ".join(desc['electrolyte_class_dataset'])},
+        nominal_capacity=desc['nominal_cell_capacity'],
+    )
+
+    # Describe the context of when it was tested
+    return BatteryMetadata(
+        source=desc['organization']['title'],
+        dataset_name=desc['title'],
+        associated_ids=associated_ids,
+        battery=battery,
+    )
+
 
 # TODO (wardlt): Columns that yet to have a home in the schema:
 #  - Cell2
