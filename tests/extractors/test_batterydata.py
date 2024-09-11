@@ -1,7 +1,10 @@
 from datetime import datetime
-from pytest import fixture
 
-from batdata.extractors.batterydata import BDExtractor
+import requests
+from pytest import fixture
+from pydantic import AnyUrl
+
+from batdata.extractors.batterydata import BDExtractor, generate_metadata
 
 
 @fixture()
@@ -45,3 +48,11 @@ def test_store_all(test_files):
     # Make sure NREL-specific columns are stored
     assert 'datenum_d' in data.cycle_stats.columns
     assert 'Charge_Throughput_Ah' in data.raw_data.columns
+
+
+def test_metadata():
+    source = 'kokam-nmc-gr-75ah-accelerated-aging'  # TODO (wardlt): Spoof a dataset if this changes
+    description = requests.get(f'https://batterydata.energy.gov/api/3/action/package_show?id={source}', timeout=15).json()
+    metadata = generate_metadata(description, ('https://test.url/',))
+    assert AnyUrl('https://test.url/') in metadata.associated_ids
+    assert metadata.battery.cathode.name == 'NMC111'

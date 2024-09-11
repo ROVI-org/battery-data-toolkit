@@ -105,7 +105,7 @@ class ColumnSchema(BaseModel):
 
 
 class RawData(ColumnSchema):
-    """Schema for the battery testing data.
+    """Schema for the time series data
 
     Each attribute in this array specifies columns within a :class:`BatteryDataFrame`.
     The schema is defined such that extra columns are allowed by default.
