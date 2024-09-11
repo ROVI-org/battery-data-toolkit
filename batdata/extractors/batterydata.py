@@ -175,7 +175,7 @@ class BDExtractor(BatteryDataExtractor):
                 raw_data = convert_raw_signal_to_batdata(nrel_data, self.store_all)
 
                 # Get EIS data, if available
-                if not (nrel_data['Z_Imag_Ohm'].isna()).all():
+                if 'Z_Imag_Ohm' in nrel_data.columns and not (nrel_data['Z_Imag_Ohm'].isna()).all():
                     eis_data = convert_eis_data_to_batdata(nrel_data)
             else:
                 raise ValueError(f'Data type unrecognized: {data_type}')
