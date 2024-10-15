@@ -45,7 +45,7 @@ for a full accounting of the available fields in our schema.
 
 .. note:: TODO: Render the schemas into an easier-to-read format
 
-Feel free to add your own fields to any part fo the schema. 
+Feel free to add fields to any part of the schema.
 The schema is a continual work in progress and the battery-data-toolkit will 
 store your new fields.
 Consider adding `an Issue <https://github.com/ROVI-org/battery-data-toolkit/issues>`_ to our GitHub
@@ -61,7 +61,7 @@ with the "IRI" of the field, which points to a website containing the descriptio
 
 Fields whose values should be terms from the BattINFO ontology are marked with the root of the terms.
 For example, the ``model_type`` field of `ModelMetadata` can be any type of
-` MathematicalModel <https://emmo-repo.github.io/emmo.html#EMMO_f7ed665b_c2e1_42bc_889b_6b42ed3a36f0>`_.
+`MathematicalModel <https://emmo-repo.github.io/emmo.html#EMMO_f7ed665b_c2e1_42bc_889b_6b42ed3a36f0>`_.
 Look them up using some utilities in ``batdata``.
 
 .. code-block:: python
@@ -91,3 +91,6 @@ of the ``BatteryMetadata``.
         name='test_cell',
         raw_data_columns={'new_signal': 'A column not yet defined in our schemas.'}
     )
+
+
+.. include:: column-schema.rst

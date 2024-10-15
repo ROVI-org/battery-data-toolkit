@@ -105,13 +105,7 @@ class ColumnSchema(BaseModel):
 
 
 class RawData(ColumnSchema):
-    """Schema for the time series data
-
-    Each attribute in this array specifies columns within a :class:`BatteryDataFrame`.
-    The schema is defined such that extra columns are allowed by default.
-    The columns listed here represent those types of data for which we specify
-    a common definition.
-    """
+    """Schema for the time series data."""
 
     cycle_number: List[int] = Field(None, description="Index of the testing cycle, starting at 0. All indices should be"
                                                       " nonnegative and be monotonically increasing", monotonic=True)
