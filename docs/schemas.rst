@@ -1,7 +1,7 @@
 Battery Data Schemas
 ====================
 
-The metadata schemas used by ```batdata``` standardize how we describe the source of battery datasets.
+The metadata schemas used by ``batdata`` standardize how we describe the source of battery datasets.
 Metadata are held as part of the ``BatteryDataset`` object and saved within the file formats
 produced by ``batdata`` to ensure that the provenance of a dataset is kept alongside the actual data.
 
@@ -11,6 +11,8 @@ Understanding the Metadata
 
 The metadata we employ in ``batdata`` follows the style of the JSON or XML data structures which are ubiquitous
 in scientific computation and data infrastructure.
+Each record is composed of a single document that has a hierarchical set of fields which can correspond
+to single values or collections of values.
 
 We recommend creating the metadata for a battery through the Python interface. 
 Start by creating a ``BatteryMetadata`` object. There are no required fields, but you should always give your data a name.
@@ -39,17 +41,15 @@ For example, the details about the battery being tested are in `BatteryDescripti
         )
     )
 
+Components
+++++++++++
+
+We use a component-based approach for the metadata about a dataset.
 
 See the `schemas <https://github.com/ROVI-org/battery-data-toolkit/tree/main/batdata/schemas>`_
 for a full accounting of the available fields in our schema.
 
-.. note:: TODO: Render the schemas into an easier-to-read format
-
-Feel free to add fields to any part of the schema.
-The schema is a continual work in progress and the battery-data-toolkit will 
-store your new fields.
-Consider adding `an Issue <https://github.com/ROVI-org/battery-data-toolkit/issues>`_ to our GitHub
-if you find you use a term enough that we should add it to the schema.
+.. include:: metadata-schema.rst
 
 Source of Terminology
 +++++++++++++++++++++
@@ -71,7 +71,11 @@ Look them up using some utilities in ``batdata``.
     print(gather_descendants('MathematicalModel'))
 
 
-.. note:: TODO: Render the options in web-hosted documentation as well
+Feel free to add fields to any part of the schema.
+The schema is a continual work in progress and the battery-data-toolkit will
+store your new fields.
+Consider adding `an Issue <https://github.com/ROVI-org/battery-data-toolkit/issues>`_ to our GitHub
+if you find you use a term enough that we should add it to the schema.
 
 Column Datasets
 ---------------
