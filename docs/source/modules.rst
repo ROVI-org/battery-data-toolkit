@@ -7,4 +7,8 @@ API documentation for each module
    :maxdepth: 2
    :caption: Contents:
 
+   data
    schemas
+   postprocess
+   extractors
+   exporters

@@ -42,12 +42,12 @@ class BatteryDataset:
     formats. The operations are named ``[to|from]_batdata_[format]``, where format could be one of
 
     - ``hdf``: Data is stored the `"table" format from PyTables
-     <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html#hdf5-pytables>`_.
-     Metadata are stored as an attribute to the
+      <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html#hdf5-pytables>`_.
+      Metadata are stored as an attribute to the
     - ``dict``: Data as a Python dictionary object with two keys: "metadata" for the battery metadata
-        and "data" with the cycling data in "list" format ({"column"->["values"]})
-    - ``parquet``: Data into a directory of `Parquet <https://parquet.apache.org/>`
-        files for each types of data. The metadata for the dataset will be saved as well
+      and "data" with the cycling data in "list" format ({"column"->["values"]})
+    - ``parquet``: Data into a directory of `Parquet <https://parquet.apache.org/>`_
+      files for each types of data. The metadata for the dataset will be saved as well
 
     Many of methods use existing Pandas implementations of I/O operations, but with slight modifications
     to encode the metadata and to ensure a standardized format.
