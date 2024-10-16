@@ -14,5 +14,6 @@ and can be easily manipulated by common analysis libraries (e.g., Pandas).
    schemas
    post-processing/index
    export
+   source/modules
 
 
