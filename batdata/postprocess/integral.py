@@ -21,7 +21,7 @@ class CapacityPerCycle(CycleSummarizer):
     2. Determine whether the battery started from a charged state
        by determining if the largest capacity change is positive
        (i.e., if the point most different state of charge from the
-       start is _more discharged_ than the starting point).
+       start is *more discharged* than the starting point).
        The code will raise a warning if the quantities are similar.
     3. If starting from a charged state, the discharge capacity
        is the maximum change in state of charge (``dSOC.max()``).
@@ -32,6 +32,7 @@ class CapacityPerCycle(CycleSummarizer):
        is the maximum change in state of charge and the discharge capacity
        is the amount transferred from the battery into the end of the cycle.
 
+
     The energy is computed using a similar procedure, but by integrating
     the product of current and voltage instead of only current.
 
@@ -41,10 +42,12 @@ class CapacityPerCycle(CycleSummarizer):
         the battery to the same state as it started the cycle.
 
     Output dataframe has 4 new columns.
-        - ``capacity_discharge``: Discharge capacity per cycle in A-hr
-        - ``capacity_charge``: Charge capacity per the cycle in A-hr
-        - ``energy_charge``: Discharge energy per cycle in J
-        - ``energy_discharge``: Charge energy per the cycle in J
+
+    - ``capacity_discharge``: Discharge capacity per cycle in A-hr
+    - ``capacity_charge``: Charge capacity per the cycle in A-hr
+    - ``energy_charge``: Discharge energy per cycle in J
+    - ``energy_discharge``: Charge energy per the cycle in J
+
     The full definitions are provided in the :class:`~batdata.schemas.cycling.CycleLevelData` schema
     """
 

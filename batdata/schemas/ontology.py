@@ -12,6 +12,7 @@ _battinfo_url = 'https://raw.githubusercontent.com/emmo-repo/domain-battery/mast
 
 @cache
 def load_battinfo():
+    """Download and store the latest ontology into an in-memory"""
     return World().get_ontology(_battinfo_url).load()
 
 
