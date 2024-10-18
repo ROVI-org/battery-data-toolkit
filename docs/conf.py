@@ -56,6 +56,6 @@ autodoc_pydantic_settings_show_json = False
 autoclass_content = 'both'
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None),
+    'python': ('https://docs.python.org/3/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
 }
