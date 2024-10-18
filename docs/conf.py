@@ -24,6 +24,14 @@ exclude_patterns = ['_build']
 
 html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
+html_theme_options = {
+    "logo": {
+        "text": "BatData",
+        "image_light": "_static/logo.png",
+        "image_dark": "_static/logo.png",
+    }
+}
+html_logo = '_static/logo.png'
 
 
 # -- Options for NBSphinx -----------------------------------------------------
@@ -48,6 +56,6 @@ autodoc_pydantic_settings_show_json = False
 autoclass_content = 'both'
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None),
+    'python': ('https://docs.python.org/3/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
 }
