@@ -10,10 +10,6 @@ and can be easily manipulated by common analysis libraries (e.g., Pandas).
    :maxdepth: 2
    :caption: Contents:
 
-   dataset
-   schemas
-   post-processing/index
-   export
+   getting-started
+   user-guide/index
    source/modules
-
-
