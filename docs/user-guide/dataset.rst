@@ -21,6 +21,8 @@ Loading and Saving
 
 The battery data and metadata can be saved in a few different styles, each with different advantages.
 
+.. _hdf5:
+
 HDF5
 ++++
 

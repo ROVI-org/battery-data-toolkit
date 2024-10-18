@@ -12,3 +12,4 @@ API documentation for each module
    postprocess
    extractors
    exporters
+   streaming

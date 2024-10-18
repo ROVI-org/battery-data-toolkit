@@ -12,5 +12,6 @@ or post-processing if using already-existing data.
 
    dataset
    schemas
-   post-processing/index.rst
+   post-processing/index
    export
+   streaming
