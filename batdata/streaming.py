@@ -24,7 +24,8 @@ def _get_raw_data_iterator_h5(hdf5_path: Union[Path, str, HDFStore], **kwargs) -
 def iterate_records_from_file(hdf5_path: Union[Path, str, HDFStore], **kwargs) -> Iterator[Dict[str, Union[str, float, int]]]:
     """Stream individual records from a file
 
-    Keyword arguments are passed to :meth:`~pandas.read_hdf`.
+    Keyword arguments are passed to :meth:`~pandas.read_hdf`, which includes options
+    to limit which rows and columns are read.
 
     Args:
         hdf5_path: Path to the data file
@@ -44,7 +45,8 @@ def iterate_cycles_from_file(hdf5_path: Union[Path, str, HDFStore],
                              **kwargs) -> Iterator[Union[pd.DataFrame, BatteryDataset]]:
     """Stream single-cycle datasets from the HDF5 file
 
-    Keyword arguments are passed to :meth:`~pandas.read_hdf`.
+    Keyword arguments are passed to :meth:`~pandas.read_hdf`, which includes options
+    to limit which rows and columns are read.
 
     Args:
         hdf5_path: Path to the data file
@@ -52,7 +54,7 @@ def iterate_cycles_from_file(hdf5_path: Union[Path, str, HDFStore],
             including the metadata from the source file.
 
     Yields:
-        Individual cycles from the "time-series"
+        All rows belonging to each cycle from the "raw_data" section fo the HDF5 file.
     """
 
     # Get the metadata out of the file, if needed

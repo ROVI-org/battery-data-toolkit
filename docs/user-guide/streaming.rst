@@ -10,24 +10,26 @@ Reading Data as a Stream
 
 The battery-data-toolkit allows streaming the raw time series data from an :ref:`HDF5 file format <hdf5>`.
 
-Stream the data either as individual rows or as groups of cycles
+Stream the data either as individual rows or all rows belonging to each cycle
 with the :meth:`~batdata.streaming.iterate_records_from_file`
 or :meth:`~batdata.streaming.iterate_cycles_from_file`.
 
 Both functions produce `a Python generator <https://docs.python.org/3/glossary.html#term-generator>`_
-which retrieves a chunk of data from the HDF5 file and can be used to produce data individually
+which retrieves a chunk of data from the HDF5 file incrementally and can be used to produce data individually
 
 .. code-block:: python
 
     row_iter = iterate_records_from_file('example.h5')
     row = next(row_iter)
+    do_something_per_timestep(row)
 
 or as part of a for loop.
 
 .. code-block:: python
 
-    for row in iterate_records_file_file('example.h5'):
-        do_something_per_timestep(row)
+    for cycle in iterate_cycles_from_file('example.h5'):
+        do_something_per_cycle(cycle)
+
 
 Streaming Data to a File
 ------------------------
