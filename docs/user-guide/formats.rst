@@ -63,7 +63,7 @@ or load any of the included cells by providing an index
 
 Load all cells by iterating over them:
 
-.. code-block::
+.. code-block:: python
 
     for name, cell in BatteryDataset.all_cells_from_batdata_hdf('test.h5'):
         do_some_processing(cell)
