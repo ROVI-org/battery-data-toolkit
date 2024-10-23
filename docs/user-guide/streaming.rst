@@ -34,4 +34,16 @@ or as part of a for loop.
 Streaming Data to a File
 ------------------------
 
-TBD! Writing incrementally is not yet supported, but a feature on our road map.
+Write large datasets into battery-data-toolkit-compatible formats incrementally using the :class:`~batdata.streaming.hdf5.HDF5Writer`.
+
+Start the writer class by providing the path to the HDF5 file and the metadata to be written
+then opening it via Python's ``with`` syntax.
+
+.. code-block:: python
+
+    metadata = BatteryMetadata(name='example')
+    with HDF5Writer('streamed.h5', metadata=metadata) as writer:
+        for time, current, voltage in data_stream:
+            writer.write_row({'test_time': time, 'current': current, 'voltage': voltage})
+
+The writer only writes to disk after enough rows are collected or the end of a data stream is signaled by exiting the ``with`` block.
