@@ -1,6 +1,6 @@
 """Schemas for battery data and metadata"""
 from datetime import date
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional
 
 from pydantic import BaseModel, Field, AnyUrl
 
@@ -44,8 +44,3 @@ class BatteryMetadata(BaseModel, extra='allow'):
     associated_ids: Optional[List[AnyUrl]] = Field(None, description="Any identifiers associated with this data file."
                                                                      " Identifiers can be any URI, such as DOIs of associated"
                                                                      " paper or HTTP addresses of associated websites")
-
-    # Description of additional columns
-    raw_data_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the raw data')
-    cycle_stats_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the cycle stats')
-    eis_data_columns: Dict[str, str] = Field(default_factory=dict, description='Descriptions of non-standard columns in the EIS data')

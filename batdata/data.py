@@ -4,7 +4,7 @@ import logging
 import warnings
 from pathlib import Path
 from datetime import datetime
-from typing import Union, Optional, Collection, List, Dict, Type, Set, Iterator, Tuple
+from typing import Union, Optional, Collection, List, Dict, Set, Iterator, Tuple
 
 from pandas import HDFStore
 from pandas.io.common import stringify_path
@@ -19,12 +19,12 @@ from batdata.schemas.cycling import RawData, CycleLevelData, ColumnSchema
 from batdata.schemas.eis import EISData
 from batdata import __version__
 
-_subsets: Dict[str, Type[ColumnSchema]] = {
-    'raw_data': RawData,
-    'cycle_stats': CycleLevelData,
-    'eis_data': EISData
+_default_schemas = {
+    'raw_data': RawData(),
+    'cycle_stats': CycleLevelData(),
+    'eis_data': EISData()
 }
-"""Mapping between subset and schema"""
+"""Mapping between pre-defined datasets and schema"""
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +65,8 @@ class BatteryDataset:
 
     metadata: BatteryMetadata
     """Metadata for the battery construction and testing"""
+    schemas: Dict[str, ColumnSchema]
+    """Schemas for the data in each of the constituent data frames"""
 
     def __init__(self, metadata: Union[BatteryMetadata, dict] = None,
                  raw_data: Optional[pd.DataFrame] = None,
@@ -82,6 +84,9 @@ class BatteryDataset:
             metadata = {}
         elif isinstance(metadata, BaseModel):
             metadata = metadata.model_dump()
+
+        # Provide default schemas for each of the columns
+        self.schemas = _default_schemas
 
         # Warn if the version of the metadata is different
         version_mismatch = False
@@ -110,7 +115,7 @@ class BatteryDataset:
         Raises
             (ValueError): If the dataset fails validation
         """
-        for attr_name, schema in _subsets.items():
+        for attr_name, schema in self.schemas.items():
             data = getattr(self, attr_name)
             if data is not None:
                 schema.validate_dataframe(data, allow_extra_columns)
@@ -128,20 +133,11 @@ class BatteryDataset:
         self.validate_columns()
         output = []
 
-        # Check whether there are undocumented columns
-        def _find_undefined_columns(data: pd.DataFrame, column_schema: Type[ColumnSchema]) -> List[str]:
-            """Get the list of columns which are not defined in the schema"""
-
-            cols = set(data.columns).difference(column_schema.model_fields)
-            return list(cols)
-
-        for attr_name, schema in _subsets.items():
+        for attr_name, schema in self.schemas.items():
             data = getattr(self, attr_name)
-            defined_columns = getattr(self.metadata, f'{attr_name}_columns')
             if data is not None:
-                new_cols = _find_undefined_columns(data, schema)
-                undefined = set(new_cols).difference(defined_columns.keys())
-                output.extend([f'Undefined column, {u}, in {attr_name}. Add a description into metadata.{attr_name}_columns'
+                undefined = set(data.columns).difference(schema.defined_columns)
+                output.extend([f'Undefined column, {u}, in {attr_name}. Add a description into schemas.{attr_name}.extra_columns'
                                for u in undefined])
 
         return output
@@ -171,7 +167,7 @@ class BatteryDataset:
 
         # Store the various datasets
         #  Note that we use the "table" format to allow for partial reads / querying
-        for key in _subsets:
+        for key in self.schemas:
             data = getattr(self, key)
             if data is not None:
                 if prefix is not None:
@@ -223,7 +219,7 @@ class BatteryDataset:
         # Determine which datasets to read
         read_all = False
         if subsets is None:
-            subsets = _subsets
+            subsets = _default_schemas
             read_all = True
 
         # Determine which prefix to read, if an int is provided
@@ -234,7 +230,7 @@ class BatteryDataset:
         data = {}
         for subset in subsets:
             # Throw error if user provides an unknown subset name
-            if subset not in _subsets:
+            if subset not in _default_schemas:
                 raise ValueError(f'Unknown subset: {subset}')
 
             # Prepend the prefix
@@ -307,7 +303,7 @@ class BatteryDataset:
         # Get the names by gathering all names before the "-" in group names
         names = set()
         for key in keys:
-            for subset in _subsets:
+            for subset in _default_schemas:
                 if key.endswith(subset):
                     name = key[:-len(subset) - 1]
                     if len(name) == 0:
@@ -339,7 +335,7 @@ class BatteryDataset:
         """
 
         output = {'metadata': self.metadata.model_dump()}
-        for key in _subsets:
+        for key in _default_schemas:
             data = getattr(self, key)
             if data is not None:
                 output[key] = data.to_dict('list')
@@ -352,7 +348,7 @@ class BatteryDataset:
 
         # Convert the keys to a dataframe
         inputs = d.copy()
-        for k in _subsets:
+        for k in _default_schemas:
             if k in inputs:
                 inputs[k] = pd.DataFrame(d[k])
         return cls(**inputs)
@@ -381,7 +377,7 @@ class BatteryDataset:
             'write_date': datetime.now().isoformat()
         }
         written = {}
-        for key in _subsets:
+        for key in _default_schemas:
             if (data := getattr(self, key)) is None:
                 continue
             # Put the metadata for the battery into the table's schema

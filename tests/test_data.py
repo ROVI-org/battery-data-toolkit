@@ -13,6 +13,7 @@ from pytest import fixture, raises
 
 from batdata.data import BatteryDataset
 from batdata import __version__
+from batdata.schemas.cycling import ColumnInfo
 
 
 @fixture()
@@ -153,7 +154,7 @@ def test_validate(test_df):
     assert 'other' in warnings[0]
 
     # Make sure we can define new columns
-    test_df.metadata.raw_data_columns['other'] = 'A column I added for testing purposes'
+    test_df.schemas['raw_data'].extra_columns['other'] = ColumnInfo(description='Test')
     warnings = test_df.validate()
     assert len(warnings) == 0
 

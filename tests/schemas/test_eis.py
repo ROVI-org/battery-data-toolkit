@@ -19,16 +19,16 @@ def example_df() -> pd.DataFrame:
 
 
 def test_pass(example_df):
-    EISData.validate_dataframe(example_df)
+    EISData().validate_dataframe(example_df)
 
 
 def test_consistency(example_df):
     example_df['z_imag'] *= 2
     with raises(ValueError) as e:
-        EISData.validate_dataframe(example_df)
+        EISData().validate_dataframe(example_df)
     assert 'imag' in str(e.value)
 
     example_df['z_real'] *= 2
     with raises(ValueError) as e:
-        EISData.validate_dataframe(example_df)
+        EISData().validate_dataframe(example_df)
     assert 'real' in str(e.value)
