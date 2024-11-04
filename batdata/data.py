@@ -15,7 +15,7 @@ import pandas as pd
 import h5py
 
 from batdata.schemas import BatteryMetadata
-from batdata.schemas.cycling import RawData, CycleLevelData, ColumnSchema
+from batdata.schemas.column import RawData, CycleLevelData, ColumnSchema
 from batdata.schemas.eis import EISData
 from batdata import __version__
 

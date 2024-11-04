@@ -13,7 +13,7 @@ from pytest import fixture, raises
 
 from batdata.data import BatteryDataset
 from batdata import __version__
-from batdata.schemas.cycling import ColumnInfo
+from batdata.schemas.column import ColumnInfo
 
 
 @fixture()

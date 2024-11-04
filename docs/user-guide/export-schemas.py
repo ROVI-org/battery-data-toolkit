@@ -3,7 +3,7 @@ from typing import TextIO, get_args, Optional, get_origin
 
 from pydantic import BaseModel
 
-from batdata.schemas.cycling import RawData, CycleLevelData
+from batdata.schemas.column import RawData, CycleLevelData
 from batdata.schemas import BatteryMetadata
 
 print('Exporting column schemas to RST...')

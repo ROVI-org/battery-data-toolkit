@@ -2,7 +2,7 @@
 from pandas import DataFrame
 import numpy as np
 
-from .cycling import ColumnSchema, ColumnInfo, DataType
+from .column import ColumnSchema, ColumnInfo, DataType
 
 
 class EISData(ColumnSchema):

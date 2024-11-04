@@ -1,13 +1,19 @@
-Battery Data Schemas
-====================
+Describing Battery Data
+=======================
 
-The metadata schemas used by ``batdata`` standardize how we describe the source of battery datasets.
-Metadata are held as part of the ``BatteryDataset`` object and saved within the file formats
+The metadata schemas used by ``batdata`` standardize how we describe the source of battery datasets
+and annotate what the data are.
+Metadata are held as part of the :class:`batdata.data.BatteryDataset` object and saved within the file formats
 produced by ``batdata`` to ensure that the provenance of a dataset is kept alongside the actual data.
 
+Descriptions are defined in two parts:
 
-Understanding the Metadata
---------------------------
+.. contents::
+   :local:
+   :depth: 2
+
+Source Metadata
+---------------
 
 The metadata we employ in ``batdata`` follows the style of the JSON or XML data structures which are ubiquitous
 in scientific computation and data infrastructure.
@@ -77,24 +83,36 @@ store your new fields.
 Consider adding `an Issue <https://github.com/ROVI-org/battery-data-toolkit/issues>`_ to our GitHub
 if you find you use a term enough that we should add it to the schema.
 
-Column Datasets
----------------
+Column Schemas
+--------------
 
-The columns of datasets are described in the `cycling module <https://github.com/ROVI-org/battery-data-toolkit/blob/main/batdata/schemas/cycling.py>`_.
+The :attr:`~batdata.data.BatteryDataset.schemas` attribute of a dataset holds
+a description of each column of each constituent table.
+Each schema is a :class:`~batdata.schemas.column.ColumnSchema`,
+which provides access to descriptions of each column as :class:`~batdata.schemas.column.ColumnInfo` objects.
 
-Use the descriptions here when formatting your dataset, playing attention to the sign conventions and units for each column.
+    >>> from batdata.schemas.eis import EISData
+    >>> EISData().test_id.model_dump()
+    {'required': True,
+     'type': <DataType.INTEGER: 'integer'>,
+     'description': 'Integer used to identify rows belonging to the same experiment.',
+     'units': None,
+     'monotonic': False}
 
-Record columns that are not defined in our schema in the ``*_columns`` fields
-of the ``BatteryMetadata``.
+These column descriptions will be written when saving your data.
+
+As detailed below, the battery-data-toolkit provides schemas for common types of data (e.g., cycling data for single cells, EIS).
+Document a new type of data by either creating a subclass of :class:`~batdata.schemas.column.ColumnSchema`
+or adding individual columns to an existing schema.
 
 .. code-block:: python
 
-    from batdata.schemas import BatteryMetadata
+    from batdata.schemas.column import RawData, ColumnInfo
 
-    metadata = BatteryMetadata(
-        name='test_cell',
-        raw_data_columns={'new_signal': 'A column not yet defined in our schemas.'}
+    schema = RawData()  # Schema for sensor measurements of cell
+    schema.extra_columns['room_temp'] = ColumnInfo(
+        description='Temperature of the room as measured by the HVAC system',
+        units='C', data_type='float',
     )
-
 
 .. include:: column-schema.rst
