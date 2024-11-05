@@ -136,7 +136,7 @@ class BatteryDataset:
         for attr_name, schema in self.schemas.items():
             data = getattr(self, attr_name)
             if data is not None:
-                undefined = set(data.columns).difference(schema.defined_columns)
+                undefined = set(data.columns).difference(schema.column_names)
                 output.extend([f'Undefined column, {u}, in {attr_name}. Add a description into schemas.{attr_name}.extra_columns'
                                for u in undefined])
 

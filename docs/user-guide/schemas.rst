@@ -15,13 +15,21 @@ Descriptions are defined in two parts:
 Source Metadata
 ---------------
 
-The metadata we employ in ``batdata`` follows the style of the JSON or XML data structures which are ubiquitous
-in scientific computation and data infrastructure.
-Each record is composed of a single document that has a hierarchical set of fields which can correspond
-to single values or collections of values.
+''Source Metadata'' captures high-level information about a battery dataset
+in the :class:`~batdata.schemas.BatteryMetadata` object.
+Information included in ``BatteryMetadata``, in contrast to `Column Schemas`_, are relevant to
+all measurements performed on a battery, such as:
 
-We recommend creating the metadata for a battery through the Python interface. 
-Start by creating a ``BatteryMetadata`` object. There are no required fields, but you should always give your data a name.
+1. The type of battery (e.g., NMC Li-ion, Pb acid)
+2. The simulation code used, if the data is from a model
+3. How the battery was cycled
+4. The authors of the data and any related publications
+
+:class:`~batdata.schemas.BatteryMetadata` objects have a hierarchical structure where
+each record is composed of a single document that has fields which can correspond
+to single values, collections of values, or entire sub-documents.
+
+Create new metadata through the Python interface by first creating a ``BatteryMetadata`` object.
 
 .. code-block:: python
 
@@ -31,8 +39,8 @@ Start by creating a ``BatteryMetadata`` object. There are no required fields, bu
         name='test-cell',
     )
 
-The metadata is a nested document where different types of information are grouped together into sub objects.
-For example, the details about the battery being tested are in `BatteryDescription`
+Different types of information are grouped together into subdocuments,
+such as details about the battery in :class:`~batdata.schemas.battery.BatteryDescription`
 
 .. code-block:: python
 
@@ -47,20 +55,15 @@ For example, the details about the battery being tested are in `BatteryDescripti
         )
     )
 
-Components
-++++++++++
+:class:`~batdata.schemas.BatteryMetadata` automatically validate inputs,
+and can convert to and JSON formats. (`Pydantic <https://docs.pydantic.dev/latest/>`_!)
 
-We use a component-based approach for the metadata about a dataset.
-
-See the `schemas <https://github.com/ROVI-org/battery-data-toolkit/tree/main/batdata/schemas>`_
-for a full accounting of the available fields in our schema.
-
-.. include:: metadata-schema.rst
+See the :mod:`batdata.schemas` for a full accounting of the available fields in our schema.
 
 Source of Terminology
 +++++++++++++++++++++
 
-We use terms from `BattINFO ontology <https://big-map.github.io/BattINFO/index.html>`_ wherever possible.
+The `BattINFO ontology <https://big-map.github.io/BattINFO/index.html>`_ is the core source of terms.
 
 Fields in the schema whose names correspond to a BattINFO term are marked
 with the "IRI" of the field, which points to a website containing the description.
@@ -78,18 +81,17 @@ Look them up using some utilities in ``batdata``.
 
 
 Feel free to add fields to any part of the schema.
-The schema is a continual work in progress and the battery-data-toolkit will
-store your new fields.
-Consider adding `an Issue <https://github.com/ROVI-org/battery-data-toolkit/issues>`_ to our GitHub
-if you find you use a term enough that we should add it to the schema.
+
+.. note::
+    The schema will be a continual work in progress.
+    Consider adding `an Issue <https://github.com/ROVI-org/battery-data-toolkit/issues>`_ to the GitHub
+    if you find you use a term enough it should be part of the schema.
 
 Column Schemas
 --------------
 
-The :attr:`~batdata.data.BatteryDataset.schemas` attribute of a dataset holds
-a description of each column of each constituent table.
-Each schema is a :class:`~batdata.schemas.column.ColumnSchema`,
-which provides access to descriptions of each column as :class:`~batdata.schemas.column.ColumnInfo` objects.
+The contents of each data table available with a dataset are described using a :class:`~batdata.schemas.column.ColumnSchema`.
+The schema is a collection of :class:`~batdata.schemas.column.ColumnInfo` objects detailing each column.
 
     >>> from batdata.schemas.eis import EISData
     >>> EISData().test_id.model_dump()
@@ -98,8 +100,6 @@ which provides access to descriptions of each column as :class:`~batdata.schemas
      'description': 'Integer used to identify rows belonging to the same experiment.',
      'units': None,
      'monotonic': False}
-
-These column descriptions will be written when saving your data.
 
 As detailed below, the battery-data-toolkit provides schemas for common types of data (e.g., cycling data for single cells, EIS).
 Document a new type of data by either creating a subclass of :class:`~batdata.schemas.column.ColumnSchema`
