@@ -60,6 +60,11 @@ and can convert to and JSON formats. (`Pydantic <https://docs.pydantic.dev/lates
 
 See the :mod:`batdata.schemas` for a full accounting of the available fields in our schema.
 
+.. note::
+
+    Validation only checks that already-defined fields are specified properly.
+    Add metadata beyond what is described in battery-data-toolkit as desired.
+
 Source of Terminology
 +++++++++++++++++++++
 
@@ -79,8 +84,6 @@ Look them up using some utilities in ``batdata``.
 
     print(gather_descendants('MathematicalModel'))
 
-
-Feel free to add fields to any part of the schema.
 
 .. note::
     The schema will be a continual work in progress.

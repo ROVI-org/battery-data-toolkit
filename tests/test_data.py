@@ -174,8 +174,9 @@ def test_parquet(test_df, tmpdir):
     written = test_df.to_batdata_parquet(write_dir)
     assert len(written) == 2
     for file in written.values():
-        metadata = pq.read_schema(file).metadata
+        metadata = pq.read_metadata(file).metadata
         assert b'battery_metadata' in metadata
+        assert b'table_metadata' in metadata
 
     # Read it back in, ensure data are recovered
     read_df = BatteryDataset.from_batdata_parquet(write_dir)
