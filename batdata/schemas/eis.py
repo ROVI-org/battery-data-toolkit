@@ -1,30 +1,23 @@
 """Schemas associated with Electrochemical Impedance Spectroscopy"""
-
-from typing import List
-
 from pandas import DataFrame
-from pydantic import Field
 import numpy as np
 
-from .cycling import ColumnSchema
+from .column import ColumnSchema, ColumnInfo, DataType
 
 
 class EISData(ColumnSchema):
     """Measurements for a specific EIS test"""
 
-    test_id: List[int] = Field(..., description='Integer used to identify rows belonging to the same experiment.')
-    test_time: List[float] = Field(None, description="Time from the beginning of the cycling test. Times must be "
-                                                     "nonnegative and monotonically increasing. Units: s",
-                                   monotonic=True)
-    time: List[float] = Field(None, description="Time as a UNIX timestamp. Assumed to be in UTC")
-    frequency: List[float] = Field(..., description="Applied frequency. Units: Hz")
-    z_real: List[float] = Field(..., description="Real component of impedance. Units: Ohm")
-    z_imag: List[float] = Field(..., description="Imaginary component of impedance. Units: Ohm")
-    z_mag: List[float] = Field(..., description="Magnitude of impedance. Units: Ohm")
-    z_phase: List[float] = Field(..., description="Phase angle of the impedance. Units: Degree")
+    test_id: ColumnInfo = ColumnInfo(description='Integer used to identify rows belonging to the same experiment.', required=True, type=DataType.INTEGER)
+    test_time: ColumnInfo = ColumnInfo(description="Time from the beginning of measurements.", units="s", monotonic=True, type=DataType.FLOAT)
+    time: ColumnInfo = ColumnInfo(description="Time as a UNIX timestamp. Assumed to be in UTC", type=DataType.FLOAT)
+    frequency: ColumnInfo = ColumnInfo(description="Applied frequency", units="Hz", required=True, type=DataType.FLOAT)
+    z_real: ColumnInfo = ColumnInfo(description="Real component of impedance", units="Ohm", required=True, type=DataType.FLOAT)
+    z_imag: ColumnInfo = ColumnInfo(description="Imaginary component of impedance", units="Ohm", required=True, type=DataType.FLOAT)
+    z_mag: ColumnInfo = ColumnInfo(description="Magnitude of impedance", units="Ohm", required=True, type=DataType.FLOAT)
+    z_phase: ColumnInfo = ColumnInfo(description="Phase angle of the impedance", units="Degree", required=True, type=DataType.FLOAT)
 
-    @classmethod
-    def validate_dataframe(cls, data: DataFrame, allow_extra_columns: bool = True):
+    def validate_dataframe(self, data: DataFrame, allow_extra_columns: bool = True):
         # Check that the schema is supported
         super().validate_dataframe(data, allow_extra_columns)
 

@@ -13,6 +13,7 @@ from pytest import fixture, raises
 
 from batdata.data import BatteryDataset
 from batdata import __version__
+from batdata.schemas.column import ColumnInfo
 
 
 @fixture()
@@ -26,7 +27,11 @@ def test_df():
     cycle_stats = pd.DataFrame({
         'cycle_number': [0],
     })
-    return BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, metadata={'name': 'Test data'})
+    dataset = BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, metadata={'name': 'Test data'})
+
+    # Add an extra column in the schema
+    dataset.schemas['raw_data'].extra_columns['new'] = ColumnInfo(description='An example column')
+    return dataset
 
 
 def test_write_hdf(tmpdir, test_df):
@@ -41,6 +46,11 @@ def test_write_hdf(tmpdir, test_df):
         assert 'metadata' in f.attrs
         assert json.loads(f.attrs['metadata'])['name'] == 'Test data'
         assert 'raw_data' in f
+
+        # Make sure we have a schema
+        g = f['raw_data']
+        assert 'metadata' in g.attrs
+        assert json.loads(g.attrs['metadata'])['test_time']['units'] == 's'
 
     # Test writing to an already-open HDFStore
     with HDFStore(out_path, 'r+') as store:
@@ -61,6 +71,7 @@ def test_read_hdf(tmpdir, test_df):
     assert data.metadata.name == 'Test data'
     assert data.raw_data is not None
     assert data.cycle_stats is not None
+    assert data.schemas['raw_data'].extra_columns['new'].description == 'An example column'
 
     # Test reading from an already-open file
     with HDFStore(out_path, 'r') as store:
@@ -153,7 +164,7 @@ def test_validate(test_df):
     assert 'other' in warnings[0]
 
     # Make sure we can define new columns
-    test_df.metadata.raw_data_columns['other'] = 'A column I added for testing purposes'
+    test_df.schemas['raw_data'].extra_columns['other'] = ColumnInfo(description='Test')
     warnings = test_df.validate()
     assert len(warnings) == 0
 
@@ -163,14 +174,16 @@ def test_parquet(test_df, tmpdir):
     written = test_df.to_batdata_parquet(write_dir)
     assert len(written) == 2
     for file in written.values():
-        metadata = pq.read_schema(file).metadata
+        metadata = pq.read_metadata(file).metadata
         assert b'battery_metadata' in metadata
+        assert b'table_metadata' in metadata
 
     # Read it back in, ensure data are recovered
     read_df = BatteryDataset.from_batdata_parquet(write_dir)
     assert (read_df.cycle_stats['cycle_number'] == test_df.cycle_stats['cycle_number']).all()
     assert (read_df.raw_data['voltage'] == test_df.raw_data['voltage']).all()
     assert read_df.metadata == test_df.metadata
+    assert read_df.schemas['raw_data'].extra_columns['new'].description == 'An example column'
 
     # Test reading subsets
     read_df = BatteryDataset.from_batdata_parquet(write_dir, subsets=('cycle_stats',))

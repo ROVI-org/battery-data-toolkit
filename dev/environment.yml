@@ -5,10 +5,17 @@ channels:
 dependencies:
   - python==3.9.*
 
+  # Install PyData libraries
+  - pytables
+  - scipy
+  - pandas
+  - h5py
+  - pyarrow
+
   # For now, use Pip for everything major
   - pip
   - pip:
     # Install jupyter
     - jupyterlab
     - matplotlib
-    - -e ..[test]
+    - -e ..[test,docs]

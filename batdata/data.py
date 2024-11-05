@@ -4,27 +4,27 @@ import logging
 import warnings
 from pathlib import Path
 from datetime import datetime
-from typing import Union, Optional, Collection, List, Dict, Type, Set, Iterator, Tuple
+from typing import Union, Optional, Collection, List, Dict, Set, Iterator, Tuple
 
 from pandas import HDFStore
-from pandas.io.common import stringify_path
 from pydantic import BaseModel, ValidationError
 from pyarrow import parquet as pq
 from pyarrow import Table
+from tables import Group
 import pandas as pd
 import h5py
 
 from batdata.schemas import BatteryMetadata
-from batdata.schemas.cycling import RawData, CycleLevelData, ColumnSchema
+from batdata.schemas.column import RawData, CycleLevelData, ColumnSchema
 from batdata.schemas.eis import EISData
 from batdata import __version__
 
-_subsets: Dict[str, Type[ColumnSchema]] = {
-    'raw_data': RawData,
-    'cycle_stats': CycleLevelData,
-    'eis_data': EISData
+_default_schemas = {
+    'raw_data': RawData(),
+    'cycle_stats': CycleLevelData(),
+    'eis_data': EISData()
 }
-"""Mapping between subset and schema"""
+"""Mapping between pre-defined datasets and schema"""
 
 logger = logging.getLogger(__name__)
 
@@ -65,11 +65,14 @@ class BatteryDataset:
 
     metadata: BatteryMetadata
     """Metadata for the battery construction and testing"""
+    schemas: Dict[str, ColumnSchema]
+    """Schemas for the data in each of the constituent data frames"""
 
     def __init__(self, metadata: Union[BatteryMetadata, dict] = None,
                  raw_data: Optional[pd.DataFrame] = None,
                  cycle_stats: Optional[pd.DataFrame] = None,
-                 eis_data: Optional[pd.DataFrame] = None):
+                 eis_data: Optional[pd.DataFrame] = None,
+                 schemas: Optional[Dict[str, ColumnSchema]] = None):
         """
 
         Args:
@@ -77,11 +80,15 @@ class BatteryDataset:
             raw_data: Time-series data of the battery state
             cycle_stats: Summaries of each cycle
             eis_data: EIS data taken at multiple times
+            schemas: Schemas describing each of the tabular datasets
         """
         if metadata is None:
             metadata = {}
         elif isinstance(metadata, BaseModel):
             metadata = metadata.model_dump()
+
+        # Provide schemas for each of the columns
+        self.schemas = _default_schemas if schemas is None else schemas
 
         # Warn if the version of the metadata is different
         version_mismatch = False
@@ -110,7 +117,7 @@ class BatteryDataset:
         Raises
             (ValueError): If the dataset fails validation
         """
-        for attr_name, schema in _subsets.items():
+        for attr_name, schema in self.schemas.items():
             data = getattr(self, attr_name)
             if data is not None:
                 schema.validate_dataframe(data, allow_extra_columns)
@@ -128,20 +135,11 @@ class BatteryDataset:
         self.validate_columns()
         output = []
 
-        # Check whether there are undocumented columns
-        def _find_undefined_columns(data: pd.DataFrame, column_schema: Type[ColumnSchema]) -> List[str]:
-            """Get the list of columns which are not defined in the schema"""
-
-            cols = set(data.columns).difference(column_schema.model_fields)
-            return list(cols)
-
-        for attr_name, schema in _subsets.items():
+        for attr_name, schema in self.schemas.items():
             data = getattr(self, attr_name)
-            defined_columns = getattr(self.metadata, f'{attr_name}_columns')
             if data is not None:
-                new_cols = _find_undefined_columns(data, schema)
-                undefined = set(new_cols).difference(defined_columns.keys())
-                output.extend([f'Undefined column, {u}, in {attr_name}. Add a description into metadata.{attr_name}_columns'
+                undefined = set(data.columns).difference(schema.column_names)
+                output.extend([f'Undefined column, {u}, in {attr_name}. Add a description into schemas.{attr_name}.extra_columns'
                                for u in undefined])
 
         return output
@@ -169,38 +167,43 @@ class BatteryDataset:
         if isinstance(path_or_buf, (str, Path)) and (Path(path_or_buf).is_file() and not append):
             Path(path_or_buf).unlink()
 
-        # Store the various datasets
-        #  Note that we use the "table" format to allow for partial reads / querying
-        for key in _subsets:
-            data = getattr(self, key)
-            if data is not None:
-                if prefix is not None:
-                    key = f'{prefix}_{key}'
-                data.to_hdf(path_or_buf, key, complevel=complevel,
-                            complib=complib, append=False, format='table',
-                            index=False)
-
         # Create logic for adding metadata
-        def add_metadata(f: HDFStore):
+        def add_metadata(f: Group, m: BaseModel):
             """Put the metadata in a standard location at the root of the HDF file"""
-            metadata = self.metadata.model_dump_json()
-            if append and 'metadata' in f.root._v_attrs:
-                existing_metadata = f.root._v_attrs.metadata
+            metadata = m.model_dump_json()
+            if append and 'metadata' in f._v_attrs:
+                existing_metadata = f._v_attrs.metadata
                 if metadata != existing_metadata:
                     warnings.warn('Metadata already in HDF5 differs from new metadata')
-            f.root._v_attrs.metadata = metadata
-            f.root._v_attrs.schema = self.metadata.model_json_schema()
+            f._v_attrs.metadata = metadata
+            f._v_attrs.json_schema = m.model_json_schema()
 
-        # Apply the metadata addition function
-        path_or_buf = stringify_path(path_or_buf)
-        if isinstance(path_or_buf, (str, Path)):
-            with HDFStore(
-                    path_or_buf, mode='a', complevel=complevel, complib=complib
-            ) as store:
-                add_metadata(store)
-                store.flush()
+        # Open the store
+        if is_store := isinstance(path_or_buf, HDFStore):
+            store = path_or_buf
         else:
-            add_metadata(path_or_buf)
+            store = HDFStore(path_or_buf, complevel=complevel, complib=complib)
+
+        try:
+            # Store the various datasets
+            #  Note that we use the "table" format to allow for partial reads / querying
+            for key, schema in self.schemas.items():
+                data = getattr(self, key)
+                if data is not None:
+                    if prefix is not None:
+                        key = f'{prefix}_{key}'
+                    data.to_hdf(path_or_buf, key=key, complevel=complevel,
+                                complib=complib, append=False, format='table',
+                                index=False)
+
+                    # Write the schema
+                    add_metadata(store.root[key], schema)
+
+            # Store the high-level metadata
+            add_metadata(store.root, self.metadata)
+        finally:
+            if not is_store:
+                store.close()  # Close the store if we opened it
 
     @classmethod
     def from_batdata_hdf(cls,
@@ -223,47 +226,54 @@ class BatteryDataset:
         # Determine which datasets to read
         read_all = False
         if subsets is None:
-            subsets = _subsets
+            subsets = _default_schemas
             read_all = True
 
-        # Determine which prefix to read, if an int is provided
-        if isinstance(prefix, int):
-            _, prefixes = cls.inspect_batdata_hdf(path_or_buf)
-            prefix = sorted(prefixes)[prefix]
-
-        data = {}
-        for subset in subsets:
-            # Throw error if user provides an unknown subset name
-            if subset not in _subsets:
-                raise ValueError(f'Unknown subset: {subset}')
-
-            # Prepend the prefix
-            if prefix is not None:
-                key = f'{prefix}_{subset}'
-            else:
-                key = subset
-
-            try:
-                data[subset] = pd.read_hdf(path_or_buf, key)
-            except KeyError as exc:
-                if read_all:
-                    continue
-                else:
-                    raise ValueError(f'File does not contain {key}') from exc
-
-        # If no data with this prefix is found, report which ones are found in the file
-        if len(data) == 0:
-            raise ValueError(f'No data available for prefix "{prefix}". '
-                             'Call `BatteryDataset.inspect_batdata_hdf` to gather a list of available prefixes.')
-
-        # Read out the battery metadata
-        if isinstance(path_or_buf, (str, Path)):
-            with h5py.File(path_or_buf, 'r') as f:
-                metadata = BatteryMetadata.model_validate_json(f.attrs['metadata'])
+        # Open the store
+        if is_store := isinstance(path_or_buf, HDFStore):
+            store = path_or_buf
         else:
-            metadata = BatteryMetadata.model_validate_json(path_or_buf.root._v_attrs.metadata)
+            store = HDFStore(path_or_buf, mode='r')
 
-        return cls(**data, metadata=metadata)
+        try:
+            # Determine which prefix to read, if an int is provided
+            if isinstance(prefix, int):
+                _, prefixes = cls.inspect_batdata_hdf(path_or_buf)
+                prefix = sorted(prefixes)[prefix]
+
+            data = {}
+            schemas = {}
+            for subset in subsets:
+                # Prepend the prefix
+                if prefix is not None:
+                    key = f'{prefix}_{subset}'
+                else:
+                    key = subset
+
+                try:
+                    data[subset] = pd.read_hdf(path_or_buf, key)
+                except KeyError as exc:
+                    if read_all:
+                        continue
+                    else:
+                        raise ValueError(f'File does not contain {key}') from exc
+
+                # Read the schema
+                group = store.root[key]
+                schemas[subset] = ColumnSchema.from_json(group._v_attrs.metadata)
+
+            # If no data with this prefix is found, report which ones are found in the file
+            if len(data) == 0:
+                raise ValueError(f'No data available for prefix "{prefix}". '
+                                 'Call `BatteryDataset.inspect_batdata_hdf` to gather a list of available prefixes.')
+
+            # Read out the battery metadata
+            metadata = BatteryMetadata.model_validate_json(store.root._v_attrs.metadata)
+        finally:
+            if not is_store:
+                store.close()
+
+        return cls(**data, metadata=metadata, schemas=schemas)
 
     @classmethod
     def all_cells_from_batdata_hdf(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None) -> Iterator[Tuple[str, 'BatteryDataset']]:
@@ -307,7 +317,7 @@ class BatteryDataset:
         # Get the names by gathering all names before the "-" in group names
         names = set()
         for key in keys:
-            for subset in _subsets:
+            for subset in _default_schemas:
                 if key.endswith(subset):
                     name = key[:-len(subset) - 1]
                     if len(name) == 0:
@@ -339,7 +349,7 @@ class BatteryDataset:
         """
 
         output = {'metadata': self.metadata.model_dump()}
-        for key in _subsets:
+        for key in _default_schemas:
             data = getattr(self, key)
             if data is not None:
                 output[key] = data.to_dict('list')
@@ -352,13 +362,15 @@ class BatteryDataset:
 
         # Convert the keys to a dataframe
         inputs = d.copy()
-        for k in _subsets:
+        for k in _default_schemas:
             if k in inputs:
                 inputs[k] = pd.DataFrame(d[k])
         return cls(**inputs)
 
-    def to_batdata_parquet(self, path: Union[Path, str], overwrite: bool = True) -> Dict[str, Path]:
+    def to_batdata_parquet(self, path: Union[Path, str], overwrite: bool = True, **kwargs) -> Dict[str, Path]:
         """Write battery data to a directory of Parquet files
+
+        Keyword arguments are passed to :func:`~pyarrow.parquet.write_table`.
 
         Args:
             path: Path in which to write to
@@ -377,20 +389,20 @@ class BatteryDataset:
         # Make the output directory, then write each Parquet file
         path.mkdir(parents=True, exist_ok=False)
         my_metadata = {
-            'battery_metadata': self.metadata.model_dump_json(exclude_defaults=True),
+            'battery_metadata': self.metadata.model_dump_json(exclude_none=True),
             'write_date': datetime.now().isoformat()
         }
         written = {}
-        for key in _subsets:
+        for key, schema in self.schemas.items():
             if (data := getattr(self, key)) is None:
                 continue
-            # Put the metadata for the battery into the table's schema
-            #  TODO (wardlt): Figure out if it can go in the file-metadata
+            # Put the metadata for the battery and this specific table into the table's schema in the FileMetaData
             data_path = path / f'{key}.parquet'
+            my_metadata['table_metadata'] = schema.model_dump_json()
             table = Table.from_pandas(data, preserve_index=False)
             new_schema = table.schema.with_metadata({**my_metadata, **table.schema.metadata})
             table = table.cast(new_schema)
-            pq.write_table(table, where=data_path)
+            pq.write_table(table, where=data_path, **kwargs)
 
             written[key] = data_path
         return written
@@ -415,24 +427,33 @@ class BatteryDataset:
         # Load each subset
         metadata = None
         data = {}
+        schemas = {}
         for subset in subsets:
             data_path = path / f'{subset}.parquet'
             table = pq.read_table(data_path)
-            data[subset] = table
 
             # Load or check the metadata
             if b'battery_metadata' not in table.schema.metadata:
-                warnings.warn(f'Metadata not found in {data_path}')
-                continue
+                warnings.warn(f'Battery metadata not found in {data_path}')
+            else:
+                # Load the metadata for the whole cell
+                my_metadata = table.schema.metadata[b'battery_metadata']
+                if metadata is None:
+                    metadata = my_metadata
+                elif my_metadata != metadata:
+                    warnings.warn(f'Battery data different for files in {path}')
 
-            my_metadata = table.schema.metadata[b'battery_metadata']
-            if metadata is None:
-                metadata = my_metadata
-            elif my_metadata != metadata:
-                warnings.warn(f'Battery data different for files in {path}')
+            # Load the batdata schema for the table
+            if b'table_metadata' not in table.schema.metadata:
+                warnings.warn(f'Column schema not found in {data_path}')
+            schemas[subset] = ColumnSchema.from_json(table.schema.metadata[b'table_metadata'])
+
+            # Read it to a dataframe
+            data[subset] = table.to_pandas()
 
         return cls(
             metadata=BatteryMetadata.model_validate_json(metadata),
+            schemas=schemas,
             **data
         )
 

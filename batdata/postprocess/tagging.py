@@ -9,7 +9,7 @@ from pandas import DataFrame
 from scipy.interpolate import interp1d
 from scipy.signal import find_peaks, savgol_filter
 
-from batdata.schemas.cycling import ChargingState, ControlMethod
+from batdata.schemas.column import ChargingState, ControlMethod
 from .base import RawDataEnhancer
 
 logger = logging.getLogger(__name__)

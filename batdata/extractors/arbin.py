@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 from batdata.extractors.base import BatteryDataExtractor
-from batdata.schemas.cycling import ChargingState
+from batdata.schemas.column import ChargingState
 from batdata.utils import drop_cycles
 from batdata.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 

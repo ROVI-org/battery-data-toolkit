@@ -22,10 +22,10 @@ Metadata: Computation (``b.schemas.modeling``)
    :undoc-members:
    :show-inheritance:
 
-Data: Time Series (``b.schemas.cycling``)
-------------------------------------------
+Data: Time Series (``b.schemas.column``)
+----------------------------------------
 
-.. automodule:: batdata.schemas.cycling
+.. automodule:: batdata.schemas.column
    :members:
    :undoc-members:
    :show-inheritance:
