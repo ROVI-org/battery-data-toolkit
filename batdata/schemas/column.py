@@ -1,8 +1,9 @@
 """Schemas related to describing cycling data"""
+import json
 from enum import Enum
 from typing import List, Dict, Optional, Union, Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, model_validator, create_model
 from pandas import DataFrame
 
 
@@ -16,24 +17,22 @@ class ChargingState(str, Enum):
 
 
 class ControlMethod(str, Enum):
-    """Method used to control battery during a certain step
-
-    - ``short_rest``: A very short rest period. Defined as a step with 4 or fewer measurements with near-zero current
-    - ``rest``: An extended period of neither charging nor discharging
-    - ``short_nonrest``: A very short period of charging or discharging. Defined as a step with 4 or fewer measurements
-        with at least one non-zero current.
-    - ``constant_current``: A step where the current is held constant
-    - ``constant_voltage``: A step where the voltage is held constant
-    - ``other``: A step that does not fit into any of the predefined categories
-    """
+    """Method used to control battery during a certain step"""
 
     short_rest = "short_rest"
+    """A very short rest period. Defined as a step with 4 or fewer measurements with near-zero current"""
     rest = "rest"
+    """An extended period of neither charging nor discharging"""
     short_nonrest = "short_nonrest"
+    """A very short period of charging or discharging. Defined as a step with 4 or fewer measurements with at least one non-zero current."""
     constant_current = "constant_current"
+    """A step where the current is held constant"""
     constant_voltage = "constant_voltage"
+    """A step where the voltage is held constant"""
     constant_power = "constant_power"
+    """A step where the power is held constant"""
     pulse = "pulse"
+    """A short period of a large current"""
     other = "other"
 
 
@@ -66,7 +65,11 @@ class ColumnSchema(BaseModel, frozen=True):
 
     Implement a schema to be re-used across multiple datasets by creating a subclass and
     adding attributes for each expected column. The type of each attribute must be a :class:`ColumnInfo`
-    with a default value that defines the
+    and have a default value.
+
+    Save a Schema to disk in JSON format using :meth:`model_dump_json`.
+    Load it using the :meth:`model_validate_json` method of the appropriate subclass,
+    if you know the subclass, or :meth:`from_json`, if you do not.
     """
 
     extra_columns: Dict[str, ColumnInfo] = Field(default_factory=dict)
@@ -98,6 +101,15 @@ class ColumnSchema(BaseModel, frozen=True):
         return d
 
     def validate_dataframe(self, data: DataFrame, allow_extra_columns: bool = True):
+        """Check whether a dataframe matches this schema
+
+        Args:
+            data: DataFrame to be assessed
+            allow_extra_columns: Whether to raise an error if the dataframe contains
+                columns which are not defined in this schema.
+        Raises:
+            (ValueError) If the dataframe does not adhere
+        """
         # Get the columns from the dataframe and their types
         data_columns = data.dtypes.to_dict()
 
@@ -147,6 +159,30 @@ class ColumnSchema(BaseModel, frozen=True):
                 is_monotonic = all(y >= x for x, y in zip(data[column], data[column].iloc[1:]))
                 if not is_monotonic:
                     raise ValueError(f'Column {column} is not monotonically increasing')
+
+    @classmethod
+    def from_json(cls, buf: str) -> 'ColumnSchema':
+        """Read a JSON description of a column schema into an object
+
+        The object will not have the same class as the original, but will
+        have the same column information.
+
+        Args:
+            buf: JSON version of this class
+        Returns:
+            Model as a subclass of :class:`ColumnSchema`
+        """
+
+        data = json.loads(buf)
+        extra_cols = dict((k, ColumnInfo.model_validate(v)) for k, v in data.pop('extra_columns').items())
+        my_cols = dict((k, (ColumnInfo, ColumnInfo.model_validate(v))) for k, v in data.items())
+
+        return create_model(
+            'ParsedColumnSchema',
+            **my_cols,
+            extra_columns=(Dict[str, ColumnInfo], extra_cols),
+            __base__=cls,
+        )()
 
 
 class RawData(ColumnSchema):

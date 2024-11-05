@@ -27,7 +27,11 @@ def test_df():
     cycle_stats = pd.DataFrame({
         'cycle_number': [0],
     })
-    return BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, metadata={'name': 'Test data'})
+    dataset = BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, metadata={'name': 'Test data'})
+
+    # Add an extra column in the schema
+    dataset.schemas['raw_data'].extra_columns['new'] = ColumnInfo(description='An example column')
+    return dataset
 
 
 def test_write_hdf(tmpdir, test_df):
@@ -67,6 +71,7 @@ def test_read_hdf(tmpdir, test_df):
     assert data.metadata.name == 'Test data'
     assert data.raw_data is not None
     assert data.cycle_stats is not None
+    assert data.schemas['raw_data'].extra_columns['new'].description == 'An example column'
 
     # Test reading from an already-open file
     with HDFStore(out_path, 'r') as store:
@@ -177,6 +182,7 @@ def test_parquet(test_df, tmpdir):
     assert (read_df.cycle_stats['cycle_number'] == test_df.cycle_stats['cycle_number']).all()
     assert (read_df.raw_data['voltage'] == test_df.raw_data['voltage']).all()
     assert read_df.metadata == test_df.metadata
+    assert read_df.schemas['raw_data'].extra_columns['new'].description == 'An example column'
 
     # Test reading subsets
     read_df = BatteryDataset.from_batdata_parquet(write_dir, subsets=('cycle_stats',))

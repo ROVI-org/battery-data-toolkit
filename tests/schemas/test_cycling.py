@@ -1,4 +1,4 @@
-from batdata.schemas.column import RawData, DataType
+from batdata.schemas.column import RawData, DataType, ColumnSchema
 
 from pytest import raises, fixture, mark
 import pandas as pd
@@ -19,7 +19,13 @@ def test_json():
     """Make sure we can serialize and deserialize classes"""
 
     as_json = RawData().model_dump_json()
+
+    # Test deserialize using Pydantic, which requires knowing the base class
     schema = RawData.model_validate_json(as_json)
+    assert schema.state.type == DataType.STATE
+
+    # Test reading using the "unknown base" version
+    schema = ColumnSchema.from_json(as_json)
     assert schema.state.type == DataType.STATE
 
 
