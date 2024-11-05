@@ -367,8 +367,10 @@ class BatteryDataset:
                 inputs[k] = pd.DataFrame(d[k])
         return cls(**inputs)
 
-    def to_batdata_parquet(self, path: Union[Path, str], overwrite: bool = True) -> Dict[str, Path]:
+    def to_batdata_parquet(self, path: Union[Path, str], overwrite: bool = True, **kwargs) -> Dict[str, Path]:
         """Write battery data to a directory of Parquet files
+
+        Keyword arguments are passed to :func:`~pyarrow.parquet.write_table`.
 
         Args:
             path: Path in which to write to
@@ -387,21 +389,20 @@ class BatteryDataset:
         # Make the output directory, then write each Parquet file
         path.mkdir(parents=True, exist_ok=False)
         my_metadata = {
-            'battery_metadata': self.metadata.model_dump_json(exclude_defaults=True),
+            'battery_metadata': self.metadata.model_dump_json(exclude_none=True),
             'write_date': datetime.now().isoformat()
         }
         written = {}
         for key, schema in self.schemas.items():
             if (data := getattr(self, key)) is None:
                 continue
-            # Put the metadata for the battery and this specific table into the table's schema
-            #  TODO (wardlt): Figure out if it can go in the file-metadata
+            # Put the metadata for the battery and this specific table into the table's schema in the FileMetaData
             data_path = path / f'{key}.parquet'
             my_metadata['table_metadata'] = schema.model_dump_json()
             table = Table.from_pandas(data, preserve_index=False)
             new_schema = table.schema.with_metadata({**my_metadata, **table.schema.metadata})
             table = table.cast(new_schema)
-            pq.write_table(table, where=data_path)
+            pq.write_table(table, where=data_path, **kwargs)
 
             written[key] = data_path
         return written

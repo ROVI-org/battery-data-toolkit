@@ -11,6 +11,7 @@ or post-processing if using already-existing data.
    :caption: Contents:
 
    dataset
+   formats
    schemas
    post-processing/index
    export
