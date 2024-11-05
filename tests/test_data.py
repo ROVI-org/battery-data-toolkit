@@ -43,6 +43,11 @@ def test_write_hdf(tmpdir, test_df):
         assert json.loads(f.attrs['metadata'])['name'] == 'Test data'
         assert 'raw_data' in f
 
+        # Make sure we have a schema
+        g = f['raw_data']
+        assert 'metadata' in g.attrs
+        assert json.loads(g.attrs['metadata'])['test_time']['units'] == 's'
+
     # Test writing to an already-open HDFStore
     with HDFStore(out_path, 'r+') as store:
         test_df.to_batdata_hdf(store)

@@ -7,10 +7,10 @@ from datetime import datetime
 from typing import Union, Optional, Collection, List, Dict, Set, Iterator, Tuple
 
 from pandas import HDFStore
-from pandas.io.common import stringify_path
 from pydantic import BaseModel, ValidationError
 from pyarrow import parquet as pq
 from pyarrow import Table
+from tables import Group
 import pandas as pd
 import h5py
 
@@ -165,38 +165,43 @@ class BatteryDataset:
         if isinstance(path_or_buf, (str, Path)) and (Path(path_or_buf).is_file() and not append):
             Path(path_or_buf).unlink()
 
-        # Store the various datasets
-        #  Note that we use the "table" format to allow for partial reads / querying
-        for key in self.schemas:
-            data = getattr(self, key)
-            if data is not None:
-                if prefix is not None:
-                    key = f'{prefix}_{key}'
-                data.to_hdf(path_or_buf, key, complevel=complevel,
-                            complib=complib, append=False, format='table',
-                            index=False)
-
         # Create logic for adding metadata
-        def add_metadata(f: HDFStore):
+        def add_metadata(f: Group, m: BaseModel):
             """Put the metadata in a standard location at the root of the HDF file"""
-            metadata = self.metadata.model_dump_json()
-            if append and 'metadata' in f.root._v_attrs:
-                existing_metadata = f.root._v_attrs.metadata
+            metadata = m.model_dump_json()
+            if append and 'metadata' in f._v_attrs:
+                existing_metadata = f._v_attrs.metadata
                 if metadata != existing_metadata:
                     warnings.warn('Metadata already in HDF5 differs from new metadata')
-            f.root._v_attrs.metadata = metadata
-            f.root._v_attrs.schema = self.metadata.model_json_schema()
+            f._v_attrs.metadata = metadata
+            f._v_attrs.json_schema = m.model_json_schema()
 
-        # Apply the metadata addition function
-        path_or_buf = stringify_path(path_or_buf)
-        if isinstance(path_or_buf, (str, Path)):
-            with HDFStore(
-                    path_or_buf, mode='a', complevel=complevel, complib=complib
-            ) as store:
-                add_metadata(store)
-                store.flush()
+        # Open the store
+        if (is_store := isinstance(path_or_buf, HDFStore)):
+            store = path_or_buf
         else:
-            add_metadata(path_or_buf)
+            store = HDFStore(path_or_buf, complevel=complevel, complib=complib)
+
+        try:
+            # Store the various datasets
+            #  Note that we use the "table" format to allow for partial reads / querying
+            for key, schema in self.schemas.items():
+                data = getattr(self, key)
+                if data is not None:
+                    if prefix is not None:
+                        key = f'{prefix}_{key}'
+                    data.to_hdf(path_or_buf, key, complevel=complevel,
+                                complib=complib, append=False, format='table',
+                                index=False)
+
+                    # Write the schema
+                    add_metadata(store.root[key], schema)
+
+            # Store the high-level metadata
+            add_metadata(store.root, self.metadata)
+        finally:
+            if not is_store:
+                store.close()  # Close the store if we opened it
 
     @classmethod
     def from_batdata_hdf(cls,

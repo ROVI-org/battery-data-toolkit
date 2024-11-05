@@ -150,7 +150,7 @@ class ColumnSchema(BaseModel, frozen=True):
 
 
 class RawData(ColumnSchema):
-    """Schema for the time series data."""
+    """Data describing measurements of a single cell"""
 
     # Related to testing protocols
     file_number: ColumnInfo = ColumnInfo(description="Which file a row came from, if the data was originally split into multiple files",
@@ -191,7 +191,7 @@ class RawData(ColumnSchema):
 
 
 class CycleLevelData(ColumnSchema):
-    """Statistics about the performance of a cell over a certain cycle"""
+    """Statistics about the performance of a cell over entire cycles"""
 
     # Related to time
     cycle_number: ColumnInfo = ColumnInfo(description='Index of the cycle', monotonic=True, type=DataType.INTEGER, required=True)
