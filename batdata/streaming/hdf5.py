@@ -5,8 +5,10 @@ from dataclasses import field, dataclass
 from pathlib import Path
 
 import pandas as pd
+from tables.group import RootGroup
 
 from batdata.schemas import BatteryMetadata
+from batdata.schemas.column import ColumnSchema, RawData
 
 
 @dataclass
@@ -23,6 +25,8 @@ class HDF5Writer(AbstractContextManager):
     """File or already-open HDF5 file in which to store data"""
     metadata: BatteryMetadata = field(default_factory=BatteryMetadata)
     """Metadata describing the cell"""
+    schema: ColumnSchema = field(default_factory=RawData)
+    """Schema describing columns of the cell"""
     complevel: Optional[int] = None
     """Compression level. Can be between 0 (no compression) and 9 (maximum compression). Ignored if :attr:`hdf5_output` is a ``HDFStore``."""
     complib: str = 'zlib'
@@ -54,7 +58,13 @@ class HDF5Writer(AbstractContextManager):
 
         # Write metadata to the store's root's attributes
         self._store.root._v_attrs.metadata = self.metadata.model_dump_json(exclude_none=True)
-        self._store.root._v_attrs.schema = self.metadata.model_json_schema()
+        self._store.root._v_attrs.json_schema = self.metadata.model_json_schema()
+
+        # TODO (wardlt): Figure out how to avoid private methods if we don't abandon pytables
+        self._store._create_nodes_and_group('raw_data')
+        group: RootGroup = self._store.root['raw_data']
+        group._v_attrs.metadata = self.schema.model_dump_json()
+        group._v_attrs.json_schema = self.schema.model_json_schema()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

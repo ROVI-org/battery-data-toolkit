@@ -192,7 +192,7 @@ class BatteryDataset:
                 if data is not None:
                     if prefix is not None:
                         key = f'{prefix}_{key}'
-                    data.to_hdf(path_or_buf, key, complevel=complevel,
+                    data.to_hdf(path_or_buf, key=key, complevel=complevel,
                                 complib=complib, append=False, format='table',
                                 index=False)
 
