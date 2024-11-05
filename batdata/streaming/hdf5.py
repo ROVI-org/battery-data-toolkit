@@ -7,18 +7,13 @@ from pathlib import Path
 import pandas as pd
 from tables.group import RootGroup
 
-from batdata.schemas import BatteryMetadata
 from batdata.schemas.column import ColumnSchema, RawData
+from batdata.schemas import BatteryMetadata
 
 
 @dataclass
 class HDF5Writer(AbstractContextManager):
-    """Tool to write raw time series data to an HDF5 file incrementally
-
-    Args:
-        hdf5_output: Path to a location on disk or the root group in an HDF5 file in which to write data.
-        storage_key: Name of the group within the file to store all states
-    """
+    """Tool to write raw time series data to an HDF5 file incrementally"""
 
     # Attributes defining where and how to write
     hdf5_output: Union[Path, str, pd.HDFStore]

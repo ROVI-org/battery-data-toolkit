@@ -82,7 +82,6 @@ of the file.
     from pyarrow import parquet as pq
     import json
 
-
     # Reading the metadata
     file_metadata = pq.read_metadata('raw_data.parquet')  # Parquet metadata
     metadata = json.loads(file_metadata.metadata[b'battery_metadata'])  # For the battery
