@@ -25,9 +25,9 @@ if errorlevel 9009 (
 
 if "%1" == "" goto help
 
-cd user-guide
+cd user-guide/schemas
 python export-schemas.py
-cd ..
+cd ../..
 %SPHINXBUILD% -M %1 %SOURCEDIR% %BUILDDIR% %SPHINXOPTS% %O%
 goto end
 
