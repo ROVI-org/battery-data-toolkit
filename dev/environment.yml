@@ -3,14 +3,7 @@ name: batdata
 channels:
   - defaults
 dependencies:
-  - python==3.9.*
-
-  # Install PyData libraries
-  - pytables
-  - scipy
-  - pandas
-  - h5py
-  - pyarrow
+  - python==3.10.*
 
   # For now, use Pip for everything major
   - pip

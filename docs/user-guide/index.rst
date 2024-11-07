@@ -12,7 +12,7 @@ or post-processing if using already-existing data.
 
    dataset
    formats
-   schemas
+   schemas/index
    post-processing/index
    export
    streaming

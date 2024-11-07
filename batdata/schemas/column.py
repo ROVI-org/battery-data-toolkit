@@ -75,6 +75,16 @@ class ColumnSchema(BaseModel, frozen=True):
     extra_columns: Dict[str, ColumnInfo] = Field(default_factory=dict)
     """Descriptions of columns beyond those defined in the batdata schema"""
 
+    def __getitem__(self, item: str) -> ColumnInfo:
+        """Retrieve a specific column"""
+
+        if item in self.extra_columns:
+            return self.extra_columns[item]
+        elif hasattr(self, item):
+            return getattr(self, item)
+        else:
+            raise KeyError(item)
+
     @property
     def columns(self) -> Dict[str, ColumnInfo]:
         """Map of name to description for all columns"""

@@ -14,7 +14,7 @@ class ElectrodeDescription(BaseModel, extra='allow'):
     product: Optional[str] = Field(None, description='Name of the product. Unique to the supplier')
 
     # Relating to the microstructure of the electrode
-    thickness: Optional[float] = Field(None, description='Thickness of the material (units: μm)', ge=0)
+    thickness: Optional[float] = Field(None, description='Thickness of the material (units: um)', ge=0)
     area: Optional[float] = Field(None, description='Total area of the electrode (units: cm2)', ge=0)
     loading: Optional[float] = Field(None, description='Amount of active material per area (units: mg/cm^2)', ge=0)
     porosity: Optional[float] = Field(None, description='Relative volume of the electrode occupied by gas (units: %)',
