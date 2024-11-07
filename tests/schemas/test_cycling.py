@@ -1,4 +1,4 @@
-from batdata.schemas.column import RawData, DataType, ColumnSchema
+from batdata.schemas.column import RawData, DataType, ColumnSchema, ColumnInfo
 
 from pytest import raises, fixture, mark
 import pandas as pd
@@ -49,6 +49,15 @@ def test_extra_cols(example_df):
     with raises(ValueError) as exc:
         RawData().validate_dataframe(example_df, allow_extra_columns=False)
     assert 'extra columns' in str(exc)
+
+
+def test_get_item():
+    schema = RawData()
+    schema.extra_columns['test'] = ColumnInfo(description='Test')
+    assert schema['test'].description == 'Test'
+    assert schema['test_time'].units == 's'
+    with raises(KeyError, match='asdf'):
+        schema['asdf']
 
 
 @mark.parametrize(
