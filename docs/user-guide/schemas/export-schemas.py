@@ -1,15 +1,16 @@
 """Write schemas to an RST-compatible table format"""
-from typing import TextIO, get_args, Optional, get_origin
+from typing import TextIO, get_args
 
 from pydantic import BaseModel
 
 from batdata.schemas.column import RawData, CycleLevelData
-from batdata.schemas import BatteryMetadata
+from batdata.schemas import BatteryMetadata, BatteryDescription, ModelMetadata
+from batdata.schemas.eis import EISData
 
 print('Exporting column schemas to RST...')
 
-with open('column-schema.rst', 'w') as fp:
-    for data_type in [RawData(), CycleLevelData()]:
+with open('rendered-column-schema.rst', 'w') as fp:
+    for data_type in [RawData(), CycleLevelData(), EISData()]:
         class_name = data_type.__class__.__name__
         print(f'``{class_name}``\n++{"+" * len(class_name)}++', file=fp)
         print(f'\n**Source Object**: :class:`{data_type.__module__}.{class_name}`\n', file=fp)
@@ -26,10 +27,11 @@ with open('column-schema.rst', 'w') as fp:
             print(f'     - {field.units}', file=fp)
         print(file=fp)
 
-
 # Export the metadata schemas recursively
 print('Exporting metadata formats')
-def expand_terms(metadata_cls: type[BaseModel], fo: TextIO):
+
+
+def expand_terms(metadata_cls: type[BaseModel], fo: TextIO, recurse: bool):
     """Export the data in column format"""
 
     to_recurse = set()
@@ -37,7 +39,8 @@ def expand_terms(metadata_cls: type[BaseModel], fo: TextIO):
     class_name = metadata_cls.__name__
     print(f'``{class_name}``\n~~{"~" * len(class_name)}~~', file=fo)
     print(f'\n**Source Object**: :class:`{metadata_cls.__module__}.{class_name}`\n', file=fo)
-    print(f'\n{metadata_cls.__doc__}\n', file=fo)
+    doc_string = "\n".join(map(str.strip, metadata_cls.__doc__.split("\n")))
+    print(f'\n{doc_string}\n', file=fo)
 
     print('.. list-table::', file=fo)
     print('   :header-rows: 1\n', file=fo)
@@ -63,9 +66,28 @@ def expand_terms(metadata_cls: type[BaseModel], fo: TextIO):
         print(f'     - {"(**Required**) " if not is_optional else ""}{str(field.description)}', file=fo)
     print(file=fo)
 
-    for cls_type in to_recurse:
-        expand_terms(cls_type, fo)
+    if recurse:
+        for cls_type in to_recurse:
+            expand_terms(cls_type, fo, recurse)
 
 
-with open('metadata-schema.rst', 'w', encoding='utf-8') as fp:
-    expand_terms(BatteryMetadata, fp)
+with open('rendered-metadata-schema.rst', 'w', encoding='utf-8') as fp:
+    print('High-level Data', file=fp)
+    print('+++++++++++++++', file=fp)
+    print('All metadata starts with the :class:`~batdata.schemas.BatteryMetadata` object.\n', file=fp)
+
+    expand_terms(BatteryMetadata, fp, False)
+
+    print('Describing Batteries', file=fp)
+    print('++++++++++++++++++++', file=fp)
+    print(':class:`~batdata.schemas.battery.BatteryDescription` and its related class capture details about the structure of a battery.\n', file=fp)
+
+    expand_terms(BatteryDescription, fp, True)
+
+    print('Simulation Data', file=fp)
+    print('+++++++++++++++', file=fp)
+    print(':class:`~batdata.schemas.modeling.ModelMetadata` and its related class capture details about data produces using computational methods.\n', file=fp)
+
+    expand_terms(ModelMetadata, fp, True)
+
+
