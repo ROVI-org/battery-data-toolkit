@@ -145,18 +145,6 @@ def test_multicell_metadata_warning(tmpdir, test_df):
         test_df.to_hdf(out_path, 'b', append=True)
 
 
-def test_dict(test_df):
-    # Test writing it
-    d = test_df.to_batdata_dict()
-    assert d['metadata']['name'] == 'Test data'
-    assert 'raw_data' in d
-
-    # Test reading it
-    data = BatteryDataset.from_batdata_dict(d)
-    assert len(data.raw_data) == 3
-    assert data.metadata.name == 'Test data'
-
-
 def test_validate(test_df):
     # Make sure the provided data passes
     warnings = test_df.validate()
@@ -208,7 +196,7 @@ def test_version_warnings(test_df):
     # Alter the version number, then copy using to/from dict
     test_df.metadata.version = 'super.old.version'
     with pytest.warns() as w:
-        BatteryDataset.from_batdata_dict(test_df.to_batdata_dict())
+        BatteryDataset(metadata=test_df.metadata)
     assert len(w) == 1  # Only the warning about the versions
     assert 'supplied=super.old.version' in str(w.list[0].message)
 
@@ -216,7 +204,7 @@ def test_version_warnings(test_df):
     test_df.metadata.name = 1  # Name cannot be an int
 
     with pytest.warns() as w:
-        recovered = BatteryDataset.from_batdata_dict(test_df.to_batdata_dict())
+        recovered = BatteryDataset(metadata=test_df.metadata)
     assert len(w) == 3  # Warning during save, warning about mismatch, warning that schema failed
     assert 'supplied=super.old.version' in str(w.list[1].message)
     assert 'failed to validate, probably' in str(w.list[2].message)
