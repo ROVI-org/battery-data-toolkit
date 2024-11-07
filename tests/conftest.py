@@ -2,8 +2,8 @@ from pathlib import Path
 
 from pytest import fixture
 
-from batdata.data import BatteryDataset, BatteryMetadata
-from batdata.postprocess.timing import CycleTimesSummarizer
+from battdat.data import BatteryDataset, BatteryMetadata
+from battdat.postprocess.timing import CycleTimesSummarizer
 
 
 @fixture()
@@ -18,7 +18,7 @@ def example_data(file_path) -> BatteryDataset:
 
     # Load the simple cycling
     path = file_path / 'example-data' / 'single-resistor-constant-charge_from-discharged.hdf'
-    data = BatteryDataset.from_batdata_hdf(path)
+    data = BatteryDataset.from_hdf(path)
 
     # Compute basic cycling states
     for stats in [CycleTimesSummarizer()]:

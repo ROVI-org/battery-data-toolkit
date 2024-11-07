@@ -1,7 +1,7 @@
 """Tests related to the MACCOR parser"""
 from pytest import fixture
 
-from batdata.extractors.maccor import MACCORExtractor
+from battdat.extractors.maccor import MACCORExtractor
 
 
 @fixture()

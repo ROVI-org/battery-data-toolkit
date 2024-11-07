@@ -1,6 +1,6 @@
 """Tests related to the Arbin parser"""
 
-from batdata.extractors.arbin import ArbinExtractor
+from battdat.extractors.arbin import ArbinExtractor
 
 
 def test_validation(file_path):

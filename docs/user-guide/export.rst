@@ -1,7 +1,7 @@
 Exporting Data to Other Tools
 =============================
 
-The `batdata.exporters` modules provides tools for writing the data from battery-data-toolkit's internal format
+The `battdat.exporters` modules provides tools for writing the data from battery-data-toolkit's internal format
 into files suitable for use in other tools.
 
 All exporter interfaces provide a `export` function which takes the dataset to be written
@@ -11,7 +11,7 @@ being exported are written, such as the number of rows per file.
 
 .. code-block:: python
 
-    from batdata.exporters.ba import BatteryArchiveExporter
+    from battdat.exporters.ba import BatteryArchiveExporter
 
     exporter = BatteryArchiveExporter(chunk_size=1000000)
     exporter.export(dataset, 'output_dir')

@@ -73,7 +73,7 @@ class ColumnSchema(BaseModel, frozen=True):
     """
 
     extra_columns: Dict[str, ColumnInfo] = Field(default_factory=dict)
-    """Descriptions of columns beyond those defined in the batdata schema"""
+    """Descriptions of columns beyond those defined in the schema"""
 
     def __getitem__(self, item: str) -> ColumnInfo:
         """Retrieve a specific column"""

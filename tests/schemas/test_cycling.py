@@ -1,4 +1,4 @@
-from batdata.schemas.column import RawData, DataType, ColumnSchema, ColumnInfo
+from battdat.schemas.column import RawData, DataType, ColumnSchema, ColumnInfo
 
 from pytest import raises, fixture, mark
 import pandas as pd

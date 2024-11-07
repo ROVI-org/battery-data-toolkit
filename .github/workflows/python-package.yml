@@ -19,7 +19,7 @@ jobs:
           pip install -e .[test]
       - name: Lint with flake8
         run: |
-          flake8 batdata/ scripts/ tests
+          flake8 battdat/ scripts/ tests
       - name: Test with pytest
         run: |
           pytest --cov=batdata tests

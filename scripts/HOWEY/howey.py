@@ -4,8 +4,8 @@ cite howey paper
 
 """
 
-from batdata.extractors.tIVT import TIVTExtractor
-from batdata.schemas import BatteryMetadata
+from battdat.extractors.tIVT import TIVTExtractor
+from battdat.schemas import BatteryMetadata
 
 from tqdm import tqdm
 import numpy as np
@@ -92,4 +92,4 @@ if __name__ == "__main__":
 
         # Save it to disk
         out_path = os.path.join(output_folder, f'cell_{cell_index}.h5')
-        cell_data.to_batdata_hdf(out_path, complevel=9)
+        cell_data.to_hdf(out_path, complevel=9)

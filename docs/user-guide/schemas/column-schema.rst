@@ -1,8 +1,8 @@
 Column Schemas
 ==============
 
-The contents of each data table available with a dataset are described using a :class:`~batdata.schemas.column.ColumnSchema`.
-The schema is a collection of :class:`~batdata.schemas.column.ColumnInfo` objects detailing each column,
+The contents of each data table available with a dataset are described using a :class:`~battdat.schemas.column.ColumnSchema`.
+The schema is a collection of :class:`~battdat.schemas.column.ColumnInfo` objects detailing each column,
 which includes
 
 1. **Description**: A English description of the contents
@@ -14,15 +14,15 @@ which includes
 Using a Column Schema
 ---------------------
 
-:class:`~batdata.schemas.column.ColumnSchema` stored inside the `HDF5 and Parquet files <../formats.html>`_
+:class:`~battdat.schemas.column.ColumnSchema` stored inside the `HDF5 and Parquet files <../formats.html>`_
 provided by the battery data toolkit are used to describe existing and validating new data.
 
-List the columns names with :attr:`~batdata.schemas.column.ColumnSchema.columns` attribute
+List the columns names with :attr:`~battdat.schemas.column.ColumnSchema.columns` attribute
 and access information for a single column through the get item method:
 
 .. code-block:: python
 
-    data = BatteryDataset.from_batdata_hdf(out_path)
+    data = BatteryDataset.from_battdat_hdf(out_path)
     schema = data.schemas['eis_data']  # ColumnSchema for the ``eis_data`` table
     print(schema['test_id'].model_dump())
 
@@ -37,7 +37,7 @@ The above code prints the data for a specific column.
      'monotonic': False}
 
 
-Use the :meth:`~batdata.schemas.column.ColumnSchema.validate_dataframe` to check
+Use the :meth:`~battdat.schemas.column.ColumnSchema.validate_dataframe` to check
 if a dataframe matches requirements for each column.
 
 Pre-defined Schema
@@ -50,12 +50,12 @@ The battery-data-toolkit provides schemas for common types of data (e.g., cyclin
 Defining a New Column Schema
 ----------------------------
 
-Document a new type of data by either creating a subclass of :class:`~batdata.schemas.column.ColumnSchema`
+Document a new type of data by either creating a subclass of :class:`~battdat.schemas.column.ColumnSchema`
 or adding individual columns to an existing schema.
 
 .. code-block:: python
 
-    from batdata.schemas.column import RawData, ColumnInfo
+    from battdat.schemas.column import RawData, ColumnInfo
 
     schema = RawData()  # Schema for sensor measurements of cell
     schema.extra_columns['room_temp'] = ColumnInfo(

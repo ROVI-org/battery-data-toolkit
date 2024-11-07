@@ -1,6 +1,6 @@
 [project]
 name = "battery-data-toolkit"
-version = "0.3.4"
+version = "0.4.0"
 description = "Utilities for reading and manipulating battery testing data"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -21,9 +21,17 @@ dependencies = [
     "EMMOntoPy",
     "xlrd"
 ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: File Formats",
+    "Topic :: Scientific/Engineering"
+]
 
 [tool.setuptools.packages.find]
-include = ["batdata*"]
+include = ["battdat*"]
 
 [project.optional-dependencies]
 test = [
@@ -41,5 +49,3 @@ docs = [
 [project.urls]
 repository = "https://github.com/rovi-org/battery-data-toolkit"
 
-[tool.poetry.scripts]
-batdata-convert = "batdata.cli:main"

@@ -1,4 +1,4 @@
-batdata API
+battdat API
 ===========
 
 API documentation for each module

@@ -4,14 +4,14 @@ import pandas as pd
 from pytest import mark
 import numpy as np
 
-from batdata.data import BatteryDataset
-from batdata.extractors.batterydata import BDExtractor
-from batdata.postprocess.integral import CapacityPerCycle, StateOfCharge
+from battdat.data import BatteryDataset
+from battdat.extractors.batterydata import BDExtractor
+from battdat.postprocess.integral import CapacityPerCycle, StateOfCharge
 
 
 def get_example_data(file_path: Path, from_charged: bool) -> BatteryDataset:
     ex_file = file_path / 'example-data' / f'single-resistor-constant-charge_from-{"" if from_charged else "dis"}charged.hdf'
-    return BatteryDataset.from_batdata_hdf(ex_file)
+    return BatteryDataset.from_hdf(ex_file)
 
 
 def test_short_cycles():

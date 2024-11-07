@@ -1,7 +1,7 @@
-Extractors (``batdata.extractors``)
+Extractors (``battdat.extractors``)
 ===================================
 
-.. automodule:: batdata.extractors
+.. automodule:: battdat.extractors
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,7 +9,7 @@ Extractors (``batdata.extractors``)
 Base Class (``b.extractors.base``)
 ----------------------------------
 
-.. automodule:: batdata.extractors.base
+.. automodule:: battdat.extractors.base
    :members:
    :undoc-members:
    :show-inheritance:
@@ -17,7 +17,7 @@ Base Class (``b.extractors.base``)
 Arbin (``b.extractors.arbin``)
 ------------------------------
 
-.. automodule:: batdata.extractors.arbin
+.. automodule:: battdat.extractors.arbin
    :members:
    :undoc-members:
    :show-inheritance:
@@ -25,7 +25,7 @@ Arbin (``b.extractors.arbin``)
 Battery Data Hub (``b.extractors.batterydata``)
 -----------------------------------------------
 
-.. automodule:: batdata.extractors.batterydata
+.. automodule:: battdat.extractors.batterydata
    :members:
    :undoc-members:
    :show-inheritance:

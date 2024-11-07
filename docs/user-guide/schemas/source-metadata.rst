@@ -2,7 +2,7 @@ Source Metadata
 ===============
 
 ''Source Metadata'' captures high-level information about a battery dataset
-in the :class:`~batdata.schemas.BatteryMetadata` object.
+in the :class:`~battdat.schemas.BatteryMetadata` object.
 Information included in ``BatteryMetadata``, in contrast to `Column Schemas <column-schema.html>`_, are relevant to
 all measurements performed on a battery, such as:
 
@@ -14,7 +14,7 @@ all measurements performed on a battery, such as:
 Metadata Structure
 ------------------
 
-:class:`~batdata.schemas.BatteryMetadata` objects have a hierarchical structure where
+:class:`~battdat.schemas.BatteryMetadata` objects have a hierarchical structure where
 each record is composed of a single document that has fields which can correspond
 to single values, collections of values, or entire sub-documents.
 
@@ -22,19 +22,19 @@ Create new metadata through the Python interface by first creating a ``BatteryMe
 
 .. code-block:: python
 
-    from batdata.schemas import BatteryMetadata
+    from battdat.schemas import BatteryMetadata
 
     metadata = BatteryMetadata(
         name='test-cell',
     )
 
 Different types of information are grouped together into subdocuments,
-such as details about the battery in :class:`~batdata.schemas.battery.BatteryDescription`
+such as details about the battery in :class:`~battdat.schemas.battery.BatteryDescription`
 
 .. code-block:: python
 
-    from batdata.schemas.battery import BatteryDescription
-    from batdata.schemas import BatteryMetadata
+    from battdat.schemas.battery import BatteryDescription
+    from battdat.schemas import BatteryMetadata
 
     metadata = BatteryMetadata(
         name='test-cell',
@@ -44,10 +44,10 @@ such as details about the battery in :class:`~batdata.schemas.battery.BatteryDes
         )
     )
 
-:class:`~batdata.schemas.BatteryMetadata` automatically validate inputs,
+:class:`~battdat.schemas.BatteryMetadata` automatically validate inputs,
 and can convert to and JSON formats. (`Pydantic <https://docs.pydantic.dev/latest/>`_!)
 
-See the :mod:`batdata.schemas` for a full accounting of the available fields in our schema.
+See the :mod:`battdat.schemas` for a full accounting of the available fields in our schema.
 
 .. note::
 
@@ -65,11 +65,11 @@ with the "IRI" of the field, which points to a website containing the descriptio
 Fields whose values should be terms from the BattINFO ontology are marked with the root of the terms.
 For example, the ``model_type`` field of `ModelMetadata` can be any type of
 `MathematicalModel <https://emmo-repo.github.io/emmo.html#EMMO_f7ed665b_c2e1_42bc_889b_6b42ed3a36f0>`_.
-Look them up using some utilities in ``batdata``.
+Look them up using some utilities in ``battdat``.
 
 .. code-block:: python
 
-    from batdata.schemas.ontology import gather_descendants
+    from battdat.schemas.ontology import gather_descendants
 
     print(gather_descendants('MathematicalModel'))
 

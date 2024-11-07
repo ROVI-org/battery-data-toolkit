@@ -5,8 +5,8 @@ import numpy as np
 
 from pytest import warns, fixture, raises
 
-from batdata.data import BatteryDataset
-from batdata.postprocess.timing import CycleTimesSummarizer, TimeEnhancer
+from battdat.data import BatteryDataset
+from battdat.postprocess.timing import CycleTimesSummarizer, TimeEnhancer
 
 
 @fixture()

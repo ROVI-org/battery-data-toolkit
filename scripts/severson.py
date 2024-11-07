@@ -8,7 +8,7 @@ The script is hard-coded to read from a Box folder.
 
 """
 
-from batdata.extractors.arbin import ArbinExtractor
+from battdat.extractors.arbin import ArbinExtractor
 
 from tqdm import tqdm
 import pandas as pd
@@ -18,7 +18,7 @@ import os
 import re
 
 # Hard code root directory of data
-from batdata.schemas import BatteryMetadata
+from battdat.schemas import BatteryMetadata
 
 root_folder = os.path.join(os.path.expanduser("~"), "Box", "ASOH LDRD",
                            "Nature Energy Data and Data Extraction", "Raw CSV files")
@@ -124,4 +124,4 @@ if __name__ == "__main__":
 
         # Save it to disk
         out_path = os.path.join(output_folder, f'cell_{cell_index}.h5')
-        cell_data.to_batdata_hdf(out_path, complevel=9)
+        cell_data.to_hdf(out_path, complevel=9)

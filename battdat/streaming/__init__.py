@@ -7,7 +7,7 @@ import pandas as pd
 from pandas import HDFStore
 from pandas.io.pytables import TableIterator
 
-from batdata.data import BatteryDataset
+from battdat.data import BatteryDataset
 
 
 @contextmanager
@@ -50,7 +50,7 @@ def iterate_cycles_from_file(hdf5_path: Union[Path, str, HDFStore],
 
     Args:
         hdf5_path: Path to the data file
-        make_dataset: Whether to form a :class:`~batdata.data.BatteryDataset` for each cycle,
+        make_dataset: Whether to form a :class:`~battdat.data.BatteryDataset` for each cycle,
             including the metadata from the source file.
 
     Yields:
@@ -60,7 +60,7 @@ def iterate_cycles_from_file(hdf5_path: Union[Path, str, HDFStore],
     # Get the metadata out of the file, if needed
     metadata = None
     if make_dataset:
-        metadata, _ = BatteryDataset.inspect_batdata_hdf(hdf5_path)
+        metadata, _ = BatteryDataset.inspect_hdf(hdf5_path)
 
     def _assemble_from_chunks(chunks: List[pd.DataFrame]):
         combined = pd.concat(chunks)

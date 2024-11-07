@@ -6,8 +6,8 @@ import pandas as pd
 
 import shutil
 import os
-from batdata.schemas import BatteryMetadata
-from batdata.extractors.maccor import MACCORExtractor
+from battdat.schemas import BatteryMetadata
+from battdat.extractors.maccor import MACCORExtractor
 
 # Hard code root directory of data
 root_folder = os.path.join(os.path.dirname(__file__))
@@ -61,4 +61,4 @@ if __name__ == "__main__":
 
         # Save it to disk
         out_path = os.path.join(output_folder, f'cell_{name}.h5')
-        cell_data.to_batdata_hdf(out_path, complevel=9)
+        cell_data.to_hdf(out_path, complevel=9)

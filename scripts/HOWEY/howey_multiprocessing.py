@@ -4,7 +4,7 @@ cite howey paper
 
 """
 
-from batdata.extractors.tIVT import TIVTExtractor
+from battdat.extractors.tIVT import TIVTExtractor
 
 from tqdm import tqdm
 import numpy as np
@@ -13,7 +13,7 @@ import pandas as pd
 import shutil
 import os
 
-from batdata.schemas import BatteryMetadata
+from battdat.schemas import BatteryMetadata
 from multiprocessing import Pool
 
 root_folder = '/lcrc/project/battdat/npaulson/howey_data/data_files_raw'
@@ -50,7 +50,7 @@ def process_write(inp):
 
     # Save it to disk
     out_path = os.path.join(output_folder, f'cell_{cell_index}.h5')
-    cell_data.to_batdata_hdf(out_path, complevel=9)
+    cell_data.to_hdf(out_path, complevel=9)
 
 
 if __name__ == "__main__":

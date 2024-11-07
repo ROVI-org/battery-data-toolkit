@@ -4,9 +4,9 @@ import json
 
 import pandas as pd
 
-from batdata.exporters.ba import BatteryArchiveExporter
-from batdata.schemas import BatteryMetadata, BatteryDescription
-from batdata.schemas.battery import ElectrodeDescription
+from battdat.exporters.ba import BatteryArchiveExporter
+from battdat.schemas import BatteryMetadata, BatteryDescription
+from battdat.schemas.battery import ElectrodeDescription
 
 
 def test_export(example_data, tmpdir):

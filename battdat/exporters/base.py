@@ -1,11 +1,11 @@
 """Interface definitions"""
 from pathlib import Path
 
-from batdata.data import BatteryDataset
+from battdat.data import BatteryDataset
 
 
 class DatasetExporter:
-    """Tool which exports data from a :class:`~batdata.data.BatteryDataset` to disk in a specific format
+    """Tool which exports data from a :class:`~battdat.data.BatteryDataset` to disk in a specific format
 
     Implementing an Exporter
     ------------------------

@@ -1,7 +1,7 @@
-Postprocessing (``batdata.postprocess``)
+Postprocessing (``battdat.postprocess``)
 ========================================
 
-.. automodule:: batdata.postprocess
+.. automodule:: battdat.postprocess
    :members:
    :undoc-members:
    :show-inheritance:
@@ -10,7 +10,7 @@ Postprocessing (``batdata.postprocess``)
 Base (``b.postprocess.base``)
 -----------------------------
 
-.. automodule:: batdata.postprocess.base
+.. automodule:: battdat.postprocess.base
    :members:
    :undoc-members:
    :show-inheritance:
@@ -18,7 +18,7 @@ Base (``b.postprocess.base``)
 Integral (``b.postprocess.integral``)
 -------------------------------------
 
-.. automodule:: batdata.postprocess.integral
+.. automodule:: battdat.postprocess.integral
    :members:
    :undoc-members:
    :show-inheritance:
@@ -26,7 +26,7 @@ Integral (``b.postprocess.integral``)
 Tagging (``b.postprocess.tagging``)
 -----------------------------------
 
-.. automodule:: batdata.postprocess.tagging
+.. automodule:: battdat.postprocess.tagging
    :members:
    :undoc-members:
    :show-inheritance:
@@ -34,7 +34,7 @@ Tagging (``b.postprocess.tagging``)
 Timing (``b.postprocess.tagging``)
 ----------------------------------
 
-.. automodule:: batdata.postprocess.timing
+.. automodule:: battdat.postprocess.timing
    :members:
    :undoc-members:
    :show-inheritance:

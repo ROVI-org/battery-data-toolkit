@@ -4,10 +4,10 @@ from typing import Union, List, Iterator, Tuple
 import numpy as np
 import pandas as pd
 
-from batdata.extractors.base import BatteryDataExtractor
-from batdata.schemas.column import ChargingState
-from batdata.utils import drop_cycles
-from batdata.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
+from battdat.extractors.base import BatteryDataExtractor
+from battdat.schemas.column import ChargingState
+from battdat.utils import drop_cycles
+from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 
 
 class ArbinExtractor(BatteryDataExtractor):

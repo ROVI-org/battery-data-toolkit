@@ -7,8 +7,8 @@ from pathlib import Path
 import pandas as pd
 from tables.group import RootGroup
 
-from batdata.schemas.column import ColumnSchema, RawData
-from batdata.schemas import BatteryMetadata
+from battdat.schemas.column import ColumnSchema, RawData
+from battdat.schemas import BatteryMetadata
 
 
 @dataclass

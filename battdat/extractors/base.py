@@ -5,8 +5,8 @@ import os
 
 import pandas as pd
 
-from batdata.data import BatteryDataset
-from batdata.schemas import BatteryMetadata
+from battdat.data import BatteryDataset
+from battdat.schemas import BatteryMetadata
 
 
 class BatteryDataExtractor:
