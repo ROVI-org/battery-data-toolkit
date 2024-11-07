@@ -1,7 +1,7 @@
-Streaming (``batdata.streaming``)
+Streaming (``battdat.streaming``)
 =================================
 
-.. automodule:: batdata.streaming
+.. automodule:: battdat.streaming
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,7 +9,7 @@ Streaming (``batdata.streaming``)
 HDF5 Streaming (``b.streaming.hdf5``)
 -------------------------------------
 
-.. automodule:: batdata.streaming.hdf5
+.. automodule:: battdat.streaming.hdf5
    :members:
    :undoc-members:
    :show-inheritance:

@@ -5,11 +5,11 @@ from logging import getLogger
 import numpy as np
 import pandas as pd
 
-from batdata.extractors.base import BatteryDataExtractor
-from batdata.schemas.column import ChargingState
-from batdata.utils import drop_cycles
-from batdata.postprocess.tagging import add_steps, add_method, add_substeps
-from batdata.postprocess.timing import compute_capacity_energy
+from battdat.extractors.base import BatteryDataExtractor
+from battdat.schemas.column import ChargingState
+from battdat.utils import drop_cycles
+from battdat.postprocess.tagging import add_steps, add_method, add_substeps
+from battdat.postprocess.timing import compute_capacity_energy
 
 from scipy.interpolate import interp1d
 from scipy.optimize import differential_evolution

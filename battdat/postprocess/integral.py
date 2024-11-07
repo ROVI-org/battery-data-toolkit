@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import cumulative_trapezoid
 
-from batdata.postprocess.base import RawDataEnhancer, CycleSummarizer
+from battdat.postprocess.base import RawDataEnhancer, CycleSummarizer
 
 
 class CapacityPerCycle(CycleSummarizer):
@@ -48,7 +48,7 @@ class CapacityPerCycle(CycleSummarizer):
     - ``energy_charge``: Discharge energy per cycle in J
     - ``energy_discharge``: Charge energy per the cycle in J
 
-    The full definitions are provided in the :class:`~batdata.schemas.cycling.CycleLevelData` schema
+    The full definitions are provided in the :class:`~battdat.schemas.cycling.CycleLevelData` schema
     """
 
     def __init__(self, reuse_integrals: bool = True):

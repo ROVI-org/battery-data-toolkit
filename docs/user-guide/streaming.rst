@@ -3,7 +3,7 @@ Streaming Battery Data
 
 Many battery datasets are too large to fit in memory in a single computer at once.
 Such data can be read or written incrementally using the streaming module of battery data toolkit,
-:class:`batdata.streaming`.
+:class:`battdat.streaming`.
 
 Reading Data as a Stream
 ------------------------
@@ -11,8 +11,8 @@ Reading Data as a Stream
 The battery-data-toolkit allows streaming the raw time series data from an :ref:`HDF5 file format <hdf5>`.
 
 Stream the data either as individual rows or all rows belonging to each cycle
-with the :meth:`~batdata.streaming.iterate_records_from_file`
-or :meth:`~batdata.streaming.iterate_cycles_from_file`.
+with the :meth:`~battdat.streaming.iterate_records_from_file`
+or :meth:`~battdat.streaming.iterate_cycles_from_file`.
 
 Both functions produce `a Python generator <https://docs.python.org/3/glossary.html#term-generator>`_
 which retrieves a chunk of data from the HDF5 file incrementally and can be used to produce data individually
@@ -34,7 +34,7 @@ or as part of a for loop.
 Streaming Data to a File
 ------------------------
 
-Write large datasets into battery-data-toolkit-compatible formats incrementally using the :class:`~batdata.streaming.hdf5.HDF5Writer`.
+Write large datasets into battery-data-toolkit-compatible formats incrementally using the :class:`~battdat.streaming.hdf5.HDF5Writer`.
 
 Start the writer class by providing the path to the HDF5 file and the metadata to be written
 then opening it via Python's ``with`` syntax.

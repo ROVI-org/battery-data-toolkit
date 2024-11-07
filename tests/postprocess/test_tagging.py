@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 from pytest import fixture
 
-from batdata.data import BatteryDataset
-from batdata.postprocess.tagging import AddSteps, AddMethod, AddSubSteps
-from batdata.schemas.column import ChargingState, ControlMethod
+from battdat.data import BatteryDataset
+from battdat.postprocess.tagging import AddSteps, AddMethod, AddSubSteps
+from battdat.schemas.column import ChargingState, ControlMethod
 
 
 @fixture()

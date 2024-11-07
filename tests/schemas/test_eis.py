@@ -2,7 +2,7 @@ from pytest import fixture, raises
 import pandas as pd
 import numpy as np
 
-from batdata.schemas.eis import EISData
+from battdat.schemas.eis import EISData
 
 
 @fixture()

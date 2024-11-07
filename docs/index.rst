@@ -1,7 +1,7 @@
 Battery Data Toolkit
 ====================
 
-The battery-data-toolkit, ``batdata`` converts battery cycling data from native formats to a standardized HDF5 file.
+The battery-data-toolkit, ``battdat`` converts battery cycling data from native formats to a standardized HDF5 file.
 These HDF5 files contain the metadata needed to understand the source of the data,
 and can be easily manipulated by common analysis libraries (e.g., Pandas).
 

@@ -1,7 +1,7 @@
 """Test the ability to resolve cross-references from the ontology"""
 
-from batdata.schemas import BatteryMetadata
-from batdata.schemas.ontology import cross_reference_terms, gather_descendants, load_battinfo, resolve_term
+from battdat.schemas import BatteryMetadata
+from battdat.schemas.ontology import cross_reference_terms, gather_descendants, load_battinfo, resolve_term
 
 
 def test_crossref():

@@ -3,9 +3,9 @@ from typing import TextIO, get_args
 
 from pydantic import BaseModel
 
-from batdata.schemas.column import RawData, CycleLevelData
-from batdata.schemas import BatteryMetadata, BatteryDescription, ModelMetadata
-from batdata.schemas.eis import EISData
+from battdat.schemas.column import RawData, CycleLevelData
+from battdat.schemas import BatteryMetadata, BatteryDescription, ModelMetadata
+from battdat.schemas.eis import EISData
 
 print('Exporting column schemas to RST...')
 
@@ -74,19 +74,19 @@ def expand_terms(metadata_cls: type[BaseModel], fo: TextIO, recurse: bool):
 with open('rendered-metadata-schema.rst', 'w', encoding='utf-8') as fp:
     print('High-level Data', file=fp)
     print('+++++++++++++++', file=fp)
-    print('All metadata starts with the :class:`~batdata.schemas.BatteryMetadata` object.\n', file=fp)
+    print('All metadata starts with the :class:`~battdat.schemas.BatteryMetadata` object.\n', file=fp)
 
     expand_terms(BatteryMetadata, fp, False)
 
     print('Describing Batteries', file=fp)
     print('++++++++++++++++++++', file=fp)
-    print(':class:`~batdata.schemas.battery.BatteryDescription` and its related class capture details about the structure of a battery.\n', file=fp)
+    print(':class:`~battdat.schemas.battery.BatteryDescription` and its related class capture details about the structure of a battery.\n', file=fp)
 
     expand_terms(BatteryDescription, fp, True)
 
     print('Simulation Data', file=fp)
     print('+++++++++++++++', file=fp)
-    print(':class:`~batdata.schemas.modeling.ModelMetadata` and its related class capture details about data produces using computational methods.\n', file=fp)
+    print(':class:`~battdat.schemas.modeling.ModelMetadata` and its related class capture details about data produces using computational methods.\n', file=fp)
 
     expand_terms(ModelMetadata, fp, True)
 

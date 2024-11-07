@@ -1,7 +1,7 @@
-Dataset (``batdata.data``)
+Dataset (``battdat.data``)
 ==========================
 
-.. automodule:: batdata.data
+.. automodule:: battdat.data
    :members:
    :undoc-members:
    :show-inheritance:

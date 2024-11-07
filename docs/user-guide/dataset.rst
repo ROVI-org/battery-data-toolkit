@@ -21,8 +21,8 @@ Loading and Saving
 
 The battery data and metadata can be saved in a few different styles, each with different advantages.
 
-Functions to save are named ``to_batdata_[format]`` and
-functions for loading data are named ``from_batdata_[format]``.
+Functions to save are named ``to_battdat_[format]`` and
+functions for loading data are named ``from_battdat_[format]``.
 
 See the `formats <formats.html>`_ documentation page for more detail.
 

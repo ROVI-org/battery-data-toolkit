@@ -5,10 +5,10 @@ from typing import Union, List, Iterator, Tuple
 import pandas as pd
 import numpy as np
 
-from batdata.extractors.base import BatteryDataExtractor
-from batdata.schemas.column import ChargingState
-from batdata.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
-from batdata.utils import drop_cycles
+from battdat.extractors.base import BatteryDataExtractor
+from battdat.schemas.column import ChargingState
+from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
+from battdat.utils import drop_cycles
 
 
 class MACCORExtractor(BatteryDataExtractor):

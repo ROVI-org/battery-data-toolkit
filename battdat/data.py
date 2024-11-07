@@ -14,10 +14,10 @@ from tables import Group
 import pandas as pd
 import h5py
 
-from batdata.schemas import BatteryMetadata
-from batdata.schemas.column import RawData, CycleLevelData, ColumnSchema
-from batdata.schemas.eis import EISData
-from batdata import __version__
+from battdat.schemas import BatteryMetadata
+from battdat.schemas.column import RawData, CycleLevelData, ColumnSchema
+from battdat.schemas.eis import EISData
+from battdat import __version__
 
 _default_schemas = {
     'raw_data': RawData(),
@@ -33,26 +33,7 @@ class BatteryDataset:
     """Holder for all data associated with tests for a battery.
 
     Attributes of this class define different view of the data (e.g., raw time-series, per-cycle statistics)
-    or different types of data (e.g., EIS) along with the metadata for the class
-
-    I/O with BatteryDataFrame
-    -------------------------
-
-    This data frame provides I/O operations that store and retrieve the battery metadata into particular
-    formats. The operations are named ``[to|from]_batdata_[format]``, where format could be one of
-
-    - ``hdf``: Data is stored the `"table" format from PyTables
-      <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html#hdf5-pytables>`_.
-      Metadata are stored as an attribute to the
-    - ``dict``: Data as a Python dictionary object with two keys: "metadata" for the battery metadata
-      and "data" with the cycling data in "list" format ({"column"->["values"]})
-    - ``parquet``: Data into a directory of `Parquet <https://parquet.apache.org/>`_
-      files for each types of data. The metadata for the dataset will be saved as well
-
-    Many of methods use existing Pandas implementations of I/O operations, but with slight modifications
-    to encode the metadata and to ensure a standardized format.
-
-    """
+    or different types of data (e.g., EIS) along with the metadata for the class"""
 
     raw_data: Optional[pd.DataFrame] = None
     """Time-series data capturing the state of the battery as a function of time"""
@@ -94,7 +75,7 @@ class BatteryDataset:
         version_mismatch = False
         if (supplied_version := metadata.get('version', __version__)) != __version__:
             version_mismatch = True
-            warnings.warn(f'Metadata was created in a different version of batdata. supplied={supplied_version}, current={__version__}.')
+            warnings.warn(f'Metadata was created in a different version of battdat. supplied={supplied_version}, current={__version__}.')
 
         try:
             self.metadata = BatteryMetadata(**metadata)
@@ -144,12 +125,12 @@ class BatteryDataset:
 
         return output
 
-    def to_batdata_hdf(self,
-                       path_or_buf: Union[str, Path, HDFStore],
-                       prefix: Optional[str] = None,
-                       append: bool = False,
-                       complevel: int = 0,
-                       complib: str = 'zlib'):
+    def to_hdf(self,
+               path_or_buf: Union[str, Path, HDFStore],
+               prefix: Optional[str] = None,
+               append: bool = False,
+               complevel: int = 0,
+               complib: str = 'zlib'):
         """Save the data in the standardized HDF5 file format
 
         This function wraps the ``to_hdf`` function of Pandas and supplies fixed values for some options
@@ -206,13 +187,13 @@ class BatteryDataset:
                 store.close()  # Close the store if we opened it
 
     @classmethod
-    def from_batdata_hdf(cls,
-                         path_or_buf: Union[str, Path, HDFStore],
-                         subsets: Optional[Collection[str]] = None,
-                         prefix: Union[str, None, int] = None) -> 'BatteryDataset':
+    def from_hdf(cls,
+                 path_or_buf: Union[str, Path, HDFStore],
+                 subsets: Optional[Collection[str]] = None,
+                 prefix: Union[str, None, int] = None) -> 'BatteryDataset':
         """Read the battery data from an HDF file
 
-        Use :meth:`all_cells_from_batdata_hdf` to read all datasets from a file.
+        Use :meth:`all_cells_from_hdf` to read all datasets from a file.
 
         Args:
             path_or_buf: File path or HDFStore object
@@ -238,7 +219,7 @@ class BatteryDataset:
         try:
             # Determine which prefix to read, if an int is provided
             if isinstance(prefix, int):
-                _, prefixes = cls.inspect_batdata_hdf(path_or_buf)
+                _, prefixes = cls.inspect_hdf(path_or_buf)
                 prefix = sorted(prefixes)[prefix]
 
             data = {}
@@ -265,7 +246,7 @@ class BatteryDataset:
             # If no data with this prefix is found, report which ones are found in the file
             if len(data) == 0:
                 raise ValueError(f'No data available for prefix "{prefix}". '
-                                 'Call `BatteryDataset.inspect_batdata_hdf` to gather a list of available prefixes.')
+                                 'Call `BatteryDataset.inspect_hdf` to gather a list of available prefixes.')
 
             # Read out the battery metadata
             metadata = BatteryMetadata.model_validate_json(store.root._v_attrs.metadata)
@@ -276,7 +257,7 @@ class BatteryDataset:
         return cls(**data, metadata=metadata, schemas=schemas)
 
     @classmethod
-    def all_cells_from_batdata_hdf(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None) -> Iterator[Tuple[str, 'BatteryDataset']]:
+    def all_cells_from_hdf(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None) -> Iterator[Tuple[str, 'BatteryDataset']]:
         """Iterate over all cells in an HDF file
 
         Args:
@@ -288,14 +269,14 @@ class BatteryDataset:
         """
 
         # Start by gathering all names of the cells
-        _, names = cls.inspect_batdata_hdf(path)
+        _, names = cls.inspect_hdf(path)
 
         with HDFStore(path, mode='r') as fp:  # Only open once
             for name in names:
-                yield name, cls.from_batdata_hdf(fp, prefix=name, subsets=subsets)
+                yield name, cls.from_hdf(fp, prefix=name, subsets=subsets)
 
     @staticmethod
-    def inspect_batdata_hdf(path_or_buf: Union[str, Path, HDFStore]) -> tuple[BatteryMetadata, Set[Optional[str]]]:
+    def inspect_hdf(path_or_buf: Union[str, Path, HDFStore]) -> tuple[BatteryMetadata, Set[Optional[str]]]:
         """Extract the battery data and the prefixes of cells contained within an HDF5 file
 
         Args:
@@ -340,34 +321,7 @@ class BatteryDataset:
         with h5py.File(path, 'r') as f:
             return BatteryMetadata.model_validate_json(f.attrs['metadata'])
 
-    def to_batdata_dict(self) -> dict:
-        """Generate data in dictionary format
-
-        Returns
-        -------
-            (dict) Data in dictionary format
-        """
-
-        output = {'metadata': self.metadata.model_dump()}
-        for key in _default_schemas:
-            data = getattr(self, key)
-            if data is not None:
-                output[key] = data.to_dict('list')
-
-        return output
-
-    @classmethod
-    def from_batdata_dict(cls, d):
-        """Read battery data and metadata from a dictionary format"""
-
-        # Convert the keys to a dataframe
-        inputs = d.copy()
-        for k in _default_schemas:
-            if k in inputs:
-                inputs[k] = pd.DataFrame(d[k])
-        return cls(**inputs)
-
-    def to_batdata_parquet(self, path: Union[Path, str], overwrite: bool = True, **kwargs) -> Dict[str, Path]:
+    def to_parquet(self, path: Union[Path, str], overwrite: bool = True, **kwargs) -> Dict[str, Path]:
         """Write battery data to a directory of Parquet files
 
         Keyword arguments are passed to :func:`~pyarrow.parquet.write_table`.
@@ -408,7 +362,7 @@ class BatteryDataset:
         return written
 
     @classmethod
-    def from_batdata_parquet(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None):
+    def from_parquet(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None):
         """Read the battery data from an HDF file
 
         Args:
@@ -458,7 +412,7 @@ class BatteryDataset:
         )
 
     @staticmethod
-    def get_metadata_from_parquet(path: Union[str, Path]) -> BatteryMetadata:
+    def inspect_parquet(path: Union[str, Path]) -> BatteryMetadata:
         """Get battery metadata from a directory of parquet files without reading them
 
         Args:

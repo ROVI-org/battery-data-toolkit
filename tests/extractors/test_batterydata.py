@@ -4,7 +4,7 @@ import requests
 from pytest import fixture
 from pydantic import AnyUrl
 
-from batdata.extractors.batterydata import BDExtractor, generate_metadata
+from battdat.extractors.batterydata import BDExtractor, generate_metadata
 
 
 @fixture()

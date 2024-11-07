@@ -1,7 +1,7 @@
-Exporters (``batdata.exporters``)
+Exporters (``battdat.exporters``)
 =================================
 
-.. automodule:: batdata.exporters
+.. automodule:: battdat.exporters
    :members:
    :undoc-members:
    :show-inheritance:
@@ -9,7 +9,7 @@ Exporters (``batdata.exporters``)
 Base Class (``b.exporters.base``)
 ---------------------------------
 
-.. automodule:: batdata.exporters.base
+.. automodule:: battdat.exporters.base
    :members:
    :undoc-members:
    :show-inheritance:
@@ -18,7 +18,7 @@ Base Class (``b.exporters.base``)
 Battery Archive (``b.exporters.ba``)
 ------------------------------------
 
-.. automodule:: batdata.exporters.ba
+.. automodule:: battdat.exporters.ba
    :members:
    :undoc-members:
    :show-inheritance:

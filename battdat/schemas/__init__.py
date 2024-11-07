@@ -4,9 +4,9 @@ from typing import List, Tuple, Optional
 
 from pydantic import BaseModel, Field, AnyUrl
 
-from batdata.schemas.modeling import ModelMetadata
-from batdata.schemas.battery import BatteryDescription
-from batdata.version import __version__
+from battdat.schemas.modeling import ModelMetadata
+from battdat.schemas.battery import BatteryDescription
+from battdat.version import __version__
 
 
 class BatteryMetadata(BaseModel, extra='allow'):

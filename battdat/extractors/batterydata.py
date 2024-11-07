@@ -68,14 +68,14 @@ _name_map_raw = {
 }
 
 
-def convert_raw_signal_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd.DataFrame:
-    """Convert a cycle statistics dataframe to one using batdata names and conventions
+def convert_raw_signal(input_df: pd.DataFrame, store_all: bool) -> pd.DataFrame:
+    """Convert a cycle statistics dataframe to one using battdat names and conventions
 
     Args:
         input_df: Initial NREL-format dataframe
         store_all: Whether to store columns even we have not defined their names
     Returns:
-        DataFrame in the batdata format
+        DataFrame in the battdat format
     """
     output = pd.DataFrame()
 
@@ -115,14 +115,14 @@ _name_map_summary = {
 }
 
 
-def convert_summary_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd.DataFrame:
-    """Convert the summary dataframe to a format using batdata names and conventions
+def convert_summary(input_df: pd.DataFrame, store_all: bool) -> pd.DataFrame:
+    """Convert the summary dataframe to a format using battdat names and conventions
 
     Args:
         input_df: Initial NREL-format dataframe
         store_all: Whether to store columns even we have not defined their names
     Returns:
-        DataFrame in the batdata format
+        DataFrame in the battdat format
     """
 
     output = pd.DataFrame()
@@ -140,13 +140,13 @@ def convert_summary_to_batdata(input_df: pd.DataFrame, store_all: bool) -> pd.Da
     return output
 
 
-def convert_eis_data_to_batdata(input_df: pd.DataFrame) -> pd.DataFrame:
+def convert_eis_data(input_df: pd.DataFrame) -> pd.DataFrame:
     """Rename the columns from an NREL-standard set of EIS data to our names and conventions
 
     Args:
         input_df: NREL-format raw data
     Returns:
-        EIS data in batdata format
+        EIS data in battdat format
     """
 
     # Filter out the non-EIS data
@@ -207,14 +207,14 @@ class BDExtractor(BatteryDataExtractor):
             # Different parsing logic by type
             data_type = match.group('type')
             if data_type == 'summary':
-                cycle_stats = convert_summary_to_batdata(pd.read_csv(path), self.store_all)
+                cycle_stats = convert_summary(pd.read_csv(path), self.store_all)
             elif data_type == 'raw':
                 nrel_data = pd.read_csv(path)
-                raw_data = convert_raw_signal_to_batdata(nrel_data, self.store_all)
+                raw_data = convert_raw_signal(nrel_data, self.store_all)
 
                 # Get EIS data, if available
                 if 'Z_Imag_Ohm' in nrel_data.columns and not (nrel_data['Z_Imag_Ohm'].isna()).all():
-                    eis_data = convert_eis_data_to_batdata(nrel_data)
+                    eis_data = convert_eis_data(nrel_data)
             else:
                 raise ValueError(f'Data type unrecognized: {data_type}')
 

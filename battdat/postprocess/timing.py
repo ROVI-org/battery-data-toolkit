@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from batdata.postprocess.base import CycleSummarizer, RawDataEnhancer
+from battdat.postprocess.base import CycleSummarizer, RawDataEnhancer
 
 
 class CycleTimesSummarizer(CycleSummarizer):

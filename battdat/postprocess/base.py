@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-from batdata.data import BatteryDataset
+from battdat.data import BatteryDataset
 
 
 class BaseFeatureComputer:
