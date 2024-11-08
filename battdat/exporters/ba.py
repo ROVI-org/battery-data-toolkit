@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from .base import DatasetExporter
-from ..data import BatteryDataset
+from ..data import CellDataset
 from ..schemas import BatteryMetadata
 
 logger = logging.getLogger(__name__)
@@ -152,7 +152,7 @@ class BatteryArchiveExporter(DatasetExporter):
         with open(path / 'metadata.json', 'w') as fp:
             json.dump(output, fp)
 
-    def export(self, dataset: BatteryDataset, path: Path):
+    def export(self, dataset: CellDataset, path: Path):
         cell_name = dataset.metadata.name or str(uuid4())  # Default to UUID if none provided
 
         if dataset.raw_data is not None:

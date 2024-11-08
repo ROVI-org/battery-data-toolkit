@@ -32,9 +32,13 @@ and the metadata for the battery as the metadata.
 The internal structure of each group (e.g., ``f['raw_data']``) are in `the PyTables layout <https://www.pytables.org/usersguide/file_format.html>`_.
 The format is readable through pytables and Pandas's :func:`~pandas.read_hdf` function, but readers for other languages do not yet exist.
 
+Each group within the HDF5 file written by ``battdat`` contains a ``battdat_type`` attribute,
+which is "dataset" for the root group and "subset" for all tables.
+
 .. note::
 
-    We may change to a simplified HDF5 layout for simpler cross-language compatibility.
+    We may change to a simplified HDF5 layout for simpler cross-language compatibility
+    (see `Issue #89 <https://github.com/ROVI-org/battery-data-toolkit/issues/89>`_)
 
 
 Multiple Batteries per File

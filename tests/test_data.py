@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from pytest import fixture, raises
 
 from battdat.schemas.column import ColumnInfo
-from battdat.data import BatteryDataset
+from battdat.data import CellDataset
 from battdat import __version__
 
 
@@ -27,7 +27,7 @@ def test_df():
     cycle_stats = pd.DataFrame({
         'cycle_number': [0],
     })
-    dataset = BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, metadata={'name': 'Test data'})
+    dataset = CellDataset(raw_data=raw_data, cycle_stats=cycle_stats, metadata={'name': 'Test data'})
 
     # Add an extra column in the schema
     dataset.schemas['raw_data'].extra_columns['new'] = ColumnInfo(description='An example column')
@@ -63,11 +63,11 @@ def test_read_hdf(tmpdir, test_df):
     test_df.to_hdf(out_path)
 
     # Test reading only the metadata
-    metadata = BatteryDataset.get_metadata_from_hdf5(out_path)
+    metadata = CellDataset.get_metadata_from_hdf5(out_path)
     assert metadata.name == 'Test data'
 
     # Read it
-    data = BatteryDataset.from_hdf(out_path)
+    data = CellDataset.from_hdf(out_path)
     assert data.metadata.name == 'Test data'
     assert data.raw_data is not None
     assert data.cycle_stats is not None
@@ -75,19 +75,19 @@ def test_read_hdf(tmpdir, test_df):
 
     # Test reading from an already-open file
     with HDFStore(out_path, 'r') as store:
-        data = BatteryDataset.from_hdf(store)
+        data = CellDataset.from_hdf(store)
     assert data.metadata.name == 'Test data'
 
     # Test requesting an unknown type of field
     with raises(ValueError) as exc:
-        BatteryDataset.from_hdf(out_path, subsets=('bad)_!~',))
+        CellDataset.from_hdf(out_path, subsets=('bad)_!~',))
     assert 'bad)_!~' in str(exc)
 
     # Test reading an absent field
-    test_df.cycle_stats = None
+    del test_df.datasets['cycle_stats']
     test_df.to_hdf(out_path)
     with raises(ValueError) as exc:
-        BatteryDataset.from_hdf(out_path, subsets=('cycle_stats',))
+        CellDataset.from_hdf(out_path, subsets=('cycle_stats',))
     assert 'File does not contain' in str(exc)
 
 
@@ -100,25 +100,25 @@ def test_multi_cell_hdf5(tmpdir, test_df):
     test_df.to_hdf(out_path, 'b', append=True)
 
     # Make sure we can count two cells
-    _, names = BatteryDataset.inspect_hdf(out_path)
+    _, names = CellDataset.inspect_hdf(out_path)
     assert names == {'a', 'b'}
 
     with pd.HDFStore(out_path) as h:
-        _, names = BatteryDataset.inspect_hdf(h)
+        _, names = CellDataset.inspect_hdf(h)
         assert names == {'a', 'b'}
 
     # Load both
-    test_a = BatteryDataset.from_hdf(out_path, prefix='a')
-    test_b = BatteryDataset.from_hdf(out_path, prefix='b')
+    test_a = CellDataset.from_hdf(out_path, prefix='a')
+    test_b = CellDataset.from_hdf(out_path, prefix='b')
     assert np.isclose(test_a.raw_data['current'] * 2, test_b.raw_data['current']).all()
 
     # Test reading by index
-    test_0 = BatteryDataset.from_hdf(out_path, prefix=0)
+    test_0 = CellDataset.from_hdf(out_path, prefix=0)
     assert np.isclose(test_0.raw_data['current'],
                       test_a.raw_data['current']).all()
 
     # Iterate over all
-    keys = dict(BatteryDataset.all_cells_from_hdf(out_path))
+    keys = dict(CellDataset.all_cells_from_hdf(out_path))
     assert len(keys)
     assert np.isclose(keys['a'].raw_data['current'] * 2,
                       keys['b'].raw_data['current']).all()
@@ -131,7 +131,7 @@ def test_missing_prefix_warning(tmpdir, test_df):
 
     # Error if prefix not found
     with pytest.raises(ValueError) as e:
-        BatteryDataset.from_hdf(out_path, prefix='b')
+        CellDataset.from_hdf(out_path, prefix='b')
     assert 'No data available for prefix "b"' in str(e)
 
 
@@ -167,28 +167,28 @@ def test_parquet(test_df, tmpdir):
         assert b'table_metadata' in metadata
 
     # Read it back in, ensure data are recovered
-    read_df = BatteryDataset.from_parquet(write_dir)
+    read_df = CellDataset.from_parquet(write_dir)
     assert (read_df.cycle_stats['cycle_number'] == test_df.cycle_stats['cycle_number']).all()
     assert (read_df.raw_data['voltage'] == test_df.raw_data['voltage']).all()
     assert read_df.metadata == test_df.metadata
     assert read_df.schemas['raw_data'].extra_columns['new'].description == 'An example column'
 
     # Test reading subsets
-    read_df = BatteryDataset.from_parquet(write_dir, subsets=('cycle_stats',))
+    read_df = CellDataset.from_parquet(write_dir, subsets=('cycle_stats',))
     assert read_df.metadata is not None
     assert read_df.raw_data is None
     assert read_df.cycle_stats is not None
 
     with raises(ValueError) as e:
-        BatteryDataset.from_parquet(tmpdir)
+        CellDataset.from_parquet(tmpdir)
     assert 'No data available' in str(e)
 
     # Test reading only metadata
-    metadata = BatteryDataset.inspect_parquet(write_dir)
+    metadata = CellDataset.inspect_parquet(write_dir)
     assert metadata == test_df.metadata
-    BatteryDataset.inspect_parquet(write_dir / 'cycle_stats.parquet')
+    CellDataset.inspect_parquet(write_dir / 'cycle_stats.parquet')
     with raises(ValueError) as e:
-        BatteryDataset.inspect_parquet(tmpdir)
+        CellDataset.inspect_parquet(tmpdir)
     assert 'No parquet files' in str(e)
 
 
@@ -196,7 +196,7 @@ def test_version_warnings(test_df):
     # Alter the version number, then copy using to/from dict
     test_df.metadata.version = 'super.old.version'
     with pytest.warns() as w:
-        BatteryDataset(metadata=test_df.metadata)
+        CellDataset(metadata=test_df.metadata)
     assert len(w) == 1  # Only the warning about the versions
     assert 'supplied=super.old.version' in str(w.list[0].message)
 
@@ -204,7 +204,7 @@ def test_version_warnings(test_df):
     test_df.metadata.name = 1  # Name cannot be an int
 
     with pytest.warns() as w:
-        recovered = BatteryDataset(metadata=test_df.metadata)
+        recovered = CellDataset(metadata=test_df.metadata)
     assert len(w) == 3  # Warning during save, warning about mismatch, warning that schema failed
     assert 'supplied=super.old.version' in str(w.list[1].message)
     assert 'failed to validate, probably' in str(w.list[2].message)
@@ -216,4 +216,4 @@ def test_bad_metadata():
 
     metadata = {'name': 1}
     with raises(ValidationError):
-        BatteryDataset(metadata=metadata)
+        CellDataset(metadata=metadata)

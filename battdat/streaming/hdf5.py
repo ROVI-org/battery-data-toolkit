@@ -54,12 +54,14 @@ class HDF5Writer(AbstractContextManager):
         # Write metadata to the store's root's attributes
         self._store.root._v_attrs.metadata = self.metadata.model_dump_json(exclude_none=True)
         self._store.root._v_attrs.json_schema = self.metadata.model_json_schema()
+        self._store.root._v_attrs.battdat_type = 'dataset'
 
         # TODO (wardlt): Figure out how to avoid private methods if we don't abandon pytables
         self._store._create_nodes_and_group('raw_data')
         group: RootGroup = self._store.root['raw_data']
         group._v_attrs.metadata = self.schema.model_dump_json()
         group._v_attrs.json_schema = self.schema.model_json_schema()
+        group._v_attrs.battdat_type = 'subset'
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

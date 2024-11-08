@@ -5,7 +5,7 @@ import os
 
 import pandas as pd
 
-from battdat.data import BatteryDataset
+from battdat.data import CellDataset
 from battdat.schemas import BatteryMetadata
 
 
@@ -93,7 +93,7 @@ class BatteryDataExtractor:
         """
         raise NotImplementedError()
 
-    def parse_to_dataframe(self, group: List[str], metadata: Optional[Union[BatteryMetadata, dict]] = None) -> BatteryDataset:
+    def parse_to_dataframe(self, group: List[str], metadata: Optional[Union[BatteryMetadata, dict]] = None) -> CellDataset:
         """Parse a set of  files into a Pandas dataframe
 
         Args:
@@ -124,4 +124,4 @@ class BatteryDataExtractor:
         df_out = pd.concat(output_dfs, ignore_index=True)
 
         # Attach the metadata and return the data
-        return BatteryDataset(raw_data=df_out, metadata=metadata)
+        return CellDataset(raw_data=df_out, metadata=metadata)
