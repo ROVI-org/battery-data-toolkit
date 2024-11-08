@@ -1,20 +1,24 @@
 The `BatteryDataset` Object
 ===========================
 
-The `BatteryDataset` object is the central object for the battery data toolkit.
+The :class:`~battdat.data.BatteryDataset` object is the central object for the battery data toolkit.
 Extractors render vendor-specific data into the `BatteryDataset`,
 schemas describe its contents,
-and post-processing codes manipulate.
+and post-processing codes manipulate its datasets.
+
+Creating a Battery Dataset
+--------------------------
+
+
 
 Using the `BatteryDataset` Object
 ---------------------------------
 
-The `BatteryDataset` holds different types of data about a battery in separate Pandas dataframes,
-and metadata describing the source of the data in a `.metadata` attribute.
+The :class:`~battdat.data.BatteryDataset` holds different types of data about a battery in separate Pandas dataframes,
+metadata describing the source of the data as the :attr:`~battdat.data.BatteryDataset.metadata` attribute,
+and schema describing each dataframe in the :class:`~battdat.data.BatteryDataset.schemas` attribute.
 
-.. note::
-
-    TBD: Describe the types of data
+All datasets
 
 Loading and Saving
 ------------------

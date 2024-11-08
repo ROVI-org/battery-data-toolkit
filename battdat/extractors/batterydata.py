@@ -10,7 +10,7 @@ from typing import Union, List, Iterator, Tuple, Optional, Iterable
 import pandas as pd
 
 from .base import BatteryDataExtractor
-from ..data import BatteryDataset
+from ..data import CellDataset
 from ..schemas import BatteryMetadata, BatteryDescription
 
 _fname_match = re.compile(r'(?P<name>[-\w]+)-(?P<type>summary|raw)\.csv')
@@ -188,7 +188,7 @@ class BDExtractor(BatteryDataExtractor):
         yield from groups.values()
 
     def parse_to_dataframe(self, group: List[str],
-                           metadata: Optional[Union[BatteryMetadata, dict]] = None) -> BatteryDataset:
+                           metadata: Optional[Union[BatteryMetadata, dict]] = None) -> CellDataset:
         # Make an empty metadata if none available
         if metadata is None:
             metadata = BatteryMetadata()
@@ -220,4 +220,4 @@ class BDExtractor(BatteryDataExtractor):
 
         # Separate out the EIS data, if possible
 
-        return BatteryDataset(raw_data=raw_data, cycle_stats=cycle_stats, eis_data=eis_data, metadata=metadata)
+        return CellDataset(raw_data=raw_data, cycle_stats=cycle_stats, eis_data=eis_data, metadata=metadata)

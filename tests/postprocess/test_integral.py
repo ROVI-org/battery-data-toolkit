@@ -4,20 +4,20 @@ import pandas as pd
 from pytest import mark
 import numpy as np
 
-from battdat.data import BatteryDataset
+from battdat.data import CellDataset
 from battdat.extractors.batterydata import BDExtractor
 from battdat.postprocess.integral import CapacityPerCycle, StateOfCharge
 
 
-def get_example_data(file_path: Path, from_charged: bool) -> BatteryDataset:
+def get_example_data(file_path: Path, from_charged: bool) -> CellDataset:
     ex_file = file_path / 'example-data' / f'single-resistor-constant-charge_from-{"" if from_charged else "dis"}charged.hdf'
-    return BatteryDataset.from_hdf(ex_file)
+    return CellDataset.from_hdf(ex_file)
 
 
 def test_short_cycles():
     """Make sure cycles that are too short for capacity measurements do not cause errors"""
 
-    example_data = BatteryDataset(
+    example_data = CellDataset(
         raw_data=pd.DataFrame({'time': range(2), 'current': [1.] * 2, 'voltage': [2.] * 2, 'cycle_number': [0] * 2})
     )
     CapacityPerCycle().compute_features(example_data)

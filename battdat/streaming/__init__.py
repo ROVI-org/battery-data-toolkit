@@ -7,7 +7,7 @@ import pandas as pd
 from pandas import HDFStore
 from pandas.io.pytables import TableIterator
 
-from battdat.data import BatteryDataset
+from battdat.data import CellDataset
 
 
 @contextmanager
@@ -42,7 +42,7 @@ def iterate_records_from_file(hdf5_path: Union[Path, str, HDFStore], **kwargs) -
 
 def iterate_cycles_from_file(hdf5_path: Union[Path, str, HDFStore],
                              make_dataset: bool = False,
-                             **kwargs) -> Iterator[Union[pd.DataFrame, BatteryDataset]]:
+                             **kwargs) -> Iterator[Union[pd.DataFrame, CellDataset]]:
     """Stream single-cycle datasets from the HDF5 file
 
     Keyword arguments are passed to :meth:`~pandas.read_hdf`, which includes options
@@ -60,12 +60,12 @@ def iterate_cycles_from_file(hdf5_path: Union[Path, str, HDFStore],
     # Get the metadata out of the file, if needed
     metadata = None
     if make_dataset:
-        metadata, _ = BatteryDataset.inspect_hdf(hdf5_path)
+        metadata, _ = CellDataset.inspect_hdf(hdf5_path)
 
     def _assemble_from_chunks(chunks: List[pd.DataFrame]):
         combined = pd.concat(chunks)
         if make_dataset:
-            return BatteryDataset(metadata=metadata, raw_data=combined)
+            return CellDataset(metadata=metadata, raw_data=combined)
         return combined
 
     current_cycle = None

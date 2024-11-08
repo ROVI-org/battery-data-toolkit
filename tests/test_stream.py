@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from pytest import fixture, mark
 
-from battdat.data import BatteryDataset
+from battdat.data import CellDataset
 from battdat.extractors.batterydata import BDExtractor
 from battdat.streaming import iterate_records_from_file, iterate_cycles_from_file
 from battdat.streaming.hdf5 import HDF5Writer
@@ -36,7 +36,7 @@ def test_stream_by_rows(example_h5_path):
 
 
 def test_stream_by_cycles(example_h5_path):
-    test_data = BatteryDataset.from_hdf(example_h5_path)
+    test_data = CellDataset.from_hdf(example_h5_path)
     cycle_iter = iterate_cycles_from_file(example_h5_path, chunksize=4)  # Small to make sure we split cycles across chunks
     for streamed, (_, original) in zip_longest(cycle_iter, test_data.raw_data.groupby('cycle_number')):
         assert streamed is not None
@@ -59,7 +59,7 @@ def test_streaming_write(example_dataset, buffer_size, tmpdir):
             writer.write_row(row.to_dict())
 
     # Make sure the data are identical
-    copied_data = BatteryDataset.from_hdf(out_file)
+    copied_data = CellDataset.from_hdf(out_file)
     assert copied_data.metadata.name == example_dataset.metadata.name
     cols = ['test_time', 'current']
     assert np.allclose(copied_data.raw_data[cols], example_dataset.raw_data[cols])
@@ -72,5 +72,5 @@ def test_streaming_write_existing_store(example_dataset, tmpdir):
         assert writer.write_row({'test_time': 1.}) == 2
 
     # Read it in
-    data = BatteryDataset.from_hdf(out_file)
+    data = CellDataset.from_hdf(out_file)
     assert np.allclose(data.raw_data['test_time'], [0., 1.])

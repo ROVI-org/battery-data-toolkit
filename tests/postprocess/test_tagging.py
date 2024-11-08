@@ -3,13 +3,13 @@ import numpy as np
 import pandas as pd
 from pytest import fixture
 
-from battdat.data import BatteryDataset
+from battdat.data import CellDataset
 from battdat.postprocess.tagging import AddSteps, AddMethod, AddSubSteps
 from battdat.schemas.column import ChargingState, ControlMethod
 
 
 @fixture()
-def synthetic_data() -> BatteryDataset:
+def synthetic_data() -> CellDataset:
     """Data which includes all of our types of steps"""
 
     # Make the segments
@@ -47,7 +47,7 @@ def synthetic_data() -> BatteryDataset:
         'cycle_number': c
     })
     data.drop([62, 63, 64], inplace=True)
-    return BatteryDataset(raw_data=data)
+    return CellDataset(raw_data=data)
 
 
 def test_example_data(synthetic_data):

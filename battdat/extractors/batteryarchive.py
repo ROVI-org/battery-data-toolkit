@@ -4,7 +4,7 @@ from typing import Union, List, Iterator, Tuple, Optional
 import pandas as pd
 
 from .base import BatteryDataExtractor
-from ..data import BatteryDataset
+from ..data import CellDataset
 
 
 class BatteryArchiveExtractor(BatteryDataExtractor):
@@ -71,4 +71,4 @@ class BatteryArchiveExtractor(BatteryDataExtractor):
             ts_path = [x for x in group if 'timeseries' in x][0]
 
         ts_data = self.parse_timeseries_to_dataframe(ts_path)
-        return BatteryDataset(raw_data=ts_data, metadata=metadata)
+        return CellDataset(raw_data=ts_data, metadata=metadata)

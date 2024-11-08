@@ -1,7 +1,7 @@
 """Interface definitions"""
 from pathlib import Path
 
-from battdat.data import BatteryDataset
+from battdat.data import CellDataset
 
 
 class DatasetExporter:
@@ -11,7 +11,7 @@ class DatasetExporter:
     ------------------------
     """
 
-    def export(self, dataset: BatteryDataset, path: Path):
+    def export(self, dataset: CellDataset, path: Path):
         """Write the dataset to disk in a specific path
 
         All files from the dataset must be placed in the provided directory

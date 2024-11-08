@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-from battdat.data import BatteryDataset
+from battdat.data import CellDataset
 
 
 class BaseFeatureComputer:
@@ -12,7 +12,7 @@ class BaseFeatureComputer:
     Features can be anything but are often collected statistics about a certain cycle.
     """
 
-    def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
+    def compute_features(self, data: CellDataset) -> pd.DataFrame:
         """Compute
 
         Args:
@@ -29,7 +29,7 @@ class RawDataEnhancer(BaseFeatureComputer):
 
     column_names: List[str] = ...
 
-    def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
+    def compute_features(self, data: CellDataset) -> pd.DataFrame:
         self.enhance(data.raw_data)
         return data.raw_data[self.column_names]
 
@@ -47,11 +47,11 @@ class CycleSummarizer(BaseFeatureComputer):
 
     column_names: List[str] = ...
 
-    def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
+    def compute_features(self, data: CellDataset) -> pd.DataFrame:
         self.add_summaries(data)
         return data.cycle_stats[['cycle_number'] + self.column_names]
 
-    def add_summaries(self, data: BatteryDataset):
+    def add_summaries(self, data: CellDataset):
         """Add cycle-level summaries to a battery dataset
 
         Args:
@@ -60,7 +60,7 @@ class CycleSummarizer(BaseFeatureComputer):
 
         # Add a cycle summary if not already available
         if data.cycle_stats is None:
-            data.cycle_stats = pd.DataFrame({'cycle_number': sorted(set(data.raw_data['cycle_number']))})
+            data.datasets['cycle_stats'] = pd.DataFrame({'cycle_number': sorted(set(data.raw_data['cycle_number']))})
 
         # Perform the update
         self._summarize(data.raw_data, data.cycle_stats)
