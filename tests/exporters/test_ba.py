@@ -4,7 +4,7 @@ import json
 
 import pandas as pd
 
-from battdat.exporters.ba import BatteryArchiveExporter
+from battdat.io.ba import BatteryArchiveExporter
 from battdat.schemas import BatteryMetadata, BatteryDescription
 from battdat.schemas.battery import ElectrodeDescription
 

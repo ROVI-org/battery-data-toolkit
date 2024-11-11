@@ -148,3 +148,18 @@ class CycleTestReader(DatasetFileReader):
 
         # Attach the metadata and return the data
         return CellDataset(raw_data=df_out, metadata=metadata)
+
+
+class DatasetExporter:
+    """Tool which exports data from a :class:`~battdat.data.BatteryDataset` to disk in a specific format"""
+
+    def export(self, dataset: BatteryDataset, path: Path):
+        """Write the dataset to disk in a specific path
+
+        All files from the dataset must be placed in the provided directory
+
+        Args:
+            dataset: Dataset to be exported
+            path: Output path
+        """
+        raise NotImplementedError()

@@ -11,9 +11,9 @@ import json
 import numpy as np
 import pandas as pd
 
-from .base import DatasetExporter
-from ..data import CellDataset
-from ..schemas import BatteryMetadata
+from battdat.io.base import DatasetExporter
+from battdat.data import CellDataset
+from battdat.schemas import BatteryMetadata
 
 logger = logging.getLogger(__name__)
 
