@@ -4,7 +4,7 @@ import requests
 from pytest import fixture
 from pydantic import AnyUrl
 
-from battdat.extractors.batterydata import BDExtractor, generate_metadata
+from battdat.io.batterydata import BDExtractor, generate_metadata
 
 
 @fixture()
@@ -19,7 +19,7 @@ def test_detect_then_convert(test_files):
     assert len(group) == 2
 
     # Parse them
-    data = extractor.parse_to_dataframe(group)
+    data = extractor.read_dataset(group)
     assert data.metadata.name == 'p492-13'
 
     # Test a few of columns which require conversion
@@ -38,7 +38,7 @@ def test_store_all(test_files):
     # Find two files
     extractor = BDExtractor(store_all=True)
     group = next(extractor.identify_files(test_files))
-    data = extractor.parse_to_dataframe(group)
+    data = extractor.read_dataset(group)
 
     # Make sure we only have the renamed `cycle_number` and not original `Cycle_Index`
     for df in [data.raw_data, data.cycle_stats]:

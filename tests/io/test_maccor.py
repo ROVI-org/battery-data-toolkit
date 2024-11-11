@@ -1,7 +1,7 @@
 """Tests related to the MACCOR parser"""
 from pytest import fixture
 
-from battdat.extractors.maccor import MACCORExtractor
+from battdat.io.maccor import MACCORExtractor
 
 
 @fixture()
@@ -16,7 +16,7 @@ def extractor():
 
 def test_validation(extractor, test_file):
     """Make sure the parser generates valid outputs"""
-    data = extractor.parse_to_dataframe([test_file])
+    data = extractor.read_dataset([test_file])
     data.validate_columns(allow_extra_columns=False)
 
 

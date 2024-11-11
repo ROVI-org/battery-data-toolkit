@@ -4,13 +4,13 @@ from typing import Union, List, Iterator, Tuple
 import numpy as np
 import pandas as pd
 
-from battdat.extractors.base import BatteryDataExtractor
+from battdat.io.base import CycleTestReader
 from battdat.schemas.column import ChargingState
 from battdat.utils import drop_cycles
 from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 
 
-class ArbinExtractor(BatteryDataExtractor):
+class ArbinExtractor(CycleTestReader):
     """Parser for reading from Arbin-format files
 
     Expects the files to be in CSV format"""
@@ -21,8 +21,8 @@ class ArbinExtractor(BatteryDataExtractor):
             if file.lower().endswith('.csv'):
                 yield file
 
-    def generate_dataframe(self, file: str, file_number: int = 0, start_cycle: int = 0,
-                           start_time: float = 0) -> pd.DataFrame:
+    def read_file(self, file: str, file_number: int = 0, start_cycle: int = 0,
+                  start_time: float = 0) -> pd.DataFrame:
 
         # Read the file and rename the file
         df = pd.read_csv(file)
@@ -48,7 +48,7 @@ class ArbinExtractor(BatteryDataExtractor):
         #   0 is rest, 1 is charge, -1 is discharge
         # TODO (wardlt): This function should move to post-processing
         def compute_state(x):
-            if abs(x) < self.eps:
+            if abs(x) < 1e-6:
                 return ChargingState.hold
             return ChargingState.charging if x > 0 else ChargingState.discharging
 

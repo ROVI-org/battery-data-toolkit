@@ -5,13 +5,13 @@ from typing import Union, List, Iterator, Tuple
 import pandas as pd
 import numpy as np
 
-from battdat.extractors.base import BatteryDataExtractor
+from battdat.io.base import DatasetFileReader, CycleTestReader
 from battdat.schemas.column import ChargingState
 from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 from battdat.utils import drop_cycles
 
 
-class MACCORExtractor(BatteryDataExtractor):
+class MACCORExtractor(CycleTestReader, DatasetFileReader):
     """Parser for reading from Arbin-format files
 
     Expects the files to be ASCII files with a .### extension.
@@ -35,8 +35,8 @@ class MACCORExtractor(BatteryDataExtractor):
         for prefix, group in itertools.groupby(split_filenames, key=lambda x: x[0]):
             yield tuple('.'.join(x) for x in group)
 
-    def generate_dataframe(self, file: str, file_number: int = 0, start_cycle: int = 0,
-                           start_time: int = 0) -> pd.DataFrame:
+    def read_file(self, file: str, file_number: int = 0, start_cycle: int = 0,
+                  start_time: int = 0) -> pd.DataFrame:
 
         # Read in the ASCII file (I found this notation works)
         df = pd.read_csv(file, skiprows=1, engine='python', sep='\t', index_col=False, encoding="ISO-8859-1")

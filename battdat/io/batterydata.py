@@ -9,9 +9,9 @@ from typing import Union, List, Iterator, Tuple, Optional, Iterable
 
 import pandas as pd
 
-from .base import BatteryDataExtractor
-from ..data import CellDataset
-from ..schemas import BatteryMetadata, BatteryDescription
+from battdat.io.base import DatasetFileReader
+from battdat.data import CellDataset
+from battdat.schemas import BatteryMetadata, BatteryDescription
 
 _fname_match = re.compile(r'(?P<name>[-\w]+)-(?P<type>summary|raw)\.csv')
 
@@ -165,7 +165,7 @@ def convert_eis_data(input_df: pd.DataFrame) -> pd.DataFrame:
 
 
 @dataclass
-class BDExtractor(BatteryDataExtractor):
+class BDExtractor(DatasetFileReader):
     """Read data from the batterydata.energy.gov CSV format
 
     Every cell in batterydata.energy.gov is stored as two separate CSV files for each battery,
@@ -187,8 +187,8 @@ class BDExtractor(BatteryDataExtractor):
 
         yield from groups.values()
 
-    def parse_to_dataframe(self, group: List[str],
-                           metadata: Optional[Union[BatteryMetadata, dict]] = None) -> CellDataset:
+    def read_dataset(self, group: List[str],
+                     metadata: Optional[Union[BatteryMetadata, dict]] = None) -> CellDataset:
         # Make an empty metadata if none available
         if metadata is None:
             metadata = BatteryMetadata()
@@ -219,5 +219,4 @@ class BDExtractor(BatteryDataExtractor):
                 raise ValueError(f'Data type unrecognized: {data_type}')
 
         # Separate out the EIS data, if possible
-
         return CellDataset(raw_data=raw_data, cycle_stats=cycle_stats, eis_data=eis_data, metadata=metadata)
