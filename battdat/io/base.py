@@ -1,5 +1,5 @@
 """Base class for a battery data import and export tools"""
-from typing import List, Optional, Union, Iterator, Sequence
+from typing import List, Optional, Union, Iterator, Sequence, Type
 from pathlib import Path
 import os
 
@@ -20,6 +20,9 @@ class DatasetReader:
     Subclasses provide additional suggested operations useful when working with data from
     common sources (e.g., file systems, web APIs)
     """
+
+    output_class: Type[BatteryDataset] = BatteryDataset
+    """Type of dataset to output"""
 
     def read_dataset(self, metadata: Optional[Union[BatteryMetadata, dict]] = None, **kwargs) -> BatteryDataset:
         """Parse a set of  files into a Pandas dataframe
@@ -96,6 +99,8 @@ class CycleTestReader(DatasetFileReader):
     Adds logic for reading cycling time series from a list of files.
     """
 
+    output_class = CellDataset
+
     def read_file(self,
                   file: str,
                   file_number: int = 0,
@@ -147,13 +152,13 @@ class CycleTestReader(DatasetFileReader):
         df_out = pd.concat(output_dfs, ignore_index=True)
 
         # Attach the metadata and return the data
-        return CellDataset(raw_data=df_out, metadata=metadata)
+        return self.output_class(raw_data=df_out, metadata=metadata)
 
 
 class DatasetWriter:
     """Tool which exports data from a :class:`~battdat.data.BatteryDataset` to disk in a specific format"""
 
-    def export(self, dataset: BatteryDataset, path: Path):
+    def export(self, dataset: BatteryDataset, path: PathLike):
         """Write the dataset to disk in a specific path
 
         All files from the dataset must be placed in the provided directory

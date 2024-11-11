@@ -39,10 +39,29 @@ Battery Data Hub (``b.io.batterydata``)
    :undoc-members:
    :show-inheritance:
 
+
+HDF5 (``b.io.hdf``)
+-------------------
+
+.. automodule:: battdat.io.hdf
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 MACCOR (``b.io.maccor``)
 ------------------------
 
 .. automodule:: battdat.io.maccor
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Parquet (``b.io.parquet``)
+--------------------------
+
+.. automodule:: battdat.io.parquet
    :members:
    :undoc-members:
    :show-inheritance:

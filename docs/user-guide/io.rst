@@ -23,10 +23,19 @@ The :mod:`battdat.io` module provides tools to read and write from :class:`~batt
      - :mod:`~battdat.io.batterydata`
      - ✔️
      - ✖️
+   * - `Parquet <formats.html#parquet>`_
+     - :mod:`~battdat.io.parquet`
+     - ✔️
+     - ✔️
    * - MACCOR
      - :mod:`~battdat.io.maccor`
      - ✔️
      - ✖️
+
+
+.. note::
+
+    The parquet and HDF5 formats write to the `battery-data-toolkit file formats <formats.html>`_.
 
 Reading Data
 ------------
@@ -47,6 +56,9 @@ find files:
     extractor = BDReader(store_all=True)
     group = next(extractor.identify_files('./example-path/'))
     dataset = extractor.read_dataset(group)
+
+The :ref:`type of output dataset <type-table>` is defined by the :attr:`~battdat.io.base.DatasetFileReader.output_class` attribute.
+Most uses of readers do not require modifying this attribute.
 
 Writing Data
 ------------
