@@ -11,8 +11,8 @@ from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 from battdat.utils import drop_cycles
 
 
-class MACCORExtractor(CycleTestReader, DatasetFileReader):
-    """Parser for reading from Arbin-format files
+class MACCORReader(CycleTestReader, DatasetFileReader):
+    """Parser for reading from MACCOR-format files
 
     Expects the files to be ASCII files with a .### extension.
     The :meth:`group` operation will consolidate files such that all with

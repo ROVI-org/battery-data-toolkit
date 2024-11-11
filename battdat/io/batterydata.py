@@ -165,7 +165,7 @@ def convert_eis_data(input_df: pd.DataFrame) -> pd.DataFrame:
 
 
 @dataclass
-class BDExtractor(DatasetFileReader):
+class BDReader(DatasetFileReader):
     """Read data from the batterydata.energy.gov CSV format
 
     Every cell in batterydata.energy.gov is stored as two separate CSV files for each battery,

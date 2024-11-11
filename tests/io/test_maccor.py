@@ -1,7 +1,7 @@
 """Tests related to the MACCOR parser"""
 from pytest import fixture
 
-from battdat.io.maccor import MACCORExtractor
+from battdat.io.maccor import MACCORReader
 
 
 @fixture()
@@ -11,7 +11,7 @@ def test_file(file_path):
 
 @fixture()
 def extractor():
-    return MACCORExtractor()
+    return MACCORReader()
 
 
 def test_validation(extractor, test_file):

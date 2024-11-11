@@ -11,6 +11,7 @@ or post-processing if using already-existing data.
    :caption: Contents:
 
    dataset
+   io
    formats
    schemas/index
    post-processing/index

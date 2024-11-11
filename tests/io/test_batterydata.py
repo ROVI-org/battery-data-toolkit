@@ -3,7 +3,7 @@ from datetime import datetime
 from pytest import fixture
 from pydantic import AnyUrl
 
-from battdat.io.batterydata import BDExtractor, generate_metadata
+from battdat.io.batterydata import BDReader, generate_metadata
 
 example_metadata = {'cell_type': ['Pouch cell'],
                     'creator_user_id': 'a853d711-0e37-44c9-80c9-a41d450c2da4',
@@ -59,7 +59,7 @@ def test_files(file_path):
 
 def test_detect_then_convert(test_files):
     # Find two files
-    extractor = BDExtractor(store_all=False)
+    extractor = BDReader(store_all=False)
     group = next(extractor.identify_files(test_files))
     assert len(group) == 2
 
@@ -81,7 +81,7 @@ def test_store_all(test_files):
     """Make sure we get exactly one copy of all columns"""
 
     # Find two files
-    extractor = BDExtractor(store_all=True)
+    extractor = BDReader(store_all=True)
     group = next(extractor.identify_files(test_files))
     data = extractor.read_dataset(group)
 

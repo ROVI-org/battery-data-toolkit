@@ -11,7 +11,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from battdat.io.base import DatasetExporter
+from battdat.io.base import DatasetWriter
 from battdat.data import CellDataset
 from battdat.schemas import BatteryMetadata
 
@@ -60,7 +60,7 @@ _metadata_reference: dict[str, str] = {
 # TODO (wardlt): Reconsider saving in CSV. Parquet would preserve data types
 
 @dataclass
-class BatteryArchiveExporter(DatasetExporter):
+class BatteryArchiveWriter(DatasetWriter):
     """Export data into CSV files that follow the format definitions used in BatteryArchive
 
     The exporter writes files for each table in the

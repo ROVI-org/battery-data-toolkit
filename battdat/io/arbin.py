@@ -10,7 +10,7 @@ from battdat.utils import drop_cycles
 from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 
 
-class ArbinExtractor(CycleTestReader):
+class ArbinReader(CycleTestReader):
     """Parser for reading from Arbin-format files
 
     Expects the files to be in CSV format"""

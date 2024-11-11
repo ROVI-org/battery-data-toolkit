@@ -5,7 +5,7 @@ from pytest import mark
 import numpy as np
 
 from battdat.data import CellDataset
-from battdat.io.batterydata import BDExtractor
+from battdat.io.batterydata import BDReader
 from battdat.postprocess.integral import CapacityPerCycle, StateOfCharge
 
 
@@ -76,7 +76,7 @@ def test_against_battery_data_gov(file_path):
     """See if our capacities are similar to those computed in BatteryData.Energy.Gov"""
 
     cyc_id = 8
-    data = BDExtractor().read_dataset(list((file_path / 'batterydata').glob('p492*')))
+    data = BDReader().read_dataset(list((file_path / 'batterydata').glob('p492*')))
     orig_data = \
         data.cycle_stats[
             ['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']

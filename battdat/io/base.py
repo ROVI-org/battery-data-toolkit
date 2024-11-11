@@ -150,7 +150,7 @@ class CycleTestReader(DatasetFileReader):
         return CellDataset(raw_data=df_out, metadata=metadata)
 
 
-class DatasetExporter:
+class DatasetWriter:
     """Tool which exports data from a :class:`~battdat.data.BatteryDataset` to disk in a specific format"""
 
     def export(self, dataset: BatteryDataset, path: Path):
