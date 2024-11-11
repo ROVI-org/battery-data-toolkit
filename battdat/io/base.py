@@ -1,5 +1,5 @@
 """Base class for a battery data import and export tools"""
-from typing import List, Optional, Union, Iterator, Sequence
+from typing import List, Optional, Union, Iterator, Sequence, Type
 from pathlib import Path
 import os
 
@@ -38,6 +38,9 @@ class DatasetFileReader(DatasetReader):
     Provide an :meth:`identify_files` to filter out files likely to be in this format,
     or :meth:`group` function to find related file if data are often split into multiple files.
     """
+
+    output_class: Type[BatteryDataset] = BatteryDataset
+    """Type of dataset to output"""
 
     def identify_files(self, path: PathLike, context: dict = None) -> Iterator[tuple[PathLike]]:
         """Identify all groups of files likely to be compatible with this reader
@@ -96,6 +99,8 @@ class CycleTestReader(DatasetFileReader):
     Adds logic for reading cycling time series from a list of files.
     """
 
+    output_class = CellDataset
+
     def read_file(self,
                   file: str,
                   file_number: int = 0,
@@ -147,7 +152,7 @@ class CycleTestReader(DatasetFileReader):
         df_out = pd.concat(output_dfs, ignore_index=True)
 
         # Attach the metadata and return the data
-        return CellDataset(raw_data=df_out, metadata=metadata)
+        return self.output_class(raw_data=df_out, metadata=metadata)
 
 
 class DatasetWriter:

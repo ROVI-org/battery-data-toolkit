@@ -1,15 +1,12 @@
 """Objects that represent battery datasets"""
-import shutil
 import logging
 import warnings
 from pathlib import Path
-from datetime import datetime
 from typing import Union, Optional, Collection, List, Dict, Set, Iterator, Tuple
 
 from pandas import HDFStore
 from pydantic import BaseModel, ValidationError
 from pyarrow import parquet as pq
-from pyarrow import Table
 from tables import Group
 import pandas as pd
 import h5py
@@ -334,85 +331,28 @@ class BatteryDataset:
         Returns:
             Map of the name of the subset to
         """
-        # Handle existing paths
-        path = Path(path)
-        if path.exists():
-            if not overwrite:
-                raise ValueError(f'Path already exists and overwrite is disabled: {path}')
-            logger.info(f'Deleting existing directory at {path}')
-            shutil.rmtree(path)
-
-        # Make the output directory, then write each Parquet file
-        path.mkdir(parents=True, exist_ok=False)
-        my_metadata = {
-            'battery_metadata': self.metadata.model_dump_json(exclude_none=True),
-            'write_date': datetime.now().isoformat()
-        }
-        written = {}
-        for key, schema in self.schemas.items():
-            if (data := self.datasets.get(key)) is None:
-                continue
-
-            # Put the metadata for the battery and this specific table into the table's schema in the FileMetaData
-            data_path = path / f'{key}.parquet'
-            my_metadata['table_metadata'] = schema.model_dump_json()
-            table = Table.from_pandas(data, preserve_index=False)
-            new_schema = table.schema.with_metadata({**my_metadata, **table.schema.metadata})
-            table = table.cast(new_schema)
-            pq.write_table(table, where=data_path, **kwargs)
-
-            written[key] = data_path
-        return written
+        from battdat.io.parquet import ParquetWriter
+        writer = ParquetWriter(overwrite=overwrite, write_options=kwargs)
+        return writer.export(self, path)
 
     @classmethod
     def from_parquet(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None):
         """Read the battery data from an HDF file
 
         Args:
-            path: Path to a directory containing parquet files for a specific batter
+            path: Path to a directory containing parquet files
             subsets: Which subsets of data to read from the data file (e.g., raw_data, cycle_stats)
         """
-
+        from battdat.io.parquet import ParquetReader
+        reader = ParquetReader()
+        reader.output_class = cls
         # Find the parquet files, if no specification is listed
         path = Path(path)
         if subsets is None:
-            subsets = [p.with_suffix('').name for p in path.glob('*.parquet')]
-
-        if len(subsets) == 0:
-            raise ValueError(f'No data available for {path}')
-
-        # Load each subset
-        metadata = None
-        data = {}
-        schemas = {}
-        for subset in subsets:
-            data_path = path / f'{subset}.parquet'
-            table = pq.read_table(data_path)
-
-            # Load or check the metadata
-            if b'battery_metadata' not in table.schema.metadata:
-                warnings.warn(f'Battery metadata not found in {data_path}')
-            else:
-                # Load the metadata for the whole cell
-                my_metadata = table.schema.metadata[b'battery_metadata']
-                if metadata is None:
-                    metadata = my_metadata
-                elif my_metadata != metadata:
-                    warnings.warn(f'Battery data different for files in {path}')
-
-            # Load the batdata schema for the table
-            if b'table_metadata' not in table.schema.metadata:
-                warnings.warn(f'Column schema not found in {data_path}')
-            schemas[subset] = ColumnSchema.from_json(table.schema.metadata[b'table_metadata'])
-
-            # Read it to a dataframe
-            data[subset] = table.to_pandas()
-
-        return cls(
-            metadata=BatteryMetadata.model_validate_json(metadata),
-            schemas=schemas,
-            datasets=data
-        )
+            return reader.read_dataset(path)
+        else:
+            paths = [path / f'{subset}.parquet' for subset in subsets]
+            return reader.read_dataset(paths)
 
     @staticmethod
     def inspect_parquet(path: Union[str, Path]) -> BatteryMetadata:

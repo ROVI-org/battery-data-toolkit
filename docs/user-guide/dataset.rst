@@ -29,6 +29,8 @@ Each subclass provides suggested names for certain types of data (e.g., ``raw_da
 during operation of a single cell).
 The current template classes are:
 
+.. _type-table:
+
 .. list-table::
    :header-rows: 1
 

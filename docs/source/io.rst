@@ -46,3 +46,12 @@ MACCOR (``b.io.maccor``)
    :members:
    :undoc-members:
    :show-inheritance:
+
+
+Parquet (``b.io.parquet``)
+--------------------------
+
+.. automodule:: battdat.io.parquet
+   :members:
+   :undoc-members:
+   :show-inheritance:
