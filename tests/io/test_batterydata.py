@@ -1,10 +1,55 @@
 from datetime import datetime
 
-import requests
 from pytest import fixture
 from pydantic import AnyUrl
 
 from battdat.io.batterydata import BDExtractor, generate_metadata
+
+example_metadata = {'cell_type': ['Pouch cell'],
+                    'creator_user_id': 'a853d711-0e37-44c9-80c9-a41d450c2da4',
+                    'date_dataset_created': '2018-08-16',
+                    'electrolyte_class_dataset': ['Organic liquid'],
+                    'id': 'ef9dec93-17a2-445a-b58e-dc3eadb1f79d',
+                    'isopen': False,
+                    'manufacturer_supplier': 'CAMP',
+                    'maximum_voltage': '4.1',
+                    'metadata_created': '2024-04-19T21:18:38.938069',
+                    'metadata_modified': '2024-04-20T00:45:59.866451',
+                    'minimum_voltage': '3',
+                    'name': 'xcel-round-2-slpc_reupload_2',
+                    'negative_electrode': ['Graphite'],
+                    'nominal_cell_capacity': '0.037',
+                    'notes': 'Single layer pouch cell from CAMP (2.5mAh/cm2) at various charge protocols (CCCV and Multi-step).',
+                    'num_resources': 35,
+                    'num_tags': 9,
+                    'onec_cell_capacity': '0.032',
+                    'organization': {'id': '67de8624-a528-43df-9b63-a65a410920bb',
+                                     'name': 'xcel',
+                                     'title': 'XCEL',
+                                     'type': 'project',
+                                     'description': 'XCEL Project ',
+                                     'image_url': '',
+                                     'created': '2023-06-08T17:38:37.007623',
+                                     'is_organization': True,
+                                     'approval_status': 'approved',
+                                     'state': 'active'},
+                    'owner_org': '67de8624-a528-43df-9b63-a65a410920bb',
+                    'poc_email_address': 'Sangwook.Kim@inl.gov',
+                    'poc_institution': ['INL'],
+                    'poc_name': 'skim',
+                    'positive_electrode': ['NMC532'],
+                    'private': False,
+                    'reference_electrode': ['No'],
+                    'separator_class': ['PP polymer'],
+                    'state': 'active',
+                    'technology': ['Li-ion'],
+                    'title': 'XCEL Round 2 SLPC',
+                    'type': 'dataset',
+                    'tags': [{'display_name': 'fast charge',
+                              'id': '04f1dafd-24f0-496e-b263-96038a9da8f8',
+                              'name': 'fast charge',
+                              'state': 'active',
+                              'vocabulary_id': None}]}
 
 
 @fixture()
@@ -51,8 +96,6 @@ def test_store_all(test_files):
 
 
 def test_metadata():
-    source = 'kokam-nmc-gr-75ah-accelerated-aging'  # TODO (wardlt): Spoof a dataset if this changes
-    description = requests.get(f'https://batterydata.energy.gov/api/3/action/package_show?id={source}', timeout=15).json()
-    metadata = generate_metadata(description, ('https://test.url/',))
+    metadata = generate_metadata(example_metadata, ('https://test.url/',))
     assert AnyUrl('https://test.url/') in metadata.associated_ids
-    assert metadata.battery.cathode.name == 'NMC111'
+    assert metadata.battery.cathode.name == 'NMC532'
