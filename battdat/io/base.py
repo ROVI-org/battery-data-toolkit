@@ -21,6 +21,9 @@ class DatasetReader:
     common sources (e.g., file systems, web APIs)
     """
 
+    output_class: Type[BatteryDataset] = BatteryDataset
+    """Type of dataset to output"""
+
     def read_dataset(self, metadata: Optional[Union[BatteryMetadata, dict]] = None, **kwargs) -> BatteryDataset:
         """Parse a set of  files into a Pandas dataframe
 
@@ -38,9 +41,6 @@ class DatasetFileReader(DatasetReader):
     Provide an :meth:`identify_files` to filter out files likely to be in this format,
     or :meth:`group` function to find related file if data are often split into multiple files.
     """
-
-    output_class: Type[BatteryDataset] = BatteryDataset
-    """Type of dataset to output"""
 
     def identify_files(self, path: PathLike, context: dict = None) -> Iterator[tuple[PathLike]]:
         """Identify all groups of files likely to be compatible with this reader
@@ -158,7 +158,7 @@ class CycleTestReader(DatasetFileReader):
 class DatasetWriter:
     """Tool which exports data from a :class:`~battdat.data.BatteryDataset` to disk in a specific format"""
 
-    def export(self, dataset: BatteryDataset, path: Path):
+    def export(self, dataset: BatteryDataset, path: PathLike):
         """Write the dataset to disk in a specific path
 
         All files from the dataset must be placed in the provided directory

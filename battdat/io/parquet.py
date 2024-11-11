@@ -1,4 +1,4 @@
-"""Read and write from `battery-data-toolkit's parquet formats <https://rovi-org.github.io/battery-data-toolkit/user-guide/formats.html#parquet>`_"""
+"""Read and write from `battery-data-toolkit's parquet format <https://rovi-org.github.io/battery-data-toolkit/user-guide/formats.html#parquet>`_"""
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, Any, Optional, Union, Collection
@@ -16,6 +16,31 @@ from ..schemas import BatteryMetadata
 from ..schemas.column import ColumnSchema
 
 logger = logging.getLogger(__name__)
+
+
+def inspect_parquet_files(path: PathLike) -> BatteryMetadata:
+    """Read the metadata from a collection of Parquet files
+
+    Args:
+        path: Path to a directory of parquet files
+
+    Returns:
+        Metadata from one of the files
+    """
+    # Get a parquet file
+    path = Path(path)
+    if path.is_file():
+        pq_path = path
+    else:
+        pq_path = next(path.glob('*.parquet'), None)
+        if pq_path is None:
+            raise ValueError(f'No parquet files in {path}')
+
+    # Read the metadata from the schema
+    schema = pq.read_schema(pq_path)
+    if b'battery_metadata' not in schema.metadata:
+        raise ValueError(f'No metadata in {pq_path}')
+    return BatteryMetadata.model_validate_json(schema.metadata[b'battery_metadata'])
 
 
 @dataclass

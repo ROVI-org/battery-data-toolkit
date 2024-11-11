@@ -97,7 +97,7 @@ def test_multi_cell_hdf5(tmpdir, test_df):
     # Save the cell once, then multiply the current by 2
     test_df.to_hdf(out_path, 'a')
     test_df.raw_data['current'] *= 2
-    test_df.to_hdf(out_path, 'b', append=True)
+    test_df.to_hdf(out_path, 'b', overwrite=False)
 
     # Make sure we can count two cells
     _, names = CellDataset.inspect_hdf(out_path)
@@ -127,7 +127,7 @@ def test_multi_cell_hdf5(tmpdir, test_df):
 def test_missing_prefix_warning(tmpdir, test_df):
     out_path = os.path.join(tmpdir, 'test.h5')
 
-    test_df.to_hdf(out_path, 'a', append=True)
+    test_df.to_hdf(out_path, 'a', overwrite=False)
 
     # Error if prefix not found
     with pytest.raises(ValueError) as e:
@@ -139,10 +139,10 @@ def test_multicell_metadata_warning(tmpdir, test_df):
     out_path = os.path.join(tmpdir, 'test.h5')
 
     # Save the cell once, then alter metadata
-    test_df.to_hdf(out_path, 'a', append=True)
+    test_df.to_hdf(out_path, 'a', overwrite=False)
     test_df.metadata.name = 'Not test data'
     with pytest.warns(UserWarning, match='differs from new metadata'):
-        test_df.to_hdf(out_path, 'b', append=True)
+        test_df.to_hdf(out_path, 'b', overwrite=False)
 
 
 def test_validate(test_df):

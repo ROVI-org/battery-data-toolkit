@@ -51,7 +51,7 @@ Add multiple batteries into an HDF5 file by providing a "prefix" to name each ce
 .. code-block:: python
 
     test_a.to_battdat_hdf('test.h5', prefix='a')
-    test_b.to_battdat_hdf('test.h5', prefix='b', append=True)  # Append is mandatory
+    test_b.to_battdat_hdf('test.h5', prefix='b', overwrite=False)  # Overwrite is mandatory
 
 
 Load a specific cell by providing a specific prefix on load
