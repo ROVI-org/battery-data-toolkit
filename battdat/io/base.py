@@ -1,35 +1,46 @@
-"""Base class for a battery data extractor"""
-from typing import List, Optional, Union, Iterator
+"""Base class for a battery data import and export tools"""
+from typing import List, Optional, Union, Iterator, Sequence
 from pathlib import Path
 import os
 
 import pandas as pd
 
-from battdat.data import CellDataset
+from battdat.data import CellDataset, BatteryDataset
 from battdat.schemas import BatteryMetadata
 
+PathLike = Union[str, Path]
 
-class BatteryDataExtractor:
-    """Base class for a data extractors
 
-    Implementing an Extractor
-    -------------------------
+class DatasetReader:
+    """Base class for tools which read battery data as a :class:`~battdat.data.BatteryDataset`
 
-    The minimum is to define the `generate_dataframe` method, which produces
-    a data-frame containing the time-series data with standardized column names.
+    All readers must implement a function which receives battery metadata as input and produces
+    a completed :class:`battdat.data.BatteryDataset` as an output.
 
-    If the data format contains additional metadata or cycle-level features,
-    override the :meth:`parse_to_dataframe` such that it adds such data
-    after parsing the time-series results.
-
-    Provide an :meth:`identify_files` or :meth:`group` function to find related files
-    if data are often split into multiple files.
+    Subclasses provide additional suggested operations useful when working with data from
+    common sources (e.g., file systems, web APIs)
     """
-    def __init__(self, eps: float = 1e-10):
-        self.eps = eps  # TODO (wardlt): Move this from extractor to post-processing logic
 
-    def identify_files(self, path: str, context: dict = None) -> Iterator[tuple[str]]:
-        """Identify all groups of files likely to be compatible with this extractor
+    def read_dataset(self, metadata: Optional[Union[BatteryMetadata, dict]] = None, **kwargs) -> BatteryDataset:
+        """Parse a set of  files into a Pandas dataframe
+
+        Args:
+            metadata: Metadata for the battery
+        Returns:
+            Dataset holding all available information about the dataset
+        """
+        raise NotImplementedError()
+
+
+class DatasetFileReader(DatasetReader):
+    """Tool which reads datasets written to files
+
+    Provide an :meth:`identify_files` to filter out files likely to be in this format,
+    or :meth:`group` function to find related file if data are often split into multiple files.
+    """
+
+    def identify_files(self, path: PathLike, context: dict = None) -> Iterator[tuple[PathLike]]:
+        """Identify all groups of files likely to be compatible with this reader
 
         Uses the :meth:`group` function to determine groups of files that should be parsed together.
 
@@ -50,13 +61,15 @@ class BatteryDataExtractor:
             for group in self.group(files, dirs, context):
                 yield group
 
-    def group(self, files: Union[str, List[str]], directories: List[str] = None,
-              context: dict = None) -> Iterator[tuple[str, ...]]:
+    def group(self,
+              files: Union[PathLike, List[PathLike]],
+              directories: List[PathLike] = None,
+              context: dict = None) -> Iterator[tuple[PathLike, ...]]:
         """Identify a groups of files and directories that should be parsed together
 
         Will create groups using only the files and directories included as input.
 
-        The files of files are _all_ files that could be read by this extractor,
+        The files of files are *all* files that could be read by this extractor,
         which may include many false positives.
 
         Args:
@@ -76,8 +89,18 @@ class BatteryDataExtractor:
         for f in files:
             yield f,
 
-    def generate_dataframe(self, file: str, file_number: int = 0, start_cycle: int = 0,
-                           start_time: int = 0) -> pd.DataFrame:
+
+class CycleTestReader(DatasetFileReader):
+    """Template class for reading the files output by battery cell cyclers
+
+    Adds logic for reading cycling time series from a list of files.
+    """
+
+    def read_file(self,
+                  file: str,
+                  file_number: int = 0,
+                  start_cycle: int = 0,
+                  start_time: int = 0) -> pd.DataFrame:
         """Generate a DataFrame containing the data in this file
 
         The dataframe will be in our standard format
@@ -93,7 +116,7 @@ class BatteryDataExtractor:
         """
         raise NotImplementedError()
 
-    def parse_to_dataframe(self, group: List[str], metadata: Optional[Union[BatteryMetadata, dict]] = None) -> CellDataset:
+    def read_dataset(self, group: Sequence[PathLike] = (), metadata: Optional[BatteryMetadata] = None) -> CellDataset:
         """Parse a set of  files into a Pandas dataframe
 
         Args:
@@ -104,7 +127,7 @@ class BatteryDataExtractor:
             DataFrame containing the information from all files
         """
 
-        # Initialize counters for the cycle numbers, etc.. Used to determine offsets for the
+        # Initialize counters for the cycle numbers, etc., Used to determine offsets for the files read
         start_cycle = 0
         start_time = 0
 
@@ -113,7 +136,7 @@ class BatteryDataExtractor:
         output_dfs = []
         for file_number, file in enumerate(group):
             # Read the file
-            df_out = self.generate_dataframe(file, file_number, start_cycle, start_time)
+            df_out = self.read_file(file, file_number, start_cycle, start_time)
             output_dfs.append(df_out)
 
             # Increment the start cycle and time to determine starting point of next file
@@ -125,3 +148,18 @@ class BatteryDataExtractor:
 
         # Attach the metadata and return the data
         return CellDataset(raw_data=df_out, metadata=metadata)
+
+
+class DatasetWriter:
+    """Tool which exports data from a :class:`~battdat.data.BatteryDataset` to disk in a specific format"""
+
+    def export(self, dataset: BatteryDataset, path: Path):
+        """Write the dataset to disk in a specific path
+
+        All files from the dataset must be placed in the provided directory
+
+        Args:
+            dataset: Dataset to be exported
+            path: Output path
+        """
+        raise NotImplementedError()

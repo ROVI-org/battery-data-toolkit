@@ -9,7 +9,6 @@ API documentation for each module
 
    data
    schemas
+   io
    postprocess
-   extractors
-   exporters
    streaming

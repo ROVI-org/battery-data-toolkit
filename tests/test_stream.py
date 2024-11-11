@@ -7,14 +7,14 @@ import pandas as pd
 from pytest import fixture, mark
 
 from battdat.data import CellDataset
-from battdat.extractors.batterydata import BDExtractor
+from battdat.io.batterydata import BDReader
 from battdat.streaming import iterate_records_from_file, iterate_cycles_from_file
 from battdat.streaming.hdf5 import HDF5Writer
 
 
 @fixture()
 def example_dataset(file_path):
-    data = BDExtractor().parse_to_dataframe([file_path / 'batterydata' / 'p492-13-raw.csv'])
+    data = BDReader().read_dataset([file_path / 'batterydata' / 'p492-13-raw.csv'])
     data.metadata.name = 'test_name'
     return data
 

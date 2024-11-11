@@ -4,7 +4,7 @@ import json
 
 import pandas as pd
 
-from battdat.exporters.ba import BatteryArchiveExporter
+from battdat.io.ba import BatteryArchiveWriter
 from battdat.schemas import BatteryMetadata, BatteryDescription
 from battdat.schemas.battery import ElectrodeDescription
 
@@ -23,7 +23,7 @@ def test_export(example_data, tmpdir):
 
     tmpdir = Path(tmpdir)
     tmpdir.mkdir(exist_ok=True)
-    exporter = BatteryArchiveExporter()
+    exporter = BatteryArchiveWriter()
     exporter.export(example_data, tmpdir)
 
     # Make sure the time series loaded correctly
