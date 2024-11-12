@@ -236,7 +236,7 @@ class HDF5Writer(DatasetWriter):
 
                 # Write the schema, mark as dataset
                 table.attrs.metadata = schema.model_dump_json()
-                table.attrs.json_schema = schema.model_dump_json()
+                table.attrs.json_schema = schema.model_json_schema()
 
     def export(self, dataset: BatteryDataset, path: PathLike):
         with File(path, mode='w') as file:
