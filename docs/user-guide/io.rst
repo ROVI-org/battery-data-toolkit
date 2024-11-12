@@ -23,14 +23,18 @@ The :mod:`battdat.io` module provides tools to read and write from :class:`~batt
      - :mod:`~battdat.io.batterydata`
      - ✔️
      - ✖️
-   * - `Parquet <formats.html#parquet>`_
-     - :mod:`~battdat.io.parquet`
+   * - `HDF5 <formats.html#hdf5>`_
+     - :mod:`~battdat.io.hdf5`
      - ✔️
      - ✔️
    * - MACCOR
      - :mod:`~battdat.io.maccor`
      - ✔️
      - ✖️
+   * - `Parquet <formats.html#parquet>`_
+     - :mod:`~battdat.io.parquet`
+     - ✔️
+     - ✔️
 
 
 .. note::

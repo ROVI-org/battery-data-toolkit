@@ -45,7 +45,8 @@ extensions.extend([
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
     'sphinx.ext.napoleon',
-    'sphinxcontrib.autodoc_pydantic'
+    'sphinxcontrib.autodoc_pydantic',
+    'sphinx_design'
 ])
 
 autodoc_pydantic_model_show_json = False
@@ -58,4 +59,5 @@ intersphinx_mapping = {
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'pyarrow': ('https://arrow.apache.org/docs/', None),
     'h5py': ('https://docs.h5py.org/en/stable/', None),
+    'tables': ('https://www.pytables.org/', None)
 }

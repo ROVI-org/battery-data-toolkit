@@ -29,17 +29,74 @@ and the metadata for the battery as the metadata.
         raw_data = f['raw_data']  # HDF5 group holding raw data
         schema = raw_data.attrs['metadata']  # Description of each column
 
-The internal structure of each group (e.g., ``f['raw_data']``) are in `the PyTables layout <https://www.pytables.org/usersguide/file_format.html>`_.
-The format is readable through pytables and Pandas's :func:`~pandas.read_hdf` function, but readers for other languages do not yet exist.
+The internal structure of each group (e.g., ``f['raw_data']``) are that of
+the `PyTables Table format <https://www.pytables.org/usersguide/file_format.html#table-format>`_:
+a one-dimensional chunked array with a compound data type.
 
-Each group within the HDF5 file written by ``battdat`` contains a ``battdat_type`` attribute,
-which is "dataset" for the root group and "subset" for all tables.
+.. dropdown:: HDF5 content
 
-.. note::
+    .. code-block::
 
-    We may change to a simplified HDF5 layout for simpler cross-language compatibility
-    (see `Issue #89 <https://github.com/ROVI-org/battery-data-toolkit/issues/89>`_)
-
+        $ h5ls -rv single-resistor-complex-charge_from-discharged.hdf
+        Opened ".\single-resistor-complex-charge_from-discharged.hdf" with sec2 driver.
+        /                        Group
+            Attribute: CLASS scalar
+                Type:      5-byte null-terminated UTF-8 string
+            Attribute: PYTABLES_FORMAT_VERSION scalar
+                Type:      3-byte null-terminated UTF-8 string
+            Attribute: TITLE null
+                Type:      1-byte null-terminated UTF-8 string
+            Attribute: VERSION scalar
+                Type:      3-byte null-terminated UTF-8 string
+            Attribute: battdat_version scalar
+                Type:      5-byte null-terminated UTF-8 string
+            Attribute: json_schema scalar
+                Type:      8816-byte null-terminated ASCII string
+            Attribute: metadata scalar
+                Type:      242-byte null-terminated UTF-8 string
+            Location:  1:96
+            Links:     1
+        /raw_data                Dataset {3701/Inf}
+            Attribute: CLASS scalar
+                Type:      5-byte null-terminated UTF-8 string
+            Attribute: FIELD_0_FILL scalar
+                Type:      native double
+            Attribute: FIELD_0_NAME scalar
+                Type:      9-byte null-terminated UTF-8 string
+            Attribute: FIELD_1_FILL scalar
+                Type:      native double
+            Attribute: FIELD_1_NAME scalar
+                Type:      7-byte null-terminated UTF-8 string
+            Attribute: FIELD_2_FILL scalar
+                Type:      native double
+            Attribute: FIELD_2_NAME scalar
+                Type:      7-byte null-terminated UTF-8 string
+            Attribute: FIELD_3_FILL scalar
+                Type:      native long long
+            Attribute: FIELD_3_NAME scalar
+                Type:      12-byte null-terminated UTF-8 string
+            Attribute: NROWS scalar
+                Type:      native long long
+            Attribute: TITLE null
+                Type:      1-byte null-terminated UTF-8 string
+            Attribute: VERSION scalar
+                Type:      3-byte null-terminated UTF-8 string
+            Attribute: json_schema scalar
+                Type:      2824-byte null-terminated UTF-8 string
+            Attribute: metadata scalar
+                Type:      2824-byte null-terminated UTF-8 string
+            Location:  1:10240
+            Links:     1
+            Chunks:    {2048} 65536 bytes
+            Storage:   118432 logical bytes, 6670 allocated bytes, 1775.59% utilization
+            Filter-0:  shuffle-2 OPT {32}
+            Filter-1:  deflate-1 OPT {9}
+            Type:      struct {
+                           "test_time"        +0    native double
+                           "current"          +8    native double
+                           "voltage"          +16   native double
+                           "cycle_number"     +24   native long long
+                       } 32 bytes
 
 Multiple Batteries per File
 +++++++++++++++++++++++++++
@@ -79,7 +136,7 @@ Parquet
 
 The `Apache Parquet format <https://en.wikipedia.org/wiki/Apache_Parquet>`_ is designed for high performance I/O of tabular data.
 ``battdat`` stores each type of data in a separate file and the metadata in `file-level metadata <https://parquet.apache.org/docs/file-format/metadata/>`_
-of the file.
+of each file.
 
 .. code-block:: python
 

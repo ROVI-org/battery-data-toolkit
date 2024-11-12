@@ -43,7 +43,8 @@ docs = [
     'sphinx',
     'pydata-sphinx-theme',
     'nbsphinx',
-    'autodoc-pydantic'
+    'autodoc-pydantic',
+    'sphinx-design'
 ]
 
 [project.urls]

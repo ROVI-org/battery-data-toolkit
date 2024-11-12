@@ -3,7 +3,7 @@ from itertools import zip_longest
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
+from tables import File
 from pytest import fixture, mark
 
 from battdat.data import CellDataset
@@ -67,9 +67,11 @@ def test_streaming_write(example_dataset, buffer_size, tmpdir):
 
 def test_streaming_write_existing_store(example_dataset, tmpdir):
     out_file = Path(tmpdir) / 'streamed.h5'
-    with pd.HDFStore(out_file) as store, HDF5Writer(store, buffer_size=2, complevel=4) as writer:
-        assert writer.write_row({'test_time': 0.}) == 0
-        assert writer.write_row({'test_time': 1.}) == 2
+    with File(out_file, mode='a') as file, HDF5Writer(file, buffer_size=2, complevel=4) as writer:
+        assert writer.write_row({'test_time': 0.}) == 0  # Written on close, so the number written here is zero
+
+    with File(out_file, mode='a') as file, HDF5Writer(file, buffer_size=2, complevel=4) as writer:
+        assert writer.write_row({'test_time': 1.}) == 0
 
     # Read it in
     data = CellDataset.from_hdf(out_file)
