@@ -10,6 +10,9 @@ The battery data toolkit stores data and metadata in two formats:
   :local:
   :depth: 1
 
+:class:`~battdat.data.BatteryDataset` objects support reading and writing to these classes via ``to_[format]`` and ``from_[format]``
+methods, such as :meth:`~battdat.data.BatteryDataset.to_hdf` and :meth:`~battdat.data.BatteryDataset.from_parquet`
+
 .. _hdf5:
 
 HDF5
@@ -26,6 +29,7 @@ and the metadata for the battery as the metadata.
 
     with h5py.File('example.h5') as f:
         metadata = json.loads(f.attrs['metadata'])  # Data describing the cell and how it was tested
+        version = json.loads(f.attrs['battdat_version'])  # BattDat version used to save dataset
         raw_data = f['raw_data']  # HDF5 group holding raw data
         schema = raw_data.attrs['metadata']  # Description of each column
 
