@@ -4,8 +4,8 @@ import warnings
 from pathlib import Path
 from typing import Union, Optional, Collection, List, Dict, Set, Iterator, Tuple
 
-from pandas import HDFStore
 from pydantic import BaseModel, ValidationError
+from tables import File
 import pandas as pd
 import h5py
 
@@ -109,7 +109,7 @@ class BatteryDataset:
         return output
 
     def to_hdf(self,
-               path_or_buf: Union[str, Path, HDFStore],
+               path_or_buf: Union[str, Path, File],
                prefix: Optional[str] = None,
                overwrite: bool = True,
                complevel: int = 0,
@@ -130,14 +130,14 @@ class BatteryDataset:
         if overwrite and isinstance(path_or_buf, (str, Path)) and Path(path_or_buf).is_file():
             Path(path_or_buf).unlink()
 
-        from battdat.io.hdf import HDF5Writer, as_hdf5_store
+        from battdat.io.hdf import HDF5Writer, as_hdf5_object
         writer = HDF5Writer(complib=complib, complevel=complevel)
-        with as_hdf5_store(path_or_buf) as store:
-            writer.write_to_hdf(self, store=store, prefix=prefix)
+        with as_hdf5_object(path_or_buf, mode='w' if overwrite else 'a') as file:
+            writer.write_to_hdf(self, file=file, prefix=prefix)
 
     @classmethod
     def from_hdf(cls,
-                 path_or_buf: Union[str, Path, HDFStore],
+                 path_or_buf: Union[str, Path, File],
                  subsets: Optional[Collection[str]] = None,
                  prefix: Union[str, int] = None) -> 'BatteryDataset':
         """Read the battery data from an HDF file
@@ -152,10 +152,10 @@ class BatteryDataset:
                 The default is to read the default prefix (``None``).
 
         """
-        from battdat.io.hdf import HDF5Reader, as_hdf5_store
+        from battdat.io.hdf import HDF5Reader, as_hdf5_object
         reader = HDF5Reader()
         reader.output_class = cls
-        with as_hdf5_store(path_or_buf) as store:
+        with as_hdf5_object(path_or_buf) as store:
             return reader.read_from_hdf(store, prefix, subsets)
 
     @classmethod
@@ -173,12 +173,12 @@ class BatteryDataset:
         # Start by gathering all names of the cells
         _, names = cls.inspect_hdf(path)
 
-        with HDFStore(path, mode='r') as fp:  # Only open once
+        with File(path, mode='r') as fp:  # Only open once
             for name in names:
                 yield name, cls.from_hdf(fp, prefix=name, subsets=subsets)
 
     @staticmethod
-    def inspect_hdf(path_or_buf: Union[str, Path, HDFStore]) -> tuple[BatteryMetadata, Set[Optional[str]]]:
+    def inspect_hdf(path_or_buf: Union[str, Path, File]) -> tuple[BatteryMetadata, Set[Optional[str]]]:
         """Extract the battery data and the prefixes of cells contained within an HDF5 file
 
         Args:
@@ -188,9 +188,9 @@ class BatteryDataset:
             - List of names of batteries stored within the file (prefixes)
         """
 
-        from battdat.io.hdf import inspect_hdf, as_hdf5_store
+        from battdat.io.hdf import inspect_hdf, as_hdf5_object
 
-        with as_hdf5_store(path_or_buf) as store:
+        with as_hdf5_object(path_or_buf) as store:
             return inspect_hdf(store)
 
     @staticmethod

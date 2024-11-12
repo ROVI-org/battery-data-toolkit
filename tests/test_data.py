@@ -6,10 +6,10 @@ import h5py
 import pytest
 import numpy as np
 import pandas as pd
-from pandas import HDFStore
 import pyarrow.parquet as pq
 from pydantic import ValidationError
 from pytest import fixture, raises
+from tables import File
 
 from battdat.schemas.column import ColumnInfo
 from battdat.data import CellDataset
@@ -52,9 +52,9 @@ def test_write_hdf(tmpdir, test_df):
         assert 'metadata' in g.attrs
         assert json.loads(g.attrs['metadata'])['test_time']['units'] == 's'
 
-    # Test writing to an already-open HDFStore
-    with HDFStore(out_path, 'r+') as store:
-        test_df.to_hdf(store)
+    # Test writing to an already-open file
+    with File(out_path, 'w') as file:
+        test_df.to_hdf(file)
 
 
 def test_read_hdf(tmpdir, test_df):
@@ -74,8 +74,8 @@ def test_read_hdf(tmpdir, test_df):
     assert data.schemas['raw_data'].extra_columns['new'].description == 'An example column'
 
     # Test reading from an already-open file
-    with HDFStore(out_path, 'r') as store:
-        data = CellDataset.from_hdf(store)
+    with File(out_path, 'r') as file:
+        data = CellDataset.from_hdf(file)
     assert data.metadata.name == 'Test data'
 
     # Test requesting an unknown type of field
@@ -103,7 +103,7 @@ def test_multi_cell_hdf5(tmpdir, test_df):
     _, names = CellDataset.inspect_hdf(out_path)
     assert names == {'a', 'b'}
 
-    with pd.HDFStore(out_path) as h:
+    with File(out_path) as h:
         _, names = CellDataset.inspect_hdf(h)
         assert names == {'a', 'b'}
 
@@ -130,9 +130,8 @@ def test_missing_prefix_warning(tmpdir, test_df):
     test_df.to_hdf(out_path, 'a', overwrite=False)
 
     # Error if prefix not found
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError, match='No data available'):
         CellDataset.from_hdf(out_path, prefix='b')
-    assert 'No data available for prefix "b"' in str(e)
 
 
 def test_multicell_metadata_warning(tmpdir, test_df):
