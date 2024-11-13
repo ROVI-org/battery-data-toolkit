@@ -31,7 +31,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test example notebooks
         run: |
-          pip install jupyter
+          pip install jupyter matplotlib
           home_dir=`pwd`
           for notebook in `find docs/user-guide -name "*.ipynb"`; do
              cd `dirname $notebook`
