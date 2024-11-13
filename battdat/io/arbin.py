@@ -7,7 +7,7 @@ import pandas as pd
 from battdat.io.base import CycleTestReader
 from battdat.schemas.column import ChargingState
 from battdat.utils import drop_cycles
-from battdat.postprocess.features.tagging import AddMethod, AddSteps, AddSubSteps
+from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 
 
 class ArbinReader(CycleTestReader):

@@ -6,7 +6,7 @@ import numpy as np
 
 from battdat.data import CellDataset
 from battdat.io.batterydata import BDReader
-from battdat.postprocess.features.integral import CapacityPerCycle, StateOfCharge
+from battdat.postprocess.integral import CapacityPerCycle, StateOfCharge
 
 
 def get_example_data(file_path: Path, from_charged: bool) -> CellDataset:

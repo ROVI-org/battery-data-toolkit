@@ -7,7 +7,7 @@ import numpy as np
 
 from battdat.io.base import DatasetFileReader, CycleTestReader
 from battdat.schemas.column import ChargingState
-from battdat.postprocess.features.tagging import AddMethod, AddSteps, AddSubSteps
+from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
 from battdat.utils import drop_cycles
 
 

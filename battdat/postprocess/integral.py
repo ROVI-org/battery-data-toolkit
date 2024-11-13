@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from scipy.integrate import cumulative_trapezoid
 
-from battdat.postprocess.features.base import RawDataEnhancer, CycleSummarizer
+from battdat.postprocess.base import RawDataEnhancer, CycleSummarizer
 
 
 class CapacityPerCycle(CycleSummarizer):

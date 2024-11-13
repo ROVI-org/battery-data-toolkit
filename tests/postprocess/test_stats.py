@@ -6,7 +6,7 @@ import numpy as np
 from pytest import warns, fixture, raises
 
 from battdat.data import CellDataset
-from battdat.postprocess.features.timing import CycleTimesSummarizer, TimeEnhancer
+from battdat.postprocess.timing import CycleTimesSummarizer, TimeEnhancer
 
 
 @fixture()
