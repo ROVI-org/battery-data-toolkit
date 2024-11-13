@@ -38,10 +38,12 @@ class SignConventionChecker(ConsistencyChecker):
     def check_subset(self, time_series: pd.DataFrame) -> Optional[str]:
         # Convert the test time (seconds) to a time object so that Panda's rolling window can use a time
         time_series['timestamp'] = time_series['test_time'].apply(datetime.fromtimestamp)
-        nonzero_current = time_series.query(f'current > {self.minimum_current} or current < -{self.minimum_current}')  # Only get nonzero currents
+        nonzero_current = time_series.query(f'current > {self.minimum_current} or current < {-self.minimum_current}')  # Only get nonzero currents
         windowed = nonzero_current[['timestamp', 'test_time', 'current', 'voltage']].rolling(
             window=timedelta(seconds=self.window_length), on='timestamp', min_periods=4,
         )
+        if len(nonzero_current) < 4:
+            raise ValueError(f'Insufficient data to judge the sign convention (only {len(nonzero_current)}). Consider raising the minimum current threshold.')
 
         # Find the region with the lowest standard deviation
         most_stable_point = windowed['current'].std().idxmin()
@@ -50,5 +52,5 @@ class SignConventionChecker(ConsistencyChecker):
         curr_volt_cov = np.cov(stable_window['voltage'], stable_window['test_time'])[0, 1]
         if np.sign(curr_volt_cov) == np.sign(stable_window['current'].mean()):  # TODO (wardlt): Invert when we flip sign convention
             return (f'Potential sign error in current. Average current between test_time={most_stable_time - self.window_length:.1f}s and '
-                    f'test_time={most_stable_time:.1f} is {stable_window["current"].mean():.1e} and the covariance between the voltage and time '
+                    f'test_time={most_stable_time:.1f} is {stable_window["current"].mean():.1e} A and the covariance between the voltage and time '
                     f'is {curr_volt_cov:.1e} V/s. The current and this covariance should not have the same sign.')

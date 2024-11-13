@@ -83,6 +83,9 @@ def convert_raw_signal(input_df: pd.DataFrame, store_all: bool) -> pd.DataFrame:
     for orig, new in _name_map_raw.items():
         output[new] = input_df[orig]
 
+    # Switch to the sign convention for battery data toolkit (will change soon)
+    output['current'] *= -1
+
     # Decrement the indices from 1-indexed to 0-indexed
     output[['cycle_number', 'step_index']] -= 1
 

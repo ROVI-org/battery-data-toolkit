@@ -15,4 +15,5 @@ or post-processing if using already-existing data.
    formats
    schemas/index
    post-processing/index
+   consistency/index
    streaming
