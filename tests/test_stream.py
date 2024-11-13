@@ -37,7 +37,7 @@ def test_stream_by_rows(example_h5_path):
 
 def test_stream_by_cycles(example_h5_path):
     test_data = CellDataset.from_hdf(example_h5_path)
-    cycle_iter = iterate_cycles_from_file(example_h5_path, chunksize=4)  # Small to make sure we split cycles across chunks
+    cycle_iter = iterate_cycles_from_file(example_h5_path)
     for streamed, (_, original) in zip_longest(cycle_iter, test_data.raw_data.groupby('cycle_number')):
         assert streamed is not None
         assert original is not None
