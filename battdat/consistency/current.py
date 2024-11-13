@@ -52,5 +52,5 @@ class SignConventionChecker(ConsistencyChecker):
         curr_volt_cov = np.cov(stable_window['voltage'], stable_window['test_time'])[0, 1]
         if np.sign(curr_volt_cov) != np.sign(stable_window['current'].mean()):  # TODO (wardlt): Invert when we flip sign convention
             return (f'Potential sign error in current. Average current between test_time={most_stable_time - self.window_length:.1f}s and '
-                    f'test_time={most_stable_time:.1f} is {stable_window["current"].mean():.1e} A and the covariance between the voltage and time '
-                    f'is {curr_volt_cov:.1e} V/s. The current and this covariance should have the same sign.')
+                    f'test_time={most_stable_time:.1f} is {stable_window["current"].mean():.1e} A and the covariance between the voltage and current '
+                    f'is {curr_volt_cov:.1e} V-s. The current and this covariance should have the same sign.')
