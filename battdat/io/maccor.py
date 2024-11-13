@@ -1,4 +1,4 @@
-"""Extractor for MACCOR (untested!!)"""
+"""Extractor for MACCOR"""
 import itertools
 from typing import Union, List, Iterator, Tuple
 
@@ -7,7 +7,7 @@ import numpy as np
 
 from battdat.io.base import DatasetFileReader, CycleTestReader
 from battdat.schemas.column import ChargingState
-from battdat.postprocess.tagging import AddMethod, AddSteps, AddSubSteps
+from battdat.postprocess.features.tagging import AddMethod, AddSteps, AddSubSteps
 from battdat.utils import drop_cycles
 
 

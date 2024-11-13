@@ -3,7 +3,7 @@ from pathlib import Path
 from pytest import fixture
 
 from battdat.data import CellDataset, BatteryMetadata
-from battdat.postprocess.timing import CycleTimesSummarizer
+from battdat.postprocess.features.timing import CycleTimesSummarizer
 
 
 @fixture()

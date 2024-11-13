@@ -4,7 +4,7 @@ import pandas as pd
 from pytest import fixture
 
 from battdat.data import CellDataset
-from battdat.postprocess.tagging import AddSteps, AddMethod, AddSubSteps
+from battdat.postprocess.features.tagging import AddSteps, AddMethod, AddSubSteps
 from battdat.schemas.column import ChargingState, ControlMethod
 
 
