@@ -6,11 +6,10 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from pandas import HDFStore
 from tables import Group, File, Filters, descr_from_dtype, Table
 
 from battdat import __version__
-from .base import DatasetWriter, PathLike, DatasetFileReader
+from .base import DatasetWriter, PathLike, DatasetReader
 from ..data import BatteryDataset
 from ..schemas import BatteryMetadata
 from ..schemas.column import ColumnSchema
@@ -121,7 +120,7 @@ def inspect_hdf(file: File) -> Tuple[BatteryMetadata, Set[Union[str, None]]]:
     return metadata, prefixes
 
 
-class HDF5Reader(DatasetFileReader):
+class HDF5Reader(DatasetReader):
     """Read datasets from a battery-data-toolkit format HDF5 file
 
     The HDF5 format permits multiple datasets in a single HDF5 file
@@ -178,8 +177,8 @@ class HDF5Reader(DatasetFileReader):
         Returns:
             Dataset read from the file
         """
-        with HDFStore(path) as store:
-            data = self.read_from_hdf(store, prefix=None)
+        with File(path) as file:
+            data = self.read_from_hdf(file, prefix=None)
             if metadata is not None:
                 data.metadata = metadata
             return data

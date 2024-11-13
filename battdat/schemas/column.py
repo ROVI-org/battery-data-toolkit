@@ -214,7 +214,7 @@ class RawData(ColumnSchema):
     # Required measurement data
     test_time: ColumnInfo = ColumnInfo(description="Time from the beginning of measurements", units='s', monotonic=True, type=DataType.FLOAT, required=True)
     voltage: ColumnInfo = ColumnInfo(description="Measured voltage of the system", units="V", type=DataType.FLOAT, required=True)
-    current: ColumnInfo = ColumnInfo(description="Measured current of the system. Positive current represents the battery discharging.",
+    current: ColumnInfo = ColumnInfo(description="Measured current of the system. Positive current represents the battery charging.",
                                      units='A', required=True, type=DataType.FLOAT)
     internal_resistance: ColumnInfo = ColumnInfo(description="Internal resistance of the battery.", units="ohm", type=DataType.FLOAT)
 

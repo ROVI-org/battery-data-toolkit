@@ -36,7 +36,7 @@ class ArbinReader(CycleTestReader):
         df_out['cycle_number'] = df_out['cycle_number'].astype('int64')
         df_out['file_number'] = file_number  # df_out['cycle_number']*0
         df_out['test_time'] = np.array(df['test_time'] - df['test_time'][0] + start_time, dtype=float)
-        df_out['current'] = -df['Current']
+        df_out['current'] = df['Current']  # TODO (wardlt): Check this!?
         df_out['temperature'] = df['Temperature']
         df_out['internal_resistance'] = df['Internal_Resistance']
         df_out['voltage'] = df['Voltage']

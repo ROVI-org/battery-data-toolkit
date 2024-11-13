@@ -11,4 +11,5 @@ API documentation for each module
    schemas
    io
    postprocess
+   consistency
    streaming
