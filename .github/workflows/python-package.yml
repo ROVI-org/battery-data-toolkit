@@ -33,7 +33,7 @@ jobs:
         run: |
           pip install jupyter matplotlib
           home_dir=`pwd`
-          for notebook in `find docs/user-guide -name "*.ipynb"`; do
+          for notebook in `find . -name "*.ipynb"`; do
              cd `dirname $notebook`
              jupyter execute `basename $notebook`
              cd $home_dir
