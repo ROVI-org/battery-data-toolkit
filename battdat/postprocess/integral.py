@@ -129,9 +129,9 @@ class StateOfCharge(RawDataEnhancer):
     The energy change is determined by integrating the product
     of current and voltage.
 
-    Output dataframe has 4 new columns:
-        - ``cycle_capacity``: Amount of charge dispersed from the battery over the cycle, in A-hr
-        - ``cycle_energy``: Amount of energy dispersed from the battery over the cycle, in J
+    Output dataframe has 2 new columns:
+        - ``cycle_capacity``: Amount of charge charged since the beginning of the cycle, in A-hr
+        - ``cycle_energy``: Amount of energy charged since the beginning of the cycle, in J
     """
 
     column_names = ['cycle_capacity', 'cycle_energy']

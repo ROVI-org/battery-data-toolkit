@@ -28,4 +28,9 @@ def example_dataset():
 def test_sign_checker(example_dataset):
     chcker = SignConventionChecker()
     result = chcker.check(example_dataset)
-    assert len(result) == 1   # Example dataset has a sign convention problem
+    assert len(result) == 0
+
+    # Make sure swapping the sign breaks things
+    example_dataset.datasets['raw_data']['current'] *= -1
+    result = chcker.check(example_dataset)
+    assert len(result) == 1
