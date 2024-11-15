@@ -4,7 +4,7 @@ from typing import TextIO, get_args
 from pydantic import BaseModel
 
 from battdat.schemas.column import RawData, CycleLevelData
-from battdat.schemas import BatteryMetadata, BatteryDescription, ModelMetadata
+from battdat.schemas import BatteryMetadata, BatteryDescription, ModelMetadata, CyclingProtocol
 from battdat.schemas.eis import EISData
 
 print('Exporting column schemas to RST...')
@@ -90,4 +90,8 @@ with open('rendered-metadata-schema.rst', 'w', encoding='utf-8') as fp:
 
     expand_terms(ModelMetadata, fp, True)
 
+    print('Cycling Data', file=fp)
+    print('++++++++++++', file=fp)
+    print('Annotate how batteries were cycled following protocol description objects.\n', file=fp)
 
+    expand_terms(CyclingProtocol, fp, True)
