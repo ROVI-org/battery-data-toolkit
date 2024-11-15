@@ -22,6 +22,15 @@ Metadata: Computation (``b.schemas.modeling``)
    :undoc-members:
    :show-inheritance:
 
+Metadata: Cycling Protocol (``b.schemas.cycling``)
+--------------------------------------------------
+
+.. automodule:: battdat.schemas.cycling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
 Data: Time Series (``b.schemas.column``)
 ----------------------------------------
 

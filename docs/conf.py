@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'BattDat'
+project = 'Battery Data Toolkit'
 copyright = '2024'
 author = 'ROVI Team'
 
@@ -26,7 +26,7 @@ html_theme = 'pydata_sphinx_theme'
 html_static_path = ['_static']
 html_theme_options = {
     "logo": {
-        "text": "BatData",
+        "text": "BattData",
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
     }

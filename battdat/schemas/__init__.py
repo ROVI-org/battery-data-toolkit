@@ -1,11 +1,11 @@
 """Schemas for battery data and metadata"""
-from datetime import date
 from typing import List, Tuple, Optional
 
 from pydantic import BaseModel, Field, AnyUrl
 
 from battdat.schemas.modeling import ModelMetadata
 from battdat.schemas.battery import BatteryDescription
+from battdat.schemas.cycling import CyclingProtocol
 from battdat.version import __version__
 
 
@@ -26,10 +26,7 @@ class BatteryMetadata(BaseModel, extra='allow'):
                                  iri="https://w3id.org/emmo#EMMO_463bcfda_867b_41d9_a967_211d4d437cfb")
 
     # Fields that describe the test protocol
-    cycler: Optional[str] = Field(None, description='Name of the cycling machine')
-    start_date: Optional[date] = Field(None, description="Date the initial test on the cell began")
-    set_temperature: Optional[float] = Field(None, description="Set temperature for the battery testing equipment. Units: C")
-    schedule: Optional[str] = Field(None, description="Schedule file used for the cycling machine")
+    test_protocol: Optional[CyclingProtocol] = Field(None, description="Method used to ")
 
     # Field that describe the battery assembly
     battery: Optional[BatteryDescription] = Field(None, description="Description of the battery being tested")
