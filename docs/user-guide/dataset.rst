@@ -39,7 +39,9 @@ Access the data tables within the dataset by indexing the dataset:
 Creating a ``BatteryDataset``
 -----------------------------
 
-Build a dataset by passing a collection of tables and their schemas along with the metadata to the constructor.
+Load data from another file format using battdat's `dataset readers <io.html>`_.
+If there is no available reader,
+build by passing a collection of tables and their schemas along with the metadata to the constructor.
 Once assembled, all component tables will be saved and loaded together.
 
 .. code-block:: python
