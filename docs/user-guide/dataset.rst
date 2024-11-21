@@ -73,6 +73,17 @@ Dataset Templates
 ``battdat`` provides subclasses of :class:`~battdat.data.BatteryDataset` for different types of battery data.
 Each subclass provides suggested names for certain types of data (e.g., ``raw_data`` for measurements
 during operation of a single cell) and predefines schema to use for each column.
+
+Dataset templates, like :class:`~battdat.data.CellDataset`, require
+neither supplying schemas for each table
+nor passing the tables as part of a dictionary.
+
+.. code-block:: python
+
+    from battdat.data import CellDataset
+
+    dataset = CellDataset(raw_data=df)
+
 The current template classes are:
 
 .. _type-table:
