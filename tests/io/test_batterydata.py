@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from pytest import fixture
-from pydantic import AnyUrl
 
 from battdat.io.batterydata import BDReader, generate_metadata
 
@@ -97,5 +96,5 @@ def test_store_all(test_files):
 
 def test_metadata():
     metadata = generate_metadata(example_metadata, ('https://test.url/',))
-    assert AnyUrl('https://test.url/') in metadata.associated_ids
+    assert 'test.url' == metadata.associated_ids[0].host
     assert metadata.battery.cathode.name == 'NMC532'
