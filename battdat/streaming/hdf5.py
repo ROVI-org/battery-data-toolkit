@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class HDF5Writer(AbstractContextManager):
-    """Tool to write raw time series data to an HDF5 file incrementally"""
+    """Tool to write raw time series data to an HDF5 file incrementally
+
+    Writes data to the ``raw_data`` key of a different dataset."""
 
     # Attributes defining where and how to write
     hdf5_output: Union[Path, str, File]
