@@ -68,6 +68,10 @@ def test_read_hdf(tmpdir, test_df):
 
     # Read it
     data = CellDataset.from_hdf(out_path)
+    assert 'raw_data' in data
+    assert 'test_time' in data['raw_data'].columns
+    assert len(data) == 3
+    assert len(list(data)) == 3
     assert data.metadata.name == 'Test data'
     assert data.raw_data is not None
     assert data.cycle_stats is not None
@@ -80,14 +84,14 @@ def test_read_hdf(tmpdir, test_df):
 
     # Test requesting an unknown type of field
     with raises(ValueError) as exc:
-        CellDataset.from_hdf(out_path, subsets=('bad)_!~',))
+        CellDataset.from_hdf(out_path, tables=('bad)_!~',))
     assert 'bad)_!~' in str(exc)
 
     # Test reading an absent field
-    del test_df.datasets['cycle_stats']
+    del test_df.tables['cycle_stats']
     test_df.to_hdf(out_path)
     with raises(ValueError) as exc:
-        CellDataset.from_hdf(out_path, subsets=('cycle_stats',))
+        CellDataset.from_hdf(out_path, tables=('cycle_stats',))
     assert 'File does not contain' in str(exc)
 
 

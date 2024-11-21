@@ -164,7 +164,7 @@ class HDF5Reader(DatasetReader):
 
         # Read out the battery metadata
         metadata = BatteryMetadata.model_validate_json(file.root._v_attrs.metadata)
-        return self.output_class(metadata=metadata, datasets=data, schemas=schemas)
+        return self.output_class(metadata=metadata, tables=data, schemas=schemas)
 
     def read_dataset(self, path: PathLike, metadata: Optional[Union[BatteryMetadata, dict]] = None) -> BatteryDataset:
         """Read the default dataset and all subsets from an HDF5 file
@@ -230,7 +230,7 @@ class HDF5Writer(DatasetWriter):
         #  Note that we use the "table" format to allow for partial reads / querying
         filters = Filters(complevel=self.complevel, complib=self.complib)
         for key, schema in dataset.schemas.items():
-            if (data := dataset.datasets.get(key)) is not None:
+            if (data := dataset.tables.get(key)) is not None:
                 table = write_df_to_table(file, group, key, data, filters=filters)
 
                 # Write the schema, mark as dataset
