@@ -24,7 +24,7 @@ The :mod:`battdat.io` module provides tools to read and write from :class:`~batt
      - ✔️
      - ✖️
    * - `HDF5 <formats.html#hdf5>`_
-     - :mod:`~battdat.io.hdf5`
+     - :mod:`~battdat.io.hdf`
      - ✔️
      - ✔️
    * - MACCOR

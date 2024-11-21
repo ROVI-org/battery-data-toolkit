@@ -73,7 +73,7 @@ class ParquetWriter(DatasetWriter):
         }
         written = {}
         for key, schema in dataset.schemas.items():
-            if (data := dataset.datasets.get(key)) is None:
+            if (data := dataset.tables.get(key)) is None:
                 continue
 
             # Put the metadata for the battery and this specific table into the table's schema in the FileMetaData
@@ -148,5 +148,5 @@ class ParquetReader(DatasetFileReader):
         return self.output_class(
             metadata=BatteryMetadata.model_validate_json(metadata),
             schemas=schemas,
-            datasets=data
+            tables=data
         )

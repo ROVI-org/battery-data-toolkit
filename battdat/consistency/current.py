@@ -31,7 +31,7 @@ class SignConventionChecker(ConsistencyChecker):
     def check(self, dataset: BatteryDataset) -> List[str]:
         warnings = []
         for subset in self.subsets_to_check:
-            if (warning := self.check_subset(dataset.datasets[subset])) is not None:
+            if (warning := self.check_subset(dataset.tables[subset])) is not None:
                 warnings.append(warning)
         return warnings
 

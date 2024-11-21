@@ -60,7 +60,7 @@ class CycleSummarizer(BaseFeatureComputer):
 
         # Add a cycle summary if not already available
         if data.cycle_stats is None:
-            data.datasets['cycle_stats'] = pd.DataFrame({'cycle_number': sorted(set(data.raw_data['cycle_number']))})
+            data.tables['cycle_stats'] = pd.DataFrame({'cycle_number': sorted(set(data.raw_data['cycle_number']))})
 
         # Perform the update
         self._summarize(data.raw_data, data.cycle_stats)
