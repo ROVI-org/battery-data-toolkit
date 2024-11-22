@@ -135,6 +135,46 @@ Load all cells by iterating over them:
     for name, cell in BatteryDataset.all_cells_from_hdf('test.h5'):
         do_some_processing(cell)
 
+
+Appending to Existing File
+++++++++++++++++++++++++++
+
+The :class:`~battdat.io.hdf.HDF5Writer` class facilitates adding to existing datasets.
+Start by creating the writer with the desired compression settings
+
+.. code-block:: python
+
+    from battdat.io.hdf import HDFWriter
+
+    writer = HDFWriter(complevel=9)
+
+Add a new table to an existing dataset with :meth:`~battdat.io.hdf.HDF5Writer.add_table`,
+which requires the name of a dataset and a `column schema <schemas/column-schema.html>`_.
+
+.. code-block:: python
+
+    import pandas as pd
+    import tables
+
+
+    # Make dataset and column
+    df = pd.DataFrame({'a': [1., 0.]})
+    schema = ColumnSchema()
+    schema.add_column('a', 'A column')
+
+    with tables.open_file('example.h5', mode='a') as file:
+        writer.add_table(file, 'example_table', df, schema)
+
+Add data to an existing table with :meth:`~battdat.io.hdf.HDF5Writer.append_to_table`
+
+.. code-block:: python
+
+    with tables.open_file('example.h5', mode='a') as file:
+        writer.append_to_table(file, 'example_table', df)
+
+The new table must match the existing table's contents exactly.
+Any compression settings or metadata from the existing table will be re-used.
+
 Parquet
 -------
 
