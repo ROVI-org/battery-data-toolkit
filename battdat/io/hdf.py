@@ -28,13 +28,22 @@ def make_numpy_dtype_from_pandas(df: pd.DataFrame) -> np.dtype:
     output = []
     for name, dtype in df.dtypes.items():
         kind = dtype.kind
-        if kind in ['O', 'S', 'U']:
+        shape = ()
+
+        # Introspect objects to learn more
+        if kind == 'O':
+            example = np.array(df[name].iloc[0])
+            dtype = example.dtype
+            kind = dtype.kind
+            shape = example.shape
+
+        if kind in ['S', 'U']:
             max_len = df[name].apply(str).apply(len).max()
             output.append((name, np.dtype(f'S{max_len}')))
         elif kind in ['M', 'm', 'V']:
             raise ValueError(f'Data type not supported: {kind}')
         else:
-            output.append((name, dtype))
+            output.append((name, dtype, shape))
     return np.dtype(output)
 
 
@@ -47,7 +56,7 @@ def write_df_to_table(file: File, group: Group, name: str, df: pd.DataFrame, fil
         name: Name of the dataset
         df: DataFrame to write
         filters: Filters to apply to data entering table
-        expected_rows:
+        expected_rows: How many rows to expect. Default is to use the length of the dataframe
     Returns:
         Table object holding the dataset
     """
@@ -57,7 +66,7 @@ def write_df_to_table(file: File, group: Group, name: str, df: pd.DataFrame, fil
     desc, _ = descr_from_dtype(dtype)
 
     # Make the table then fill
-    table = file.create_table(group, name=name, description=desc, expectedrows=len(df), filters=filters)
+    table = file.create_table(group, name=name, description=desc, expectedrows=expected_rows or len(df), filters=filters)
     row = np.empty((1,), dtype=dtype)  # TODO (wardlt): Consider a batched write (pytables might batch internally)
     for _, df_row in df.iterrows():
         for c in dtype.names:
@@ -77,7 +86,13 @@ def read_df_from_table(table: Table) -> pd.DataFrame:
     array = np.empty((table.nrows,), dtype=table.dtype)
     for i, row in enumerate(table.iterrows()):
         array[i] = row.fetch_all_fields()
-    return pd.DataFrame(array)
+    as_dict = dict((c, array[c]) for c in array.dtype.names)
+
+    # Expand ndarrays into a list
+    for k, v in as_dict.items():
+        if v.ndim != 1:
+            as_dict[k] = list(v)
+    return pd.DataFrame(as_dict)
 
 
 @contextmanager

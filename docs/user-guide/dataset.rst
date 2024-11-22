@@ -15,7 +15,7 @@ Every dataset holds three attributes:
 
 #. :attr:`~battdat.data.BatteryDataset.metadata`: Information describing the source of the data
    (see `Source Metadata <schemas/source-metadata.html>`_)
-#. :attr:`~battdat.data.BatteryDataset.tables`: A named collection of data tables as Pandas :class:`~pd.DataFrame`.
+#. :attr:`~battdat.data.BatteryDataset.tables`: A named collection of data tables as Pandas :class:`~pandas.DataFrame`.
 #. :attr:`~battdat.data.BatteryDataset.schemas`: Descriptions of the columns in each data table
    (see `Column Schema <schemas/column-schema.html>`_)
 
@@ -41,7 +41,7 @@ Creating a ``BatteryDataset``
 
 Load data from another file format using battdat's `dataset readers <io.html>`_.
 If there is no available reader,
-build by passing a collection of tables and their schemas along with the metadata to the constructor.
+build by passing a collection of tables as :class:`~pandas.DataFrame` and their schemas along with the metadata to the constructor.
 Once assembled, all component tables will be saved and loaded together.
 
 .. code-block:: python
@@ -57,6 +57,11 @@ Once assembled, all component tables will be saved and loaded together.
         schemas={'cell_1': col_schema, 'cell_2': col_schema}
         metadata=metadata
     )
+
+Columns of the dataframes can be any `NumPy data type <https://numpy.org/doc/stable/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind>`_
+except timedeltas (m), timestamps (M), or voids (v).
+Battery data toolkit does not yet support storing these types in HDF5 or Parquet formats.
+Columns where all values are arrays of the same size are also supported.
 
 Check that your data and metadata agree using the :meth:`~battdat.data.BatteryDataset.validate` method.
 
@@ -84,6 +89,18 @@ nor passing the tables as part of a dictionary.
 
     dataset = CellDataset(raw_data=df)
 
+Each table will be associated with a default schema.
+Describe columns not yet present in the schema by adding them after assembly:
+
+.. code-block:: python
+
+    from battdat.schemas.columns import ColumnInfo
+    dataset.schemas['raw_data'].add_column(
+        name='new_col',
+        description='Information not already included in RawData',
+        units='ohm',
+    )
+
 The current template classes are:
 
 .. _type-table:
@@ -98,7 +115,7 @@ The current template classes are:
        or averaged over entire cycles. Tables (and their schemas) include:
 
        - ``raw_data`` (`RawData <schemas/column-schema.html#rawdata>`_): Measurements of system state at specific points in time.
-       - ``cycle_stats`` (`CycleStats <schemas/column-schema.html#cyclestats>`_): Descriptive statistics about state over entire cycles.
+       - ``cycle_stats`` (`CycleLevelData <schemas/column-schema.html#cycleleveldata>`_): Descriptive statistics about state over entire cycles.
        - ``eis_data`` (`EISData <schemas/column-schema.html#eisdata>`_): EIS measurements at different frequencies, over time.
 
 Loading and Saving

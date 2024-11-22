@@ -111,28 +111,28 @@ Add multiple batteries into an HDF5 file by providing a "prefix" to name each ce
 
 .. code-block:: python
 
-    test_a.to_battdat_hdf('test.h5', prefix='a')
-    test_b.to_battdat_hdf('test.h5', prefix='b', overwrite=False)  # Overwrite is mandatory
+    test_a.to_hdf('test.h5', prefix='a')
+    test_b.to_hdf('test.h5', prefix='b', overwrite=False)  # Overwrite is mandatory
 
 
 Load a specific cell by providing a specific prefix on load
 
 .. code-block:: python
 
-    test_a = BatteryDataset.from_battdat_hdf('test.h5', prefix='a')
+    test_a = BatteryDataset.from_hdf('test.h5', prefix='a')
 
 
 or load any of the included cells by providing an index
 
 .. code-block:: python
 
-    test_a = BatteryDataset.from_battdat_hdf('test.h5', prefix=0)
+    test_a = BatteryDataset.from_hdf('test.h5', prefix=0)
 
 Load all cells by iterating over them:
 
 .. code-block:: python
 
-    for name, cell in BatteryDataset.all_cells_from_battdat_hdf('test.h5'):
+    for name, cell in BatteryDataset.all_cells_from_hdf('test.h5'):
         do_some_processing(cell)
 
 Parquet
