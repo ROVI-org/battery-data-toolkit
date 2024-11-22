@@ -15,7 +15,7 @@ Every dataset holds three attributes:
 
 #. :attr:`~battdat.data.BatteryDataset.metadata`: Information describing the source of the data
    (see `Source Metadata <schemas/source-metadata.html>`_)
-#. :attr:`~battdat.data.BatteryDataset.tables`: A named collection of data tables as Pandas :class:`~pd.DataFrame`.
+#. :attr:`~battdat.data.BatteryDataset.tables`: A named collection of data tables as Pandas :class:`~pandas.DataFrame`.
 #. :attr:`~battdat.data.BatteryDataset.schemas`: Descriptions of the columns in each data table
    (see `Column Schema <schemas/column-schema.html>`_)
 
@@ -41,7 +41,7 @@ Creating a ``BatteryDataset``
 
 Load data from another file format using battdat's `dataset readers <io.html>`_.
 If there is no available reader,
-build by passing a collection of tables and their schemas along with the metadata to the constructor.
+build by passing a collection of tables as :class:`~pandas.DataFrame` and their schemas along with the metadata to the constructor.
 Once assembled, all component tables will be saved and loaded together.
 
 .. code-block:: python
@@ -57,6 +57,11 @@ Once assembled, all component tables will be saved and loaded together.
         schemas={'cell_1': col_schema, 'cell_2': col_schema}
         metadata=metadata
     )
+
+Columns of the dataframes can be any `NumPy data type <https://numpy.org/doc/stable/reference/generated/numpy.dtype.kind.html#numpy.dtype.kind>`_
+except timedeltas (m), timestamps (M), or voids (v).
+Battery data toolkit does not yet support storing these types in HDF5 or Parquet formats.
+Columns where all values are arrays of the same size are also supported.
 
 Check that your data and metadata agree using the :meth:`~battdat.data.BatteryDataset.validate` method.
 
