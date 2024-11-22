@@ -235,22 +235,34 @@ class HDF5Writer(DatasetWriter):
         root_node._f_setattr('json_schema', dataset.metadata.model_json_schema())
         root_node._f_setattr('battdat_version', __version__)
 
-        # Move to the group in which to store the data
+        # Create the group if needed
         if prefix is not None:
-            group: Group = file.create_group('/', name=prefix)
-        else:
-            group = file.root
+            file.create_group('/', name=prefix)
 
         # Store the various datasets
         #  Note that we use the "table" format to allow for partial reads / querying
-        filters = Filters(complevel=self.complevel, complib=self.complib)
         for key, schema in dataset.schemas.items():
             if (data := dataset.tables.get(key)) is not None:
-                table = write_df_to_table(file, group, key, data, filters=filters)
+                self.add_dataset(file, key, data, schema, prefix)
 
-                # Write the schema, mark as dataset
-                table.attrs.metadata = schema.model_dump_json()
-                table.attrs.json_schema = schema.model_json_schema()
+    def add_dataset(self, file: File, name: str, data: pd.DataFrame, schema: ColumnSchema, prefix: Optional[str] = None):
+        """Add a dataset to an existing file
+
+        Args:
+            file: HDF file open via pytables
+            name: Name of the data table
+            data: Data table to be saved
+            schema: Description of the columns in battdat format
+            prefix: Prefix of the battery dataset if saving multiple per file
+        """
+        # Write dataset
+        group = file.root if prefix is None else file.get_node('/' + prefix)
+        filters = Filters(complevel=self.complevel, complib=self.complib)
+        table = write_df_to_table(file, group, name, data, filters=filters)
+
+        # Write the schema, mark as dataset
+        table.attrs.metadata = schema.model_dump_json()
+        table.attrs.json_schema = schema.model_json_schema()
 
     def export(self, dataset: BatteryDataset, path: PathLike):
         with File(path, mode='w') as file:
