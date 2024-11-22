@@ -243,10 +243,10 @@ class HDF5Writer(DatasetWriter):
         #  Note that we use the "table" format to allow for partial reads / querying
         for key, schema in dataset.schemas.items():
             if (data := dataset.tables.get(key)) is not None:
-                self.add_dataset(file, key, data, schema, prefix)
+                self.add_table(file, key, data, schema, prefix)
 
-    def add_dataset(self, file: File, name: str, data: pd.DataFrame, schema: ColumnSchema, prefix: Optional[str] = None):
-        """Add a dataset to an existing file
+    def add_table(self, file: File, name: str, data: pd.DataFrame, schema: ColumnSchema, prefix: Optional[str] = None):
+        """Add a table to an existing dataset
 
         Args:
             file: HDF file open via pytables
@@ -263,6 +263,37 @@ class HDF5Writer(DatasetWriter):
         # Write the schema, mark as dataset
         table.attrs.metadata = schema.model_dump_json()
         table.attrs.json_schema = schema.model_json_schema()
+
+    def append_to_table(self, file: File, name: str, data: pd.DataFrame, prefix: Optional[str] = None):
+        """Add to an existing table
+
+        Args:
+            file: HDF file open via pytables
+            name: Name of the data table
+            data: Data table to be saved
+            prefix: Prefix of the battery dataset if saving multiple per file
+        """
+
+        # Get the table
+        if prefix is None:
+            group = file.root
+        else:
+            if '/' + prefix not in file:
+                raise ValueError(f'No data available for prefix: {prefix}')
+            group: Group = file.get_node('/' + prefix)
+        table: Table = group[name]
+
+        # Check tables
+        new_dtype = make_numpy_dtype_from_pandas(data)
+        cur_dtype = table.dtype
+        if new_dtype != cur_dtype:
+            raise ValueError(f'Existing and new data types differ. Existing={cur_dtype}, New={new_dtype}')
+
+        row = np.empty((1,), dtype=cur_dtype)  # TODO (wardlt): Consider a batched write (pytables might batch internally)
+        for _, df_row in data.iterrows():
+            for c in cur_dtype.names:
+                row[c] = df_row[c]
+            table.append(row)
 
     def export(self, dataset: BatteryDataset, path: PathLike):
         with File(path, mode='w') as file:
