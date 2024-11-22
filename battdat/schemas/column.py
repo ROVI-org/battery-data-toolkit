@@ -61,7 +61,7 @@ class ColumnInfo(BaseModel):
 
 
 class ColumnSchema(BaseModel, frozen=True):
-    """Base class for schemas that describe the columns of a tabular dataset
+    """Base class for schemas that describe the columns of a table
 
     Implement a schema to be re-used across multiple datasets by creating a subclass and
     adding attributes for each expected column. The type of each attribute must be a :class:`ColumnInfo`
@@ -109,6 +109,31 @@ class ColumnSchema(BaseModel, frozen=True):
             elif field_info.default is None:
                 raise ValueError('The subclass is incorrect. All fields must have a default value')
         return d
+
+    def add_column(self,
+                   name: str,
+                   description: str,
+                   data_type: DataType = DataType.OTHER,
+                   required: bool = False,
+                   units: Optional[str] = None,
+                   monotonic: bool = False) -> ColumnInfo:
+        """Add a new column to the :attr:`extra_columns` as a :class:`ColumnInfo` object
+
+        Args:
+            name: Name of new column
+            description: Human-readable description of the data
+            data_type: Type of data
+            required: Whether the data must be included in a table
+            units: Units used for all rows in column
+            monotonic: Whether values must always remain constant or increase
+        Returns:
+            The new column object
+        """
+        new_col = ColumnInfo(
+            description=description, required=required, units=units, monotonic=monotonic, type=data_type
+        )
+        self.extra_columns[name] = new_col
+        return new_col
 
     def validate_dataframe(self, data: DataFrame, allow_extra_columns: bool = True):
         """Check whether a dataframe matches this schema

@@ -43,12 +43,18 @@ def test_extra_cols(example_df):
     example_df['extra'] = [1, 1]
 
     # Passes with extra columns by default
-    RawData().validate_dataframe(example_df)
+    schema = RawData()
+    schema.validate_dataframe(example_df)
 
     # Fails when desired
     with raises(ValueError) as exc:
-        RawData().validate_dataframe(example_df, allow_extra_columns=False)
+        schema.validate_dataframe(example_df, allow_extra_columns=False)
     assert 'extra columns' in str(exc)
+
+    # Passes when new column is defined
+    schema.add_column('extra', 'An extra column')
+    assert 'extra' in schema.extra_columns
+    schema.validate_dataframe(example_df, allow_extra_columns=False)
 
 
 def test_get_item():

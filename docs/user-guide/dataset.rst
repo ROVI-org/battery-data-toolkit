@@ -84,6 +84,18 @@ nor passing the tables as part of a dictionary.
 
     dataset = CellDataset(raw_data=df)
 
+Each table will be associated with a default schema.
+Describe columns not yet present in the schema by adding them after assembly:
+
+.. code-block:: python
+
+    from battdat.schemas.columns import ColumnInfo
+    dataset.schemas['raw_data'].add_column(
+        name='new_col',
+        description='Information not already included in RawData',
+        units='ohm',
+    )
+
 The current template classes are:
 
 .. _type-table:
@@ -98,7 +110,7 @@ The current template classes are:
        or averaged over entire cycles. Tables (and their schemas) include:
 
        - ``raw_data`` (`RawData <schemas/column-schema.html#rawdata>`_): Measurements of system state at specific points in time.
-       - ``cycle_stats`` (`CycleStats <schemas/column-schema.html#cyclestats>`_): Descriptive statistics about state over entire cycles.
+       - ``cycle_stats`` (`CycleLevelData <schemas/column-schema.html#cycleleveldata>`_): Descriptive statistics about state over entire cycles.
        - ``eis_data`` (`EISData <schemas/column-schema.html#eisdata>`_): EIS measurements at different frequencies, over time.
 
 Loading and Saving
