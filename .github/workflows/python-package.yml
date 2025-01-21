@@ -3,11 +3,12 @@ name: Python Package
 on: [ push, pull_request ]
 
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
+  build:
     strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
       max-parallel: 5
-
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.10
@@ -30,6 +31,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Test example notebooks
+        if: ${{ runner.os == 'Linux' }}
         run: |
           pip install jupyter matplotlib
           home_dir=`pwd`
