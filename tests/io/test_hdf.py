@@ -23,6 +23,8 @@ def test_store_df(tmpdir):
         table = write_df_to_table(file, group, 'table', example_df)
         assert tuple(table[0]) == (1, 1., b'charge', np.ones((1, 1)))
 
+    with tables.open_file(tmpdir / "example.h5", "r") as file:
+        table = file.get_node('/base/table')
         df_copy = read_df_from_table(table)
         assert (df_copy.columns == ['a', 'b', 'c', 'array']).all()
         assert np.allclose(df_copy['b'], [1., 3.])
@@ -48,6 +50,7 @@ def test_append(tmpdir, prefix):
         df_copy = read_df_from_table(table)
         assert len(df_copy) == len(example_df) * 2
         assert np.allclose(df_copy['a'], [1, 2, 1, 2])
+        assert np.equal(df_copy['c'], [b'charge', b'discharge'] * 2).all()
 
         # Test data check
         with raises(ValueError, match='Existing and new'):
