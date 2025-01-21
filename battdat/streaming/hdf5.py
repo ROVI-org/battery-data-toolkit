@@ -26,6 +26,8 @@ class HDF5Writer(AbstractContextManager):
     # Attributes defining where and how to write
     hdf5_output: Union[Path, str, File]
     """File or already-open HDF5 file in which to store data"""
+    write_mode: str = 'a'
+    """Mode to use when opening the HDF5 file. Ignored if :attr:`hdf5_output` is a ``File``."""
     metadata: BatteryMetadata = field(default_factory=BatteryMetadata)
     """Metadata describing the cell"""
     schema: ColumnSchema = field(default_factory=RawData)
@@ -59,7 +61,7 @@ class HDF5Writer(AbstractContextManager):
             self._file = File(
                 self.hdf5_output,
                 root_uep='/' + self.key,
-                mode='w'
+                mode=self.write_mode
             )
 
         # Write metadata to the store's root's attributes
