@@ -24,14 +24,14 @@ and the metadata for the battery as the metadata.
 
 .. code-block:: python
 
-    import h5py
+    from tables import File
     import json
 
-    with h5py.File('example.h5') as f:
-        metadata = json.loads(f.attrs['metadata'])  # Data describing the cell and how it was tested
-        version = json.loads(f.attrs['battdat_version'])  # BattDat version used to save dataset
-        raw_data = f['raw_data']  # HDF5 group holding raw data
-        schema = raw_data.attrs['metadata']  # Description of each column
+    with File('example.h5') as f:
+        metadata = json.loads(f.root._v_attrs['metadata'])  # Data describing the cell and how it was tested
+        version = json.loads(f.root._v_attrs['battdat_version'])  # BattDat version used to save dataset
+        raw_data = f.root['raw_data']  # HDF5 group holding raw data
+        schema = raw_data._v_attrs['metadata']  # Description of each column
 
 The internal structure of each group (e.g., ``f['raw_data']``) are that of
 the `PyTables Table format <https://www.pytables.org/usersguide/file_format.html#table-format>`_:

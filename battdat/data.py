@@ -7,7 +7,6 @@ from typing import Union, Optional, Collection, List, Dict, Set, Iterator, Tuple
 from pydantic import BaseModel, ValidationError
 from tables import File
 import pandas as pd
-import h5py
 
 from battdat.schemas import BatteryMetadata
 from battdat.schemas.column import RawData, CycleLevelData, ColumnSchema
@@ -216,8 +215,8 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
             Metadata from this file
         """
 
-        with h5py.File(path, 'r') as f:
-            return BatteryMetadata.model_validate_json(f.attrs['metadata'])
+        with File(path, 'r') as f:
+            return BatteryMetadata.model_validate_json(f.root._v_attrs['metadata'])
 
     def to_parquet(self, path: Union[Path, str], overwrite: bool = True, **kwargs) -> Dict[str, Path]:
         """Write battery data to a directory of Parquet files
