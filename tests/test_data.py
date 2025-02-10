@@ -2,7 +2,6 @@
 import json
 import os
 
-import h5py
 import pytest
 import numpy as np
 import pandas as pd
@@ -42,15 +41,17 @@ def test_write_hdf(tmpdir, test_df):
     test_df.to_hdf(out_path)
 
     # Investigate the contents
-    with h5py.File(out_path) as f:
-        assert 'metadata' in f.attrs
-        assert json.loads(f.attrs['metadata'])['name'] == 'Test data'
-        assert 'raw_data' in f
+    with File(out_path) as f:
+        attrs = f.root._v_attrs
+        assert 'metadata' in attrs
+        assert json.loads(attrs['metadata'])['name'] == 'Test data'
+        assert 'raw_data' in f.root
 
         # Make sure we have a schema
-        g = f['raw_data']
-        assert 'metadata' in g.attrs
-        assert json.loads(g.attrs['metadata'])['test_time']['units'] == 's'
+        g = f.root['raw_data']
+        attrs = g._v_attrs
+        assert 'metadata' in attrs
+        assert json.loads(attrs['metadata'])['test_time']['units'] == 's'
 
     # Test writing to an already-open file
     with File(out_path, 'w') as file:
