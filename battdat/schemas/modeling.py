@@ -36,9 +36,14 @@ class ModelMetadata(BaseModel, extra='allow'):
     references: Optional[List[AnyUrl]] = Field(None, description='List of references associated with the software')
 
     # Details for physics based simulation
-    models: Optional[List[str]] = Field(None, description='Type of mathematical model(s) being used in physics simulation.'
-                                                          'Use terms defined in BattINFO, such as "BatteryEquivalentCircuitModel".',
-                                        root_iri='https://w3id.org/emmo#EMMO_f7ed665b_c2e1_42bc_889b_6b42ed3a36f0')
-    simulation_type: Optional[str] = Field(None, description='Type of simulation being performed. '
-                                                             'Use terms defined in BattINFO, such as "TightlyCoupledModelsSimulation"',
-                                           root_iri='https://w3id.org/emmo#EMMO_e97af6ec_4371_4bbc_8936_34b76e33302f')
+    models: Optional[List[str]] = Field(
+        None, description='Type of mathematical model(s) being used in physics simulation.'
+                          'Use terms defined in BattINFO, such as "BatteryEquivalentCircuitModel".',
+        json_schema_extra=dict(
+            root_iri='https://w3id.org/emmo#EMMO_f7ed665b_c2e1_42bc_889b_6b42ed3a36f0'
+        ))
+    simulation_type: Optional[str] = Field(
+        None, description='Type of simulation being performed. Use terms defined in BattINFO, such as "TightlyCoupledModelsSimulation"',
+        json_schema_extra=dict(
+            root_iri='https://w3id.org/emmo#EMMO_e97af6ec_4371_4bbc_8936_34b76e33302f'
+        ))
