@@ -47,19 +47,31 @@ class BatteryDescription(BaseModel, extra='allow'):
     # Geometry information
     layer_count: Optional[int] = Field(None, description="Number of layers within the battery", gt=1)
     form_factor: Optional[str] = Field(None, description="The general shape of the battery",
-                                       iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_1586ef26_6d30_49e3_ae32_b4c9fc181941")
+                                       json_schema_extra=dict(
+                                           iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_1586ef26_6d30_49e3_ae32_b4c9fc181941"
+                                       ))
     mass: Optional[float] = Field(None, description="Mass of the entire battery. Units: kg")
     dimensions: Optional[List[float]] = Field(None, description='Dimensions of the battery in plain text.')
 
     # Materials description
     anode: Optional[ElectrodeDescription] = Field(None, description="Name of the anode material",
-                                                  iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_b6319c74_d2ce_48c0_a75a_63156776b302")
-    cathode: Optional[ElectrodeDescription] = Field(None, description="Name of the cathode material",
-                                                    iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_35c650ab_3b23_4938_b312_1b0dede2e6d5")
-    electrolyte: Optional[ElectrolyteDescription] = Field(None, description="Name of the electrolyte material",
-                                                          iri=("https://w3id.org/emmo/domain/electrochemistry"
-                                                               "#electrochemistry_fb0d9eef_92af_4628_8814_e065ca255d59"))
+                                                  json_schema_extra=dict(
+                                                      iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_b6319c74_d2ce_48c0_a75a_63156776b302"
+                                                  ))
+    cathode: Optional[ElectrodeDescription] = Field(
+        None, description="Name of the cathode material",
+        json_schema_extra=dict(
+            iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_35c650ab_3b23_4938_b312_1b0dede2e6d5"
+        ))
+    electrolyte: Optional[ElectrolyteDescription] = Field(
+        None, description="Name of the electrolyte material",
+        json_schema_extra=dict(
+            iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_fb0d9eef_92af_4628_8814_e065ca255d59"
+        ))
 
     # Performance information
-    nominal_capacity: Optional[float] = Field(None, description="Rated capacity of the battery. Units: A-hr",
-                                              iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_9b3b4668_0795_4a35_9965_2af383497a26")
+    nominal_capacity: Optional[float] = Field(
+        None, description="Rated capacity of the battery. Units: A-hr",
+        json_schema_extra=dict(
+            iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_9b3b4668_0795_4a35_9965_2af383497a26"
+        ))

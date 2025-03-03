@@ -23,13 +23,15 @@ class BatteryMetadata(BaseModel, extra='allow'):
     comments: Optional[str] = Field(None, description="Long form comments describing the test")
     version: str = Field(__version__, description="Version of this metadata. Set by the battery-data-toolkit")
     is_measurement: bool = Field(True, description="Whether the data was created observationally as opposed to a computer simulation",
-                                 iri="https://w3id.org/emmo#EMMO_463bcfda_867b_41d9_a967_211d4d437cfb")
+                                 json_schema_extra=dict(
+                                     iri="https://w3id.org/emmo#EMMO_463bcfda_867b_41d9_a967_211d4d437cfb"
+                                 ))
 
     # Fields that describe the test protocol
-    test_protocol: Optional[CyclingProtocol] = Field(None, description="Method used to ")
+    test_protocol: Optional[CyclingProtocol] = Field(None, description="Method used to cycle the battery")
 
     # Field that describe the battery assembly
-    battery: Optional[BatteryDescription] = Field(None, description="Description of the battery being tested")
+    battery: Optional[BatteryDescription] = Field(None, description="Description of the battery being cycled")
 
     # Fields that describe source of synthetic data
     modeling: Optional[ModelMetadata] = Field(None, description="Description of simulation approach")
