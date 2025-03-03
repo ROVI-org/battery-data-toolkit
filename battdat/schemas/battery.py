@@ -14,11 +14,14 @@ class ElectrodeDescription(BaseModel, extra='allow'):
     product: Optional[str] = Field(None, description='Name of the product. Unique to the supplier')
 
     # Relating to the microstructure of the electrode
-    thickness: Optional[float] = Field(None, description='Thickness of the material (units: um)', ge=0)
-    area: Optional[float] = Field(None, description='Total area of the electrode (units: cm2)', ge=0)
-    loading: Optional[float] = Field(None, description='Amount of active material per area (units: mg/cm^2)', ge=0)
-    porosity: Optional[float] = Field(None, description='Relative volume of the electrode occupied by gas (units: %)',
-                                      ge=0, le=100)
+    thickness: Optional[float] = Field(None, description='Thickness of the material', ge=0,
+                                       json_schema_extra=dict(units='um'))
+    area: Optional[float] = Field(None, description='Total area of the electrode', ge=0,
+                                  json_schema_extra=dict(units='cm^2'))
+    loading: Optional[float] = Field(None, description='Amount of active material per area', ge=0,
+                                     json_schema_extra=dict(units='mg/cm^2'))
+    porosity: Optional[float] = Field(None, description='Relative volume of the electrode occupied by gas',
+                                      ge=0, le=100, json_schema_extra=dict(units='%'))
 
 
 class ElectrolyteAdditive(BaseModel, extra='allow'):
@@ -50,8 +53,9 @@ class BatteryDescription(BaseModel, extra='allow'):
                                        json_schema_extra=dict(
                                            iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_1586ef26_6d30_49e3_ae32_b4c9fc181941"
                                        ))
-    mass: Optional[float] = Field(None, description="Mass of the entire battery. Units: kg")
-    dimensions: Optional[List[float]] = Field(None, description='Dimensions of the battery in plain text.')
+    mass: Optional[float] = Field(None, description="Mass of the entire battery",
+                                  json_schema_extra=dict(units='kg'))
+    dimensions: Optional[str] = Field(None, description='Dimensions of the battery in plain text.')
 
     # Materials description
     anode: Optional[ElectrodeDescription] = Field(None, description="Name of the anode material",
@@ -71,7 +75,8 @@ class BatteryDescription(BaseModel, extra='allow'):
 
     # Performance information
     nominal_capacity: Optional[float] = Field(
-        None, description="Rated capacity of the battery. Units: A-hr",
+        None, description="Rated capacity of the battery",
         json_schema_extra=dict(
-            iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_9b3b4668_0795_4a35_9965_2af383497a26"
+            iri="https://w3id.org/emmo/domain/electrochemistry#electrochemistry_9b3b4668_0795_4a35_9965_2af383497a26",
+            units='A-hr'
         ))
