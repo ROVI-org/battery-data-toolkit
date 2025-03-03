@@ -47,6 +47,8 @@ def expand_terms(metadata_cls: type[BaseModel], fo: TextIO, recurse: bool):
     print('   * - Column', file=fo)
     print('     - Type', file=fo)
     print('     - Description', file=fo)
+    print('     - Units', file=fo)
+    print('     - Definition', file=fo)
     for name, field in metadata_cls.model_fields.items():
         print(f'   * - {name}', file=fo)
 
@@ -64,6 +66,20 @@ def expand_terms(metadata_cls: type[BaseModel], fo: TextIO, recurse: bool):
                 to_recurse.add(cls_type)
 
         print(f'     - {"(**Required**) " if not is_optional else ""}{str(field.description)}', file=fo)
+
+        # Print units
+        if field.json_schema_extra is not None and (units := field.json_schema_extra.get('units')) is not None:
+            print(f'     - {units}', file=fo)
+        else:
+            print('     -', file=fo)
+
+        # Print metadata source
+        if field.json_schema_extra is not None and (iri := field.json_schema_extra.get('iri')) is not None:
+            assert 'emmo' in iri.lower(), f'Found an IRI that is not from EMMO!?'
+            print(f'     - `EMMO <{iri}>`_', file=fo)
+        else:
+            print('     -', file=fo)
+
     print(file=fo)
 
     if recurse:
