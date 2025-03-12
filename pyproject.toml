@@ -1,6 +1,6 @@
 [project]
 name = "battery-data-toolkit"
-version = "0.4.3"
+dynamic = ["version"]
 description = "Utilities for reading and manipulating battery testing data"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -31,6 +31,12 @@ classifiers = [
 
 [tool.setuptools.packages.find]
 include = ["battdat*"]
+
+[build-system]
+requires = ["setuptools>=64", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
 
 [project.optional-dependencies]
 test = [
