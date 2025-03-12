@@ -2,11 +2,13 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Optional, Union, Tuple, Set, Collection
+from json import JSONDecodeError
 import warnings
 
 import numpy as np
 import pandas as pd
 from tables import Group, File, Filters, descr_from_dtype, Table
+from pydantic import ValidationError
 
 from battdat import __version__
 from .base import DatasetWriter, PathLike, DatasetReader
@@ -171,7 +173,7 @@ class HDF5Reader(DatasetReader):
             table = group[key]
             try:
                 schemas[key] = ColumnSchema.from_json(table._v_attrs.metadata)
-            except AttributeError as e:
+            except (AttributeError, JSONDecodeError, ValidationError) as e:
                 # TODO (wardlt): Once our format settles, only bother parsing tables with `battdat_version` attr
                 if 'battdat_version' in table._v_attrs:
                     raise ValueError(f'Table {key} is marked as a battdat dataset but schema fails to read') from e

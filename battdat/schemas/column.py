@@ -209,7 +209,7 @@ class ColumnSchema(BaseModel, frozen=True):
         """
 
         data = json.loads(buf)
-        extra_cols = dict((k, ColumnInfo.model_validate(v)) for k, v in data.pop('extra_columns').items())
+        extra_cols = dict((k, ColumnInfo.model_validate(v)) for k, v in data.pop('extra_columns', {}).items())
         my_cols = dict((k, (ColumnInfo, ColumnInfo.model_validate(v))) for k, v in data.items())
 
         return create_model(
