@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 import tables
 
-from battdat.io.hdf import make_numpy_dtype_from_pandas, write_df_to_table, read_df_from_table, HDF5Writer
+from battdat.data import BatteryDataset
+from battdat.io.hdf import make_numpy_dtype_from_pandas, write_df_to_table, read_df_from_table, HDF5Writer, HDF5Reader
 from battdat.schemas.column import ColumnSchema
 
 example_df = pd.DataFrame({'a': [1, 2], 'b': [1., 3.], 'c': ['charge', 'discharge'], 'array': [[[1.]], [[0.]]]})
@@ -28,6 +29,31 @@ def test_store_df(tmpdir):
         df_copy = read_df_from_table(table)
         assert (df_copy.columns == ['a', 'b', 'c', 'array']).all()
         assert np.allclose(df_copy['b'], [1., 3.])
+
+
+def test_read_with_other_tables(tmpdir):
+    writer = HDF5Writer()
+    out_file = Path(tmpdir) / 'example.h5'
+
+    # Write the same table through the writer (which puts metadata) and through the basic function (which does not)
+    with tables.open_file(out_file, mode='w') as file:
+        dataset = BatteryDataset(tables={'example_table': example_df},
+                                 schemas={'example_table': ColumnSchema()})
+        writer.write_to_hdf(dataset, file, None)
+        write_df_to_table(file, file.root, 'extra_table', example_df)
+
+    # Reading should only yield one table
+    with tables.open_file(out_file) as file:
+        dataset = HDF5Reader().read_from_hdf(file, None)
+        assert set(dataset.tables.keys()) == {'example_table'}
+
+    # Ensure error is raised if the schema is corrupted
+    with tables.open_file(out_file, mode='a') as file:
+        table = file.root['example_table']
+        for corrupted in ("asdf", '{"a": 1}'):
+            table._v_attrs['metadata'] = corrupted
+            with raises(ValueError, match='marked as a battdat dataset but schema fails to read'):
+                HDF5Reader().read_from_hdf(file, None)
 
 
 @mark.parametrize('prefix', [None, 'a'])
