@@ -26,6 +26,7 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
         metadata: Metadata for the entire dataset
         schemas: Schemas describing each subset
         check_schemas: Whether to throw an error if datasets lack a schema
+        warn_on_mismatch: Whether to emit a warning if there is a mismatch even if no parsing errors
     """
 
     metadata: BatteryMetadata
@@ -39,7 +40,8 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
                  tables: Dict[str, pd.DataFrame],
                  schemas: Dict[str, ColumnSchema],
                  metadata: BatteryMetadata = None,
-                 check_schemas: bool = True):
+                 check_schemas: bool = True,
+                 warn_on_mismatch: bool = False):
         self.schemas = schemas.copy()
         self.tables = tables.copy()
 
@@ -53,12 +55,15 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
         version_mismatch = False
         if (supplied_version := metadata.get('version', __version__)) != __version__:
             version_mismatch = True
-            warnings.warn(f'Metadata was created in a different version of battdat. supplied={supplied_version}, current={__version__}.')
+            if warn_on_mismatch:
+                warnings.warn(f'Metadata was created in a different version of battdat. supplied={supplied_version}, current={__version__}.')
         try:
             self.metadata = BatteryMetadata(**metadata)
         except ValidationError:
             if version_mismatch:
-                warnings.warn('Metadata failed to validate, probably due to version mismatch. Discarding until we support backwards compatibility')
+                warnings.warn('Metadata failed to validate, probably due to version mismatch:'
+                              f' {supplied_version} != {__version__}.'
+                              f' Discarding until we support backwards compatibility')
                 self.metadata = BatteryMetadata()
             else:
                 raise
@@ -298,7 +303,8 @@ class CellDataset(BatteryDataset):
                  cycle_stats: Optional[pd.DataFrame] = None,
                  eis_data: Optional[pd.DataFrame] = None,
                  schemas: Optional[Dict[str, ColumnSchema]] = None,
-                 tables: Dict[str, pd.DataFrame] = None):
+                 tables: Dict[str, pd.DataFrame] = None,
+                 warn_on_mismatch: bool = False):
         _schemas = {
             'raw_data': RawData(),
             'cycle_stats': CycleLevelData(),
@@ -314,4 +320,5 @@ class CellDataset(BatteryDataset):
             tables=_datasets,
             schemas=_schemas,
             metadata=metadata,
+            warn_on_mismatch=warn_on_mismatch
         )

@@ -200,7 +200,7 @@ def test_version_warnings(test_df):
     # Alter the version number, then copy using to/from dict
     test_df.metadata.version = 'super.old.version'
     with pytest.warns() as w:
-        CellDataset(metadata=test_df.metadata)
+        CellDataset(metadata=test_df.metadata, warn_on_mismatch=True)
     assert len(w) == 1  # Only the warning about the versions
     assert 'supplied=super.old.version' in str(w.list[0].message)
 
@@ -208,7 +208,7 @@ def test_version_warnings(test_df):
     test_df.metadata.name = 1  # Name cannot be an int
 
     with pytest.warns() as w:
-        recovered = CellDataset(metadata=test_df.metadata)
+        recovered = CellDataset(metadata=test_df.metadata, warn_on_mismatch=True)
     assert len(w) == 3  # Warning during save, warning about mismatch, warning that schema failed
     assert 'supplied=super.old.version' in str(w.list[1].message)
     assert 'failed to validate, probably' in str(w.list[2].message)
