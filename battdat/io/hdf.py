@@ -188,7 +188,7 @@ class HDF5Reader(DatasetReader):
 
         # Read out the battery metadata
         metadata = BatteryMetadata.model_validate_json(file.root._v_attrs.metadata)
-        return self.output_class(metadata=metadata, tables=data, schemas=schemas)
+        return BatteryDataset.make_cell_dataset(metadata=metadata, tables=data, schemas=schemas)
 
     def read_dataset(self, path: PathLike, metadata: Optional[Union[BatteryMetadata, dict]] = None) -> BatteryDataset:
         """Read the default dataset and all subsets from an HDF5 file

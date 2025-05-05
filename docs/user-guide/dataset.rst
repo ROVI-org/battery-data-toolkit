@@ -72,22 +72,21 @@ Check that your data and metadata agree using the :meth:`~battdat.data.BatteryDa
 The validate function will raise errors if the tables do not match the column schema
 and will return names of columns without descriptions, if desired.
 
-Dataset Templates
-+++++++++++++++++
+Factory Methods
++++++++++++++++
 
-``battdat`` provides subclasses of :class:`~battdat.data.BatteryDataset` for different types of battery data.
-Each subclass provides suggested names for certain types of data (e.g., ``raw_data`` for measurements
-during operation of a single cell) and predefines schema to use for each column.
+:class:`~battdat.data.BatteryDataset` contains factory methods that build datasets from
+tables with pre-defined names and tables.
+All are named ``make_*_dataset``.
 
-Dataset templates, like :class:`~battdat.data.CellDataset`, require
-neither supplying schemas for each table
-nor passing the tables as part of a dictionary.
+For example, :meth:`~battdat.data.BatteryDataset.make_cell_dataset` creates a dataset
+which represents a single-cell battery.
 
 .. code-block:: python
 
-    from battdat.data import CellDataset
+    from battdat.data import BatteryDataset
 
-    dataset = CellDataset(raw_data=df)
+    dataset = BatteryDataset.make_cell_data(raw_data=df)
 
 Each table will be associated with a default schema.
 Describe columns not yet present in the schema by adding them after assembly:
@@ -101,16 +100,16 @@ Describe columns not yet present in the schema by adding them after assembly:
         units='ohm',
     )
 
-The current template classes are:
+The current factory methods are:
 
 .. _type-table:
 
 .. list-table::
    :header-rows: 1
 
-   * - Class
+   * - Method
      - Description
-   * - :class:`~battdat.data.CellDataset`
+   * - :class:`~battdat.data.BatteryDataset.make_cell_dataset`
      - Single battery cell with measurements of voltage, current, and other data at specific times
        or averaged over entire cycles. Tables (and their schemas) include:
 

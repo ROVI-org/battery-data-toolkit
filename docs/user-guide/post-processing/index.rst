@@ -28,7 +28,7 @@ The feature computers fall into two categories:
 
 .. note::
 
-    Post-processing is only supported for :class:`battdat.data.CellDataset` for now.
+    Post-processing assumes the table named ``raw_data`` follows the :class:`~battdat.schemas.column.RawData` schema.
 
 Integral Quantities
 -------------------

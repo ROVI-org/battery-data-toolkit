@@ -3,7 +3,7 @@ from typing import List
 
 import pandas as pd
 
-from battdat.data import CellDataset
+from battdat.data import BatteryDataset
 
 
 class BaseFeatureComputer:
@@ -12,7 +12,7 @@ class BaseFeatureComputer:
     Features can be anything but are often collected statistics about a certain cycle.
     """
 
-    def compute_features(self, data: CellDataset) -> pd.DataFrame:
+    def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
         """Compute
 
         Args:
@@ -29,9 +29,9 @@ class RawDataEnhancer(BaseFeatureComputer):
 
     column_names: List[str] = ...
 
-    def compute_features(self, data: CellDataset) -> pd.DataFrame:
-        self.enhance(data.raw_data)
-        return data.raw_data[self.column_names]
+    def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
+        self.enhance(data.tables['raw_data'])
+        return data.tables['raw_data'][self.column_names]
 
     def enhance(self, data: pd.DataFrame):
         """Add additional columns to the raw data
@@ -47,11 +47,11 @@ class CycleSummarizer(BaseFeatureComputer):
 
     column_names: List[str] = ...
 
-    def compute_features(self, data: CellDataset) -> pd.DataFrame:
+    def compute_features(self, data: BatteryDataset) -> pd.DataFrame:
         self.add_summaries(data)
-        return data.cycle_stats[['cycle_number'] + self.column_names]
+        return data.tables['cycle_stats'][['cycle_number'] + self.column_names]
 
-    def add_summaries(self, data: CellDataset):
+    def add_summaries(self, data: BatteryDataset):
         """Add cycle-level summaries to a battery dataset
 
         Args:
@@ -59,11 +59,13 @@ class CycleSummarizer(BaseFeatureComputer):
         """
 
         # Add a cycle summary if not already available
-        if data.cycle_stats is None:
-            data.tables['cycle_stats'] = pd.DataFrame({'cycle_number': sorted(set(data.raw_data['cycle_number']))})
+        if 'cycle_stats' not in data.tables:
+            data.tables['cycle_stats'] = pd.DataFrame({
+                'cycle_number': sorted(set(data.tables['raw_data']['cycle_number']))
+            })
 
         # Perform the update
-        self._summarize(data.raw_data, data.cycle_stats)
+        self._summarize(data.tables['raw_data'], data.tables['cycle_stats'])
 
     def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
         """Add additional data to a cycle summary dataframe

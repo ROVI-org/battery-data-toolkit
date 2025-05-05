@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from pytest import fixture
 
-from battdat.data import CellDataset
+from battdat.data import BatteryDataset
 from battdat.consistency.current import SignConventionChecker
 
 
@@ -16,7 +16,7 @@ def example_dataset():
     voltage = np.ones_like(times)
     voltage[128:] = np.linspace(1., 1.3, 128)
 
-    return CellDataset(
+    return BatteryDataset.make_cell_dataset(
         raw_data=pd.DataFrame({
             'test_time': times,
             'current': current,

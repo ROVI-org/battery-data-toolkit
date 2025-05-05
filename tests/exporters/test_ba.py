@@ -11,7 +11,8 @@ from battdat.schemas.battery import ElectrodeDescription
 
 def test_export(example_data, tmpdir):
     # Add a datetime
-    example_data.raw_data['time'] = example_data.raw_data['test_time'] + datetime(year=2024, month=7, day=1).timestamp()
+    raw_data = example_data.tables['raw_data']
+    raw_data['time'] = raw_data['test_time'] + datetime(year=2024, month=7, day=1).timestamp()
 
     # Add some metadata to the file
     example_data.metadata = BatteryMetadata(
