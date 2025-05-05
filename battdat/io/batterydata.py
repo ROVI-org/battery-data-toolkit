@@ -9,8 +9,8 @@ from typing import Union, List, Iterator, Tuple, Optional, Iterable
 
 import pandas as pd
 
+from battdat.data import BatteryDataset
 from battdat.io.base import DatasetFileReader
-from battdat.data import CellDataset
 from battdat.schemas import BatteryMetadata, BatteryDescription
 
 _fname_match = re.compile(r'(?P<name>[-\w]+)-(?P<type>summary|raw)\.csv')
@@ -187,8 +187,9 @@ class BDReader(DatasetFileReader):
 
         yield from groups.values()
 
-    def read_dataset(self, group: List[str],
-                     metadata: Optional[Union[BatteryMetadata, dict]] = None) -> CellDataset:
+    def read_dataset(self,
+                     group: List[str],
+                     metadata: Optional[Union[BatteryMetadata, dict]] = None) -> BatteryDataset:
         # Make an empty metadata if none available
         if metadata is None:
             metadata = BatteryMetadata()
@@ -219,4 +220,4 @@ class BDReader(DatasetFileReader):
                 raise ValueError(f'Data type unrecognized: {data_type}')
 
         # Separate out the EIS data, if possible
-        return CellDataset(raw_data=raw_data, cycle_stats=cycle_stats, eis_data=eis_data, metadata=metadata)
+        return BatteryDataset.make_cell_dataset(raw_data=raw_data, cycle_stats=cycle_stats, eis_data=eis_data, metadata=metadata)

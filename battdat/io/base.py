@@ -1,11 +1,11 @@
 """Base class for a battery data import and export tools"""
-from typing import List, Optional, Union, Iterator, Sequence, Type
+from typing import List, Optional, Union, Iterator, Sequence
 from pathlib import Path
 import os
 
 import pandas as pd
 
-from battdat.data import CellDataset, BatteryDataset
+from battdat.data import BatteryDataset
 from battdat.schemas import BatteryMetadata
 
 PathLike = Union[str, Path]
@@ -20,9 +20,6 @@ class DatasetReader:
     Subclasses provide additional suggested operations useful when working with data from
     common sources (e.g., file systems, web APIs)
     """
-
-    output_class: Type[BatteryDataset] = BatteryDataset
-    """Type of dataset to output"""
 
     def read_dataset(self, metadata: Optional[Union[BatteryMetadata, dict]] = None, **kwargs) -> BatteryDataset:
         """Parse a set of  files into a Pandas dataframe
@@ -99,8 +96,6 @@ class CycleTestReader(DatasetFileReader):
     Adds logic for reading cycling time series from a list of files.
     """
 
-    output_class = CellDataset
-
     def read_file(self,
                   file: str,
                   file_number: int = 0,
@@ -121,7 +116,7 @@ class CycleTestReader(DatasetFileReader):
         """
         raise NotImplementedError()
 
-    def read_dataset(self, group: Sequence[PathLike] = (), metadata: Optional[BatteryMetadata] = None) -> CellDataset:
+    def read_dataset(self, group: Sequence[PathLike] = (), metadata: Optional[BatteryMetadata] = None) -> BatteryDataset:
         """Parse a set of  files into a Pandas dataframe
 
         Args:
@@ -152,7 +147,7 @@ class CycleTestReader(DatasetFileReader):
         df_out = pd.concat(output_dfs, ignore_index=True)
 
         # Attach the metadata and return the data
-        return self.output_class(raw_data=df_out, metadata=metadata)
+        return BatteryDataset.make_cell_dataset(raw_data=df_out, metadata=metadata)
 
 
 class DatasetWriter:

@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 from battdat.io.base import DatasetWriter
-from battdat.data import CellDataset
+from battdat.data import BatteryDataset
 from battdat.schemas import BatteryMetadata
 
 logger = logging.getLogger(__name__)
@@ -152,14 +152,14 @@ class BatteryArchiveWriter(DatasetWriter):
         with open(path / 'metadata.json', 'w') as fp:
             json.dump(output, fp)
 
-    def export(self, dataset: CellDataset, path: Path):
+    def export(self, dataset: BatteryDataset, path: Path):
         cell_name = dataset.metadata.name or str(uuid4())  # Default to UUID if none provided
 
-        if dataset.raw_data is not None:
-            self.write_timeseries(cell_name, dataset.raw_data, path)
+        if (table := dataset.tables.get('raw_data')) is not None:
+            self.write_timeseries(cell_name, table, path)
 
         if dataset.metadata is not None:
             self.write_metadata(cell_name, dataset.metadata, path)
 
-        if dataset.cycle_stats is not None:
-            self.write_cycle_stats(cell_name, dataset.cycle_stats, path)
+        if (table := dataset.tables.get('cycle_stats')) is not None:
+            self.write_cycle_stats(cell_name, table, path)

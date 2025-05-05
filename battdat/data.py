@@ -80,6 +80,11 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
         """Access a specific table within the dataset"""
         return self.tables[item]
 
+    def __getattr__(self, item) -> pd.DataFrame:
+        if item in self.tables:
+            return self.tables[item]
+        raise AttributeError(f'No such table or attribute: {item}')
+
     def __contains__(self, item):
         """Whether the dataset contains a specific table"""
         return item in self.tables
@@ -175,7 +180,7 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
             return reader.read_from_hdf(store, prefix, tables)
 
     @classmethod
-    def all_cells_from_hdf(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None) -> Iterator[Tuple[str, 'CellDataset']]:
+    def all_cells_from_hdf(cls, path: Union[str, Path], subsets: Optional[Collection[str]] = None) -> Iterator[Tuple[str, 'BatteryDataset']]:
         """Iterate over all cells in an HDF file
 
         Args:
@@ -270,55 +275,44 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
         from battdat.io.parquet import inspect_parquet_files
         return inspect_parquet_files(path)
 
+    @classmethod
+    def make_cell_dataset(cls,
+                          metadata: Union[BatteryMetadata, dict] = None,
+                          raw_data: Optional[pd.DataFrame] = None,
+                          cycle_stats: Optional[pd.DataFrame] = None,
+                          eis_data: Optional[pd.DataFrame] = None,
+                          schemas: Optional[Dict[str, ColumnSchema]] = None,
+                          tables: Dict[str, pd.DataFrame] = None,
+                          **kwargs):
+        """Build a battery dataset for a single cell
 
-class CellDataset(BatteryDataset):
-    """Data associated with tests for a single battery cell
+        Args:
+            metadata: Description of the cell
+            raw_data: Time-series data of the battery state, following :class:`~battdat.schemas.column.RawData`.
+            cycle_stats: Summaries of each cycle, following :class:`~battdat.schemas.column.CycleLevelData`.
+            eis_data: EIS data taken at multiple times, following :class:`~battdat.schemas.eis.EISData`.
+            tables: Additional data tables
+            schemas: Schemas for additional tables
 
-    Args:
-        metadata: Metadata that describe the battery construction, data provenance and testing routines
-        raw_data: Time-series data of the battery state
-        cycle_stats: Summaries of each cycle
-        eis_data: EIS data taken at multiple times
-        schemas: Schemas describing each of the tabular datasets
-    """
+        """
+        # Assemble the pre-defined tables
+        _tables = {}
+        _schemas = {}
+        for name, schema, value in [('raw_data', RawData(), raw_data), ('cycle_stats', CycleLevelData(), cycle_stats),
+                                    ('eis_data', EISData(), eis_data)]:
+            if value is not None:
+                _tables[name] = value
+                _schemas[name] = schema
 
-    @property
-    def raw_data(self) -> Optional[pd.DataFrame]:
-        """Time-series data capturing the state of the battery as a function of time"""
-        return self.tables.get('raw_data')
-
-    @property
-    def cycle_stats(self) -> Optional[pd.DataFrame]:
-        """Summary statistics of each cycle"""
-        return self.tables.get('cycle_stats')
-
-    @property
-    def eis_data(self) -> Optional[pd.DataFrame]:
-        """Electrochemical Impedance Spectroscopy (EIS) data"""
-        return self.tables.get('eis_data')
-
-    def __init__(self,
-                 metadata: Union[BatteryMetadata, dict] = None,
-                 raw_data: Optional[pd.DataFrame] = None,
-                 cycle_stats: Optional[pd.DataFrame] = None,
-                 eis_data: Optional[pd.DataFrame] = None,
-                 schemas: Optional[Dict[str, ColumnSchema]] = None,
-                 tables: Dict[str, pd.DataFrame] = None,
-                 warn_on_mismatch: bool = False):
-        _schemas = {
-            'raw_data': RawData(),
-            'cycle_stats': CycleLevelData(),
-            'eis_data': EISData()
-        }
+        # Add the user-provided data
         if schemas is not None:
             _schemas.update(schemas)
-
-        _datasets = {'raw_data': raw_data, 'eis_data': eis_data, 'cycle_stats': cycle_stats}
         if tables is not None:
-            _datasets.update(tables)
-        super().__init__(
-            tables=_datasets,
+            _tables.update(tables)
+
+        return cls(
+            tables=_tables,
             schemas=_schemas,
             metadata=metadata,
-            warn_on_mismatch=warn_on_mismatch
+            **kwargs
         )

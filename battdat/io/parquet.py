@@ -145,7 +145,7 @@ class ParquetReader(DatasetFileReader):
             # Read it to a dataframe
             data[subset] = table.to_pandas()
 
-        return self.output_class(
+        return BatteryDataset.make_cell_dataset(
             metadata=BatteryMetadata.model_validate_json(metadata),
             schemas=schemas,
             tables=data
