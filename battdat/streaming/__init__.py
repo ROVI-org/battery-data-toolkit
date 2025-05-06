@@ -81,11 +81,9 @@ def iterate_cycles_from_file(hdf5_path: Union[Path, str, HDFStore],
 
         # Produce the desired output file
         chunks = [pd.DataFrame(chunk) for chunk in chunks]
-        print(keys)
         if single and not make_dataset:
             yield chunks[0]
         elif make_dataset:
-            print(keys)
             yield BatteryDataset(
                 metadata=metadata,
                 schemas=schemas,
