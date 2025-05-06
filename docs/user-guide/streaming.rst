@@ -30,6 +30,21 @@ or as part of a for loop.
     for cycle in iterate_cycles_from_file('example.h5'):
         do_something_per_cycle(cycle)
 
+Reading full cycles by file can produce either a single :class:`~pandas.DataFrame` when reading a single table,
+a dictionary of ``DataFrames``, or a full :class:`~battdat.data.BatteryDataset` depending on the
+options for ``key`` and ``make_dataset``.
+
+.. code-block:: python
+
+    # Read as a single DataFrame
+    df = next(iterate_cycles_from_file('example.h5', key='raw_data'))
+
+    # Read multiple tables as a dictionary
+    dict_of_df = next(iterate_cycles_from_file('example.h5', key=['raw_data', 'cycle_stats']))
+
+    # Read all tables as a Dataset
+    dataset = next(iterate_cycles_from_file('example.h5', key=None, make_dataset=True))
+
 
 Streaming Data to a File
 ------------------------

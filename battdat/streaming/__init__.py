@@ -1,9 +1,8 @@
 """Retrieve data in smaller chunks from a large HDF5 file"""
+from typing import Union, Iterator, Dict, Collection
 from itertools import groupby
 from pathlib import Path
-from typing import Union, Iterator, Dict, List
 
-import numpy as np
 import pandas as pd
 from pandas import HDFStore
 from tables import File, Table
@@ -11,19 +10,21 @@ from tables import File, Table
 from battdat.data import BatteryDataset
 from battdat.io.hdf import as_hdf5_object
 
+RecordType = Dict[str, Union[str, float, int]]
 
-def _get_raw_data_iterator_h5(hdf5_path: Union[Path, str, File], key: str) -> Iterator[np.ndarray]:
+
+def _get_raw_data_iterator_h5(hdf5_path: Union[Path, str, File], key: str) -> Iterator[RecordType]:
     """Open an iterator over rows of an HDF5 Table"""
 
     with as_hdf5_object(hdf5_path) as file:
-        table: Table = file.get_node(key)
+        table: Table = file.get_node(f'/{key}')
         names = table.dtype.fields.keys()
         for row in table.iterrows():
             out = dict((n, row[n]) for n in names)
             yield out
 
 
-def iterate_records_from_file(hdf5_path: Union[Path, str, HDFStore], key: str = '/raw_data') -> Iterator[Dict[str, Union[str, float, int]]]:
+def iterate_records_from_file(hdf5_path: Union[Path, str, HDFStore], key: str = 'raw_data') -> Iterator[RecordType]:
     """Stream individual records from a file
 
     Args:
@@ -38,29 +39,55 @@ def iterate_records_from_file(hdf5_path: Union[Path, str, HDFStore], key: str = 
 
 def iterate_cycles_from_file(hdf5_path: Union[Path, str, HDFStore],
                              make_dataset: bool = False,
-                             key: str = '/raw_data') -> Iterator[Union[pd.DataFrame, BatteryDataset]]:
+                             key: str | Collection[str] | None = 'raw_data') -> Iterator[Union[pd.DataFrame, Dict[str, pd.DataFrame], BatteryDataset]]:
     """Stream single-cycle datasets from the HDF5 file
 
     Args:
         hdf5_path: Path to the data file
         make_dataset: Whether to form a :class:`~battdat.data.BatteryDataset` for each cycle,
             including the metadata from the source file.
-        key: Which table to read
+        key: Which table(s) to read. Supply either a single key, a list of keys, or ``None`` to read all tables
 
     Yields:
-        All rows belonging to each cycle from the "raw_data" section fo the HDF5 file.
+        All rows belonging to each cycle from the requested table of the HDF5 file.
+        Generates a ``BatteryDataset`` if ``make_dataset`` is ``True``.
+        Otherwise, yields a single DataFrame if ``key`` is a single string
+        or a dictionary of DataFrames if ``key`` is a list.
     """
 
     # Get the metadata out of the file, if needed
     metadata = None
-    if make_dataset:
-        metadata, _ = BatteryDataset.inspect_hdf(hdf5_path)
+    if make_dataset or key is None:
+        metadata, _, schemas = BatteryDataset.inspect_hdf(hdf5_path)
 
-    def _assemble_from_records(chunks: List[dict]):
-        combined = pd.DataFrame(chunks)
-        if make_dataset:
-            return BatteryDataset.make_cell_dataset(metadata=metadata, raw_data=combined)
-        return combined
+    # Determine the keys to read from the file
+    single = False
+    if isinstance(key, str):
+        single = True
+        keys = [key]
+    elif key is None:
+        keys = list(schemas.keys())
+    else:
+        keys = list(key)
 
-    for _, chunk in groupby(_get_raw_data_iterator_h5(hdf5_path, key), lambda x: x['cycle_number']):
-        yield _assemble_from_records(chunk)
+    iterators = [
+        groupby(_get_raw_data_iterator_h5(hdf5_path, k), lambda x: x['cycle_number']) for k in keys
+    ]
+
+    for batch in zip(*iterators):
+        cycle_ids, chunks = zip(*batch)
+        if len(set(cycle_ids)) != 1:
+            raise ValueError(f'Different cycle indices across entries: {" ".join(f"{k}={i}" for k, i in zip(keys, cycle_ids))}')
+
+        # Produce the desired output file
+        chunks = [pd.DataFrame(chunk) for chunk in chunks]
+        if single and not make_dataset:
+            yield chunks[0]
+        elif make_dataset:
+            yield BatteryDataset(
+                metadata=metadata,
+                schemas=schemas,
+                tables=dict(zip(keys, chunks))
+            )
+        else:
+            yield dict(zip(keys, chunks))

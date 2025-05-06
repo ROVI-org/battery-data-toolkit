@@ -4,10 +4,11 @@ from pathlib import Path
 
 import numpy as np
 from tables import File
-from pytest import fixture, mark
+from pytest import fixture, mark, raises
 
 from battdat.data import BatteryDataset
 from battdat.io.batterydata import BDReader
+from battdat.postprocess.timing import CycleTimesSummarizer
 from battdat.streaming import iterate_records_from_file, iterate_cycles_from_file
 from battdat.streaming.hdf5 import HDF5Writer
 
@@ -43,10 +44,39 @@ def test_stream_by_cycles(example_h5_path):
         assert original is not None
         assert np.allclose(streamed['test_time'], original['test_time'])
 
-    # Ensure we can generate chunks with metadata
-    cycle_iter = iterate_cycles_from_file(example_h5_path, make_dataset=True)
+    # Test reading a list of keys
+    cycle_iter = iterate_cycles_from_file(example_h5_path, make_dataset=False, key=['raw_data'])
     cycle_0 = next(cycle_iter)
-    assert cycle_0.metadata == test_data.metadata
+    assert 'raw_data' in cycle_0
+
+    # Ensure we can generate chunks with metadata
+    for key in ('raw_data', ['raw_data']):
+        cycle_iter = iterate_cycles_from_file(example_h5_path, make_dataset=True, key=key)
+        cycle_0 = next(cycle_iter)
+        assert cycle_0.metadata == test_data.metadata
+
+
+def test_stream_by_cycles_with_stats(example_dataset, tmpdir):
+    # Remove EIS data, add capacities
+    example_dataset.tables.pop('eis_data')
+    CycleTimesSummarizer().add_summaries(example_dataset)
+    assert 'cycle_stats' in example_dataset
+    h5_path = Path(tmpdir / 'test.h5')
+    example_dataset.to_hdf(h5_path)
+
+    # Test streaming a cycle
+    cycle_iter = iterate_cycles_from_file(h5_path, make_dataset=False, key=None)
+    cycle_0 = next(cycle_iter)
+    assert cycle_0['cycle_stats'].iloc[0]['cycle_number'] == 0
+
+    # Delete the first row in the cycle steps to cause an error
+    example_dataset.cycle_stats.drop(index=0, inplace=True)
+    h5_path = Path(tmpdir / 'test-fail.h5')
+    example_dataset.to_hdf(h5_path)
+
+    cycle_iter = iterate_cycles_from_file(h5_path, make_dataset=False, key=None)
+    with raises(ValueError, match='cycle_stats=1'):
+        next(cycle_iter)
 
 
 @mark.parametrize('buffer_size', [128, 400000000])  # Way smaller than data size, way larger

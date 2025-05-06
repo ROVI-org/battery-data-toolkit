@@ -4,6 +4,7 @@ from typing import List
 import pandas as pd
 
 from battdat.data import BatteryDataset
+from battdat.schemas.column import ColumnSchema
 
 
 class BaseFeatureComputer:
@@ -63,6 +64,7 @@ class CycleSummarizer(BaseFeatureComputer):
             data.tables['cycle_stats'] = pd.DataFrame({
                 'cycle_number': sorted(set(data.tables['raw_data']['cycle_number']))
             })
+            data.schemas['cycle_stats'] = ColumnSchema()
 
         # Perform the update
         self._summarize(data.tables['raw_data'], data.tables['cycle_stats'])
