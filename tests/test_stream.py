@@ -71,7 +71,7 @@ def test_stream_by_cycles_with_stats(example_dataset, tmpdir):
 
     # Delete the first row in the cycle steps to cause an error
     example_dataset.cycle_stats.drop(index=0, inplace=True)
-    h5_path = Path(tmpdir / 'test.h5')
+    h5_path = Path(tmpdir / 'test-fail.h5')
     example_dataset.to_hdf(h5_path)
 
     cycle_iter = iterate_cycles_from_file(h5_path, make_dataset=False, key=None)
