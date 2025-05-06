@@ -88,15 +88,15 @@ class ColumnSchema(BaseModel, frozen=True):
     @property
     def columns(self) -> Dict[str, ColumnInfo]:
         """Map of name to description for all columns"""
-        specified = dict((k, getattr(self, k)) for k in self.model_fields if k != "extra_columns")
+        specified = dict((k, getattr(self, k)) for k in self.__class__.model_fields if k != "extra_columns")
         specified.update(self.extra_columns)
         return specified
 
     @property
     def column_names(self) -> List[str]:
         """Names of all columns defined in this schema"""
-        specified = [x for x in self.model_fields if x != "extra_columns"]
-        specified.extend(self.extra_columns)
+        specified = [x for x in self.__class__.model_fields if x != "extra_columns"]
+        specified.extend(self.extra_columns.keys())
         return specified
 
     @model_validator(mode='before')
@@ -150,16 +150,12 @@ class ColumnSchema(BaseModel, frozen=True):
 
         # If needed, check for extra columns
         if not allow_extra_columns:
-            extra_cols = set(data_columns.keys()).difference(self.model_fields.keys()).difference(self.extra_columns.keys())
+            extra_cols = set(data_columns.keys()).difference(self.column_names)
             if len(extra_cols) > 0:
                 raise ValueError(f'Dataset contains extra columns: {" ".join(extra_cols)}')
 
         # Check each of the columns that match
-        for column, col_schema in self.model_fields.items():
-            col_schema = col_schema.default
-            if column == 'extra_columns':
-                continue
-
+        for column, col_schema in self.columns.items():
             # Check if column is missing
             if column not in data_columns:
                 if col_schema.required:
