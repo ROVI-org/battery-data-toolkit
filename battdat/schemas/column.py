@@ -85,6 +85,9 @@ class ColumnSchema(BaseModel, frozen=True):
         else:
             raise KeyError(item)
 
+    def __contains__(self, item):
+        return item in self.extra_columns or hasattr(self, item)
+
     @property
     def columns(self) -> Dict[str, ColumnInfo]:
         """Map of name to description for all columns"""

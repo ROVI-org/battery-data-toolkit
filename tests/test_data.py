@@ -105,12 +105,15 @@ def test_multi_cell_hdf5(tmpdir, test_df):
     test_df.to_hdf(out_path, 'b', overwrite=False)
 
     # Make sure we can count two cells
-    _, names = BatteryDataset.inspect_hdf(out_path)
+    _, names, _ = BatteryDataset.inspect_hdf(out_path)
     assert names == {'a', 'b'}
 
     with File(out_path) as h:
-        _, names = BatteryDataset.inspect_hdf(h)
+        _, names, schemas = BatteryDataset.inspect_hdf(h)
         assert names == {'a', 'b'}
+
+    # Check that there are schemas for the raw_data
+    assert 'current' in schemas['raw_data']
 
     # Load both
     test_a = BatteryDataset.from_hdf(out_path, prefix='a')

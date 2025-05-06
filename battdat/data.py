@@ -175,7 +175,6 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
         """
         from battdat.io.hdf import HDF5Reader, as_hdf5_object
         reader = HDF5Reader()
-        reader.output_class = cls
         with as_hdf5_object(path_or_buf) as store:
             return reader.read_from_hdf(store, prefix, tables)
 
@@ -192,14 +191,14 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
         """
 
         # Start by gathering all names of the cells
-        _, names = cls.inspect_hdf(path)
+        _, names, _ = cls.inspect_hdf(path)
 
         with File(path, mode='r') as fp:  # Only open once
             for name in names:
                 yield name, cls.from_hdf(fp, prefix=name, tables=subsets)
 
     @staticmethod
-    def inspect_hdf(path_or_buf: Union[str, Path, File]) -> tuple[BatteryMetadata, Set[Optional[str]]]:
+    def inspect_hdf(path_or_buf: Union[str, Path, File]) -> tuple[BatteryMetadata, Set[Optional[str]], Dict[str, ColumnSchema]]:
         """Extract the battery data and the prefixes of cells contained within an HDF5 file
 
         Args:
@@ -228,6 +227,17 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
         with File(path, 'r') as f:
             return BatteryMetadata.model_validate_json(f.root._v_attrs['metadata'])
 
+    @staticmethod
+    def get_schemas_hdf5(path_of_buf: Union[str, Path, File], prefix: str = None) -> Dict[str, ColumnSchema]:
+        """Retrieve the schemas for tables within a dataset
+
+        Args:
+            path_or_buf: File path or HDFStore object
+            prefix: (``str``) Prefix designating which battery extract from this file,
+                or (``int``) index within the list of available prefixes, sorted alphabetically.
+                The default is to read the default prefix (``None``).
+        """
+
     def to_parquet(self, path: Union[Path, str], overwrite: bool = True, **kwargs) -> Dict[str, Path]:
         """Write battery data to a directory of Parquet files
 
@@ -253,7 +263,6 @@ class BatteryDataset(Mapping[str, pd.DataFrame]):
         """
         from battdat.io.parquet import ParquetReader
         reader = ParquetReader()
-        reader.output_class = cls
         # Find the parquet files, if no specification is listed
         path = Path(path)
         if subsets is None:

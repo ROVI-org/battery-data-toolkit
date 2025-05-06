@@ -1,7 +1,7 @@
-"""Read and write from `battery-data-toolkit's HDF format <https://rovi-org.github.io/battery-data-toolkit/user-guide/formats.html#parquet>`_"""
+"""Read and write from `battery-data-toolkit's HDF format <https://rovi-org.github.io/battery-data-toolkit/user-guide/formats.html#hdf5>`_"""
+from typing import Optional, Union, Tuple, Set, Collection, Dict
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Optional, Union, Tuple, Set, Collection
 from json import JSONDecodeError
 import warnings
 
@@ -117,7 +117,7 @@ def as_hdf5_object(path_or_file: Union[PathLike, File], **kwargs) -> File:
         yield path_or_file
 
 
-def inspect_hdf(file: File) -> Tuple[BatteryMetadata, Set[Union[str, None]]]:
+def inspect_hdf(file: File) -> Tuple[BatteryMetadata, Set[Union[str, None]], Dict[str, ColumnSchema]]:
     """Gather the metadata describing all datasets and the names of datasets within an HDF5 file
 
     Args:
@@ -128,13 +128,26 @@ def inspect_hdf(file: File) -> Tuple[BatteryMetadata, Set[Union[str, None]]]:
         - List of names of datasets stored within the file (prefixes)
     """
     # Find all fields
-    metadata = BatteryMetadata.model_validate_json(file.root._v_attrs.metadata)  # First char is always "/"
+    metadata = BatteryMetadata.model_validate_json(file.root._v_attrs.metadata)
 
     # Get the names by gathering all names before the "-" in group names
     prefixes = set()
+    schema_json = dict()
     for group in file.walk_nodes('/', 'Table'):
-        prefixes.add(group._v_parent._v_name)
-    return metadata, prefixes
+        # Store the prefix name
+        prefix = group._v_parent._v_name
+        prefixes.add(prefix)
+
+        # Load the schema
+        table_name = group._v_name
+        table_schema = group._v_attrs.metadata
+        if table_name in schema_json and table_schema != schema_json[table_name]:
+            warnings.warn(f'Schema of table {prefix}/{table_name} does not match others')
+        schema_json[table_name] = table_schema
+
+    # Convert the schema from JSON to objects
+    schemas = dict((k, ColumnSchema.from_json(v)) for k, v in schema_json.items())
+    return metadata, prefixes, schemas
 
 
 class HDF5Reader(DatasetReader):
@@ -149,7 +162,7 @@ class HDF5Reader(DatasetReader):
     def read_from_hdf(self, file: File, prefix: Union[int, str, None], subsets: Optional[Collection[str]] = None):
         # Determine which group to read from
         if isinstance(prefix, int):
-            _, prefixes = inspect_hdf(file)
+            _, prefixes, _ = inspect_hdf(file)
             prefix = sorted(prefixes)[prefix]
         if prefix is None:
             group = file.root
