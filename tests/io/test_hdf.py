@@ -89,7 +89,27 @@ def test_append(tmpdir, prefix):
 
 def test_df_missing_strings(tmpdir):
     df = pd.DataFrame({'a': [None, 'a', 'bb']})
+    assert df.dtypes['a'] == object
     with tables.open_file(tmpdir / "example.h5", "w") as file:
         group = file.create_group('/', name='base')
         table = write_df_to_table(file, group, 'table', df)
         assert tuple(table[-1]) == (b'bb',)
+
+
+def test_df_strings(tmpdir):
+    df = pd.DataFrame({'a': ['ccc', 'a', 'bb']})
+    assert df.dtypes['a'] == object
+    with tables.open_file(tmpdir / "example.h5", "w") as file:
+        group = file.create_group('/', name='base')
+        table = write_df_to_table(file, group, 'table', df)
+        assert tuple(table[-1]) == (b'bb',)
+        assert tuple(table[0]) == (b'ccc',)
+
+
+def test_df_lists(tmpdir):
+    df = pd.DataFrame({'a': [[1., 1.], [2., 2.]]})
+    assert df.dtypes['a'] == object
+    with tables.open_file(tmpdir / "example.h5", "w") as file:
+        group = file.create_group('/', name='base')
+        table = write_df_to_table(file, group, 'table', df)
+        assert np.array_equal(table[-1]['a'], [2., 2.])
