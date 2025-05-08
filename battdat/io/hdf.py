@@ -34,12 +34,17 @@ def make_numpy_dtype_from_pandas(df: pd.DataFrame) -> np.dtype:
 
         # Introspect objects to learn more
         if kind == 'O':
-            example = np.array(df[name].iloc[0])
-            dtype = example.dtype
-            kind = dtype.kind
-            shape = example.shape
+            example = df[name].iloc[0]
+            if isinstance(example, (list, np.ndarray)):
+                example = np.array(example)
+                dtype = example.dtype
+                shape = example.shape
+                output.append((name, dtype, shape))
+            else:  # Encode as a string
+                max_len = df[name].apply(str).apply(len).max()
+                output.append((name, np.dtype(f'S{max_len}')))
 
-        if kind in ['S', 'U']:
+        elif kind in ['S', 'U']:
             max_len = df[name].apply(str).apply(len).max()
             output.append((name, np.dtype(f'S{max_len}')))
         elif kind in ['M', 'm', 'V']:
