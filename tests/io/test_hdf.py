@@ -85,3 +85,11 @@ def test_append(tmpdir, prefix):
         # Test bad prefix
         with raises(ValueError, match='No data available for prefix'):
             writer.append_to_table(file, 'example_table', pd.DataFrame({'a': [1., 2.]}), prefix='b')
+
+
+def test_df_missing_strings(tmpdir):
+    df = pd.DataFrame({'a': [None, 'a', 'bb']})
+    with tables.open_file(tmpdir / "example.h5", "w") as file:
+        group = file.create_group('/', name='base')
+        table = write_df_to_table(file, group, 'table', df)
+        assert tuple(table[-1]) == (b'bb',)
