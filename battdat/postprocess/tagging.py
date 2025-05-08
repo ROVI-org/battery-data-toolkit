@@ -128,6 +128,9 @@ class AddState(RawDataEnhancer):
     column_names = ['current']
 
     def enhance(self, data: pd.DataFrame) -> None:
+        if 'state' in data.columns:
+            print('State already present!')
+            return
         logger.debug('Adding states')
         data['state'] = data.apply(_determine_state, axis=1)
 
