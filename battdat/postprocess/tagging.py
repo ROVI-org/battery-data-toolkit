@@ -128,9 +128,6 @@ class AddState(RawDataEnhancer):
     column_names = ['current']
 
     def enhance(self, data: pd.DataFrame) -> None:
-        if 'state' in data.columns:
-            print('State already present!')
-            return
         logger.debug('Adding states')
         data['state'] = data.apply(_determine_state, axis=1)
 
@@ -190,16 +187,11 @@ def _determine_state(
     """
     Function to help determine the state of the cell based on the current
 
-    Parameters
-    ----------
-    row: pd.Series
-        Row that stores the value of current, following the convention established in this package
-    zero_threshold: float
-        Maximum absolute value a current can take to be assigned rest. Defaults to 0.1 mA
+    Args:
+        row: Row that stores the value of current, following the convention established in this package
+        zero_threshold: Maximum absolute value a current can take to be assigned rest. Defaults to 0.1 mA
 
-    Outputs
-    -------
-    state: string
+    Returns
         State of the cell, which can be either 'charging', 'discharging', or 'hold'
     """
     current = row['current']
