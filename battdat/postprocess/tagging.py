@@ -2,6 +2,7 @@
 
 For example, :meth:`add_method` determines whether the battery is being held at a constant voltage or current."""
 import logging
+from typing import Literal
 
 import numpy as np
 import pandas as pd
@@ -120,6 +121,17 @@ class AddMethod(RawDataEnhancer):
         return df[['method']]
 
 
+class AddState(RawDataEnhancer):
+    """
+    Marks states in which battery is charging, discharging, or resting
+    """
+    column_names = ['current']
+
+    def enhance(self, data: pd.DataFrame) -> None:
+        logger.debug('Adding states')
+        data['state'] = data.apply(_determine_state, axis=1)
+
+
 class AddSteps(RawDataEnhancer):
     """Mark points at which the battery changed state: charging, discharging, rest"""
 
@@ -166,3 +178,25 @@ def _determine_steps(df: DataFrame, column: str, output_col: str):
     # Step 2: Adjust so that each cycle starts with step 0
     for _, cycle in df.groupby("cycle_number"):
         df.loc[cycle.index, output_col] -= cycle[output_col].min()
+
+
+def _determine_state(
+        row: pd.Series,
+        zero_threshold: float = 1.0e-4
+        ) -> Literal[ChargingState.charging, ChargingState.discharging, ChargingState.hold]:
+    """
+    Function to help determine the state of the cell based on the current
+
+    Args:
+        row: Row that stores the value of current, following the convention established in this package
+        zero_threshold: Maximum absolute value a current can take to be assigned rest. Defaults to 0.1 mA
+
+    Returns
+        State of the cell, which can be either 'charging', 'discharging', or 'hold'
+    """
+    current = row['current']
+    if abs(current) <= zero_threshold:
+        return ChargingState.hold
+    elif current > 0.:
+        return ChargingState.charging
+    return ChargingState.discharging
