@@ -13,7 +13,7 @@ from battdat.data import BatteryDataset
 from battdat.io.base import DatasetFileReader
 from battdat.schemas import BatteryMetadata, BatteryDescription
 
-_fname_match = re.compile(r'(?P<name>[-\w]+)-(?P<type>summary|raw)\.csv')
+_fname_match = re.compile(r'(?P<name>[-\w]+)[- ](?P<type>summary|raw)\.csv')
 
 logger = logging.getLogger(__name__)
 
