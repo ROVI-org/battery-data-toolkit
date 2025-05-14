@@ -2,7 +2,7 @@
 
 For example, :meth:`add_method` determines whether the battery is being held at a constant voltage or current."""
 import logging
-from typing import Literal
+from typing import List, Literal
 
 import numpy as np
 import pandas as pd
@@ -124,19 +124,20 @@ class AddMethod(RawDataEnhancer):
 class AddState(RawDataEnhancer):
     """
     Marks states in which battery is charging, discharging, or resting
+
+    Args:
+        rest_curr_threshold: threshold of current for a period to be considered a rest
     """
-    column_names = ['current']
+    def __init__(self, rest_curr_threshold: float = 1.0e-04):
+        self.rest_curr_threshold = rest_curr_threshold
 
-    def enhance(self, data: pd.DataFrame, rest_curr_threshold: float = 1.0e-04) -> None:
-        """
-        Enhances the dataframe with states
+    @property
+    def column_names(self) -> List[str]:
+        return ['current']
 
-        Args:
-            data: pd.DataFrame in the right format
-            rest_curr_threshold: threshold of current for a period to be considered a rest
-        """
+    def enhance(self, data: pd.DataFrame) -> None:
         logger.debug('Adding states')
-        data['state'] = data.apply(_determine_state, axis=1, args=(rest_curr_threshold,))
+        data['state'] = data.apply(_determine_state, axis=1, args=(self.rest_curr_threshold,))
 
 
 class AddSteps(RawDataEnhancer):
