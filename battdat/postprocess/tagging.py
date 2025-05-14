@@ -127,9 +127,16 @@ class AddState(RawDataEnhancer):
     """
     column_names = ['current']
 
-    def enhance(self, data: pd.DataFrame) -> None:
+    def enhance(self, data: pd.DataFrame, rest_curr_threshold: float = 1.0e-04) -> None:
+        """
+        Enhances the dataframe with states
+
+        Args:
+            data: pd.DataFrame in the right format
+            rest_curr_threshold: threshold of current for a period to be considered a rest
+        """
         logger.debug('Adding states')
-        data['state'] = data.apply(_determine_state, axis=1)
+        data['state'] = data.apply(_determine_state, axis=1, args=(rest_curr_threshold,))
 
 
 class AddSteps(RawDataEnhancer):
