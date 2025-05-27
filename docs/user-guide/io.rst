@@ -61,9 +61,6 @@ find files:
     group = next(extractor.identify_files('./example-path/'))
     dataset = extractor.read_dataset(group)
 
-The :ref:`type of output dataset <type-table>` is defined by the :attr:`~battdat.io.base.DatasetFileReader.output_class` attribute.
-Most uses of readers do not require modifying this attribute.
-
 Writing Data
 ------------
 

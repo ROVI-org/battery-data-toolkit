@@ -96,20 +96,13 @@ class CycleTestReader(DatasetFileReader):
     Adds logic for reading cycling time series from a list of files.
     """
 
-    def read_file(self,
-                  file: str,
-                  file_number: int = 0,
-                  start_cycle: int = 0,
-                  start_time: int = 0) -> pd.DataFrame:
+    def read_file(self, file: str) -> pd.DataFrame:
         """Generate a DataFrame containing the data in this file
 
         The dataframe will be in our standard format
 
         Args:
             file: Path to the file
-            file_number: Number of file, in case the test is spread across multiple files
-            start_cycle: Index to use for the first cycle, in case test is spread across multiple files
-            start_time: Test time to use for the start of the test, in case test is spread across multiple files
 
         Returns:
             Dataframe containing the battery data in a standard format
@@ -127,21 +120,31 @@ class CycleTestReader(DatasetFileReader):
             DataFrame containing the information from all files
         """
 
-        # Initialize counters for the cycle numbers, etc., Used to determine offsets for the files read
-        start_cycle = 0
-        start_time = 0
-
         # Read the data for each file
         #  Keep track of the ending index and ending time
         output_dfs = []
         for file_number, file in enumerate(group):
-            # Read the file
-            df_out = self.read_file(file, file_number, start_cycle, start_time)
-            output_dfs.append(df_out)
+            df_out = self.read_file(file)
+            df_out['file_number'] = file_number
 
-            # Increment the start cycle and time to determine starting point of next file
-            start_cycle += df_out['cycle_number'].max() - df_out['cycle_number'].min() + 1
-            start_time = df_out['test_time'].max()
+            # Adjust the test time and cycle for subsequent files
+            if len(output_dfs) > 0:
+                last_row = output_dfs[-1]
+
+                # Determine the length of rest between last file and current
+                rest_between_files = 0  # Assume duplicate points if no data are available
+                if 'time' in last_row and 'time' in df_out:
+                    rest_between_files = df_out['time'].iloc[0] - last_row['time']
+
+                # Increment the test time such that it continues from the last file
+                df_out['test_time'] += last_row['test_time'] + rest_between_files
+
+                # Adjust the cycle number, if included
+                #  Assume the new file starts a new cycle
+                if 'cycle_number' in df_out.columns and 'cycle_number' in last_row:
+                    df_out['cycle_number'] += 1 + last_row['cycle_number']
+
+            output_dfs.append(df_out)
 
         # Combine the data from all files
         df_out = pd.concat(output_dfs, ignore_index=True)

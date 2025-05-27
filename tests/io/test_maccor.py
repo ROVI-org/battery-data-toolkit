@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 from pytest import fixture, raises
 
+from battdat.consistency.time import TestTimeVsTimeChecker
 from battdat.io.maccor import MACCORReader, correct_time_offsets
 
 
@@ -55,7 +56,17 @@ def test_grouping(extractor, tmp_path):
     assert (str(tmp_path / 'testB.001'),) in groups
 
 
+def test_test_time_multifile(extractor, test_file):
+    """Ensure we get the time between starting files correctly"""
+    files = [test_file, test_file.with_suffix('.002')]
+    data = extractor.read_dataset(files)
+    data.validate()
+
+    assert len(TestTimeVsTimeChecker().check(data)) == 0  # That the test times and date columns are correct
+
+
 def test_date_check(extractor, test_file):
+    """Test detecting out-of-order files"""
     files = [test_file, test_file.with_suffix('.002')]
     data = extractor.read_dataset(files)
     data.validate()
@@ -73,3 +84,5 @@ def test_time_parser(extractor, test_file):
     # With only the time in the time column
     df = extractor.read_file(test_file.with_suffix('.002'))
     assert datetime.fromtimestamp(df['time'].iloc[0]).month == 4
+    assert datetime.fromtimestamp(df['time'].iloc[0]).day == 1
+    assert datetime.fromtimestamp(df['time'].iloc[-1]).day == 2

@@ -102,8 +102,7 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
 
         return super().read_dataset(group, metadata)
 
-    def read_file(self, file: PathLike, file_number: int = 0, start_cycle: int = 0,
-                  start_time: int = 0) -> pd.DataFrame:
+    def read_file(self, file: PathLike) -> pd.DataFrame:
 
         # Pull the test date from the first line of the file
         with open(file, 'r') as fp:
@@ -118,10 +117,9 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
         df_out = pd.DataFrame()
 
         # fill in new dataframe
-        df_out['cycle_number'] = df['Cyc#'] + start_cycle - df['Cyc#'].min()
+        df_out['cycle_number'] = df['Cyc#'] - df['Cyc#'].min()
         df_out['cycle_number'] = df_out['cycle_number'].astype('int64')
-        df_out['file_number'] = file_number  # df_out['cycle_number']*0
-        df_out['test_time'] = df['Test (Min)'] * 60 - df['Test (Min)'].iloc[0] * 60 + start_time
+        df_out['test_time'] = df['Test (Min)'] * 60 - df['Test (Min)'].iloc[0] * 60
         df_out['state'] = df['State']
         df_out['current'] = df['Amps']
         df_out['current'] = np.where(df['State'] == 'D', -1 * df_out['current'], df_out['current'])
