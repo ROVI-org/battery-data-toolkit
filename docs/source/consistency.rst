@@ -22,3 +22,11 @@ Current (``b.consistency.current``)
    :members:
    :undoc-members:
    :show-inheritance:
+
+Current (``b.consistency.time``)
+------------------------------------
+
+.. automodule:: battdat.consistency.time
+   :members:
+   :undoc-members:
+   :show-inheritance:
