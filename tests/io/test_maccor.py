@@ -1,8 +1,10 @@
 """Tests related to the MACCOR parser"""
+import numpy as np
+import pandas as pd
 from datetime import datetime
 from pytest import fixture, raises
 
-from battdat.io.maccor import MACCORReader
+from battdat.io.maccor import MACCORReader, correct_time_offsets
 
 
 @fixture()
@@ -19,6 +21,26 @@ def test_validation(extractor, test_file):
     """Make sure the parser generates valid outputs"""
     data = extractor.read_dataset([test_file])
     data.validate_columns(allow_extra_columns=False)
+
+
+def test_check_offset_correct(caplog):
+    df = pd.DataFrame({
+        'test_time': np.arange(3, dtype=float),
+    })
+
+    # Test the OK offsets
+    for off in [86400, 1, -3600]:
+        df['time'] = df['test_time'] + datetime.now().timestamp()
+        df['time'].iloc[1:] += off
+        correct_time_offsets(df)
+        assert np.allclose(df['time'] - df['time'].iloc[0], np.arange(3.))
+        assert len(caplog.messages) == 0
+
+    # Test an offset which yields a warning
+    df['time'].iloc[1:] += 25
+    correct_time_offsets(df)
+    assert len(caplog.messages) == 1
+    assert '25' in caplog.messages[-1]
 
 
 def test_grouping(extractor, tmp_path):
@@ -51,8 +73,3 @@ def test_time_parser(extractor, test_file):
     # With only the time in the time column
     df = extractor.read_file(test_file.with_suffix('.002'))
     assert datetime.fromtimestamp(df['time'].iloc[0]).month == 4
-
-    # Ignoring datetime
-    extractor.ignore_time = True
-    df = extractor.read_file(test_file)
-    assert 'time' not in df.columns
