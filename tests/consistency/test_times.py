@@ -17,7 +17,7 @@ def example_dataset():
         'test_time': np.arange(8, dtype=float)
     })
     df['time'] = datetime.now().timestamp() + df['test_time']
-    data = BatteryDataset.make_cell_dataset(raw_data=df)
+    data = BatteryDataset.make_cell_dataset(raw_data=df, cycle_stats=pd.DataFrame({'cycle_number': [0]}))
     data.validate()
     return data
 
