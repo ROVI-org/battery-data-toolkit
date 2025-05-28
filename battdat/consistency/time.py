@@ -13,7 +13,9 @@ from ..data import BatteryDataset
 class TestTimeVsTimeChecker(ConsistencyChecker):
     """Ensure that the test time and timestamp columns agree
 
-    Verify that the difference between the test_time
+    Verify that the difference between the first and current row
+    for the ``test_time`` (time elapsed since the beginning of cycling)
+    and ``time`` (clock datetime) columns agree.
     """
 
     max_inconsistency: float = 0.1
