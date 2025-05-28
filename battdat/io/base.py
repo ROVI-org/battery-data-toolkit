@@ -129,12 +129,12 @@ class CycleTestReader(DatasetFileReader):
 
             # Adjust the test time and cycle for subsequent files
             if len(output_dfs) > 0:
-                last_row = output_dfs[-1]
+                last_row = output_dfs[-1].iloc[-1]
 
                 # Determine the length of rest between last file and current
                 rest_between_files = 0  # Assume duplicate points if no data are available
                 if 'time' in last_row and 'time' in df_out:
-                    rest_between_files = df_out['time'].iloc[0] - last_row['time']
+                    rest_between_files = max(df_out['time'].iloc[0] - last_row['time'], 0)
 
                 # Increment the test time such that it continues from the last file
                 df_out['test_time'] += last_row['test_time'] + rest_between_files
@@ -142,7 +142,7 @@ class CycleTestReader(DatasetFileReader):
                 # Adjust the cycle number, if included
                 #  Assume the new file starts a new cycle
                 if 'cycle_number' in df_out.columns and 'cycle_number' in last_row:
-                    df_out['cycle_number'] += 1 + last_row['cycle_number']
+                    df_out['cycle_number'] += 1 + int(last_row['cycle_number'])
 
             output_dfs.append(df_out)
 

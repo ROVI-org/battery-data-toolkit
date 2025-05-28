@@ -21,46 +21,6 @@ _test_date_re = re.compile(r'Date of Test:\s+(\d{2}/\d{2}/\d{4})')
 logger = logging.getLogger(__name__)
 
 
-def correct_time_offsets(raw_data: pd.DataFrame, desync_tol: float = 0.01) -> int:
-    """Correct errors in the timestamp column that result
-    from the day not being listed with timestamp.
-
-    Day rollovers are detected by desynchronization between the test time
-    and timestamps, which are corrected by moving the test_time forward
-    to meet the date time.
-
-    Will warn if the desynchronization is not a multiple of a day,
-    an hour (daylight savings time), or a second (leap seconds).
-
-    Args:
-        raw_data: Raw data signal to be corrected
-        desync_tol: Tolerance of desynchronization between time columns
-    Returns:
-        Number of day rollovers that were detected
-    """
-
-    test_time = raw_data['test_time'] - raw_data['test_time'].iloc[0]
-
-    def _get_differences():
-        timestamp_diff = raw_data['time'] - raw_data['time'].iloc[0]
-        return timestamp_diff - test_time
-
-    while np.abs(diffs := _get_differences()).max() > desync_tol:
-        # Get the amount of offset detected
-        first_bad_ix = np.argmax(np.abs(diffs) > desync_tol)
-        offset = diffs[first_bad_ix].item()
-
-        # Check if it's consistent with a date rollover, daylight savings time, or leap second
-        if np.isclose(offset % 86400, 0, atol=1e-1) or \
-                np.isclose(np.abs(offset), [3600, 1], atol=1e-1).any():
-            pass  # Nothing of concern
-        else:
-            logger.warning(f'Detected an offset inconsistent with a day: {offset} s')
-
-        # Correct the offset
-        raw_data['time'].iloc[first_bad_ix:] -= offset
-
-
 @dataclass
 class MACCORReader(CycleTestReader, DatasetFileReader):
     """Parser for reading from MACCOR-format files
@@ -69,6 +29,15 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
     The :meth:`group` operation will consolidate files such that all with
     the same prefix (i.e., everything except the numerals in the extension)
     are treated as part of the same experiment.
+
+    MACCOR files include both a test time relative to the start of testing
+    and a timestamp following the clock time.
+    This parser only assumes the test time to be correct because the timestamps
+    are nontrivial to rely upon, as they may be non-monotonic due to
+    changes to the computer's clock.
+    Test times are always monotonic.
+    The timestamps are generated based on the timestamp of the first row and
+    the change in test time.
     """
 
     def group(self, files: Union[str, List[str]], directories: List[str] = None,
@@ -119,10 +88,11 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
         # fill in new dataframe
         df_out['cycle_number'] = df['Cyc#'] - df['Cyc#'].min()
         df_out['cycle_number'] = df_out['cycle_number'].astype('int64')
-        df_out['test_time'] = df['Test (Min)'] * 60 - df['Test (Min)'].iloc[0] * 60
+        df_out['test_time'] = (df['Test (Min)'] - df['Test (Min)'].iloc[0]) * 60
         df_out['state'] = df['State']
         df_out['current'] = df['Amps']
         df_out['current'] = np.where(df['State'] == 'D', -1 * df_out['current'], df_out['current'])
+        df_out['voltage'] = df['Volts']
 
         # Parse the timestamps
         def _parse_time(time: str) -> float:
@@ -131,9 +101,8 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
             else:
                 return datetime.strptime(f'{test_date} {time}', '%m/%d/%Y %H:%M:%S').timestamp()
 
-        df_out['time'] = df['DPt Time'].apply(_parse_time)
-
-        correct_time_offsets(df_out)
+        start_time = _parse_time(df['DPt Time'].iloc[0])
+        df_out['time'] = start_time + df_out['test_time']
 
         #   0 is rest, 1 is charge, -1 is discharge
         df_out.loc[df_out['state'] == 'R', 'state'] = ChargingState.hold
@@ -141,7 +110,6 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
         df_out.loc[df_out['state'] == 'D', 'state'] = ChargingState.discharging
         df_out.loc[df_out['state'].apply(lambda x: x not in {'R', 'C', 'D'}), 'state'] = ChargingState.unknown
 
-        df_out['voltage'] = df['Volts']
         df_out = drop_cycles(df_out)
         AddSteps().enhance(df_out)
         AddMethod().enhance(df_out)

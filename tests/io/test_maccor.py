@@ -1,11 +1,9 @@
 """Tests related to the MACCOR parser"""
-import numpy as np
-import pandas as pd
 from datetime import datetime
 from pytest import fixture, raises
 
 from battdat.consistency.time import TestTimeVsTimeChecker
-from battdat.io.maccor import MACCORReader, correct_time_offsets
+from battdat.io.maccor import MACCORReader
 
 
 @fixture()
@@ -22,26 +20,6 @@ def test_validation(extractor, test_file):
     """Make sure the parser generates valid outputs"""
     data = extractor.read_dataset([test_file])
     data.validate_columns(allow_extra_columns=False)
-
-
-def test_check_offset_correct(caplog):
-    df = pd.DataFrame({
-        'test_time': np.arange(3, dtype=float),
-    })
-
-    # Test the OK offsets
-    for off in [86400, 1, -3600]:
-        df['time'] = df['test_time'] + datetime.now().timestamp()
-        df['time'].iloc[1:] += off
-        correct_time_offsets(df)
-        assert np.allclose(df['time'] - df['time'].iloc[0], np.arange(3.))
-        assert len(caplog.messages) == 0
-
-    # Test an offset which yields a warning
-    df['time'].iloc[1:] += 25
-    correct_time_offsets(df)
-    assert len(caplog.messages) == 1
-    assert '25' in caplog.messages[-1]
 
 
 def test_grouping(extractor, tmp_path):
@@ -63,6 +41,8 @@ def test_test_time_multifile(extractor, test_file):
     data.validate()
 
     assert len(TestTimeVsTimeChecker().check(data)) == 0  # That the test times and date columns are correct
+    assert data.raw_data['test_time'].max() > 86400
+    assert data.raw_data['cycle_number'].max() == 1
 
 
 def test_date_check(extractor, test_file):
