@@ -59,7 +59,7 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
         # Verify the cells are ordered by test date
         start_dates = []
         for file in group:
-            with open(file, 'r') as fp:
+            with open(file, 'r', encoding='latin1') as fp:
                 header = fp.readline()
                 test_date = _test_date_re.findall(header)[0]
                 start_dates.append(datetime.strptime(test_date, '%m/%d/%Y'))
@@ -74,7 +74,7 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
     def read_file(self, file: PathLike) -> pd.DataFrame:
 
         # Pull the test date from the first line of the file
-        with open(file, 'r') as fp:
+        with open(file, 'r', encoding='latin1') as fp:
             header = fp.readline()
         test_date = _test_date_re.findall(header)[0]
 

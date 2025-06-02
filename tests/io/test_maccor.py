@@ -56,7 +56,6 @@ def test_add_zero_current(extractor, test_file):
     assert data.raw_data['current'].iloc[orig_len] == 0
 
 
-
 def test_date_check(extractor, test_file):
     """Test detecting out-of-order files"""
     files = [test_file, test_file.with_suffix('.002')]
