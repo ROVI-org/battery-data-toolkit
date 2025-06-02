@@ -141,7 +141,7 @@ class CycleTestReader(DatasetFileReader):
                 df_out['test_time'] += last_row['test_time'] + rest_between_files
 
                 # Ensure current is zero if the rest between files is nonzero
-                if rest_between_files != 0 and last_row['current'] != 0:
+                if rest_between_files != 0 and (last_row['current'] != 0 or df_out['current'].iloc[0] != 0):
                     # Assume the rest occurs a millisecond later
                     new_last_row = output_dfs[-1].iloc[-1:].copy()
                     new_last_row['test_time'] += 1e-3
