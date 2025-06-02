@@ -1,5 +1,7 @@
 """Tests related to the MACCOR parser"""
 from datetime import datetime
+
+import numpy as np
 from pytest import fixture, raises
 
 from battdat.consistency.time import TestTimeVsTimeChecker
@@ -53,7 +55,8 @@ def test_add_zero_current(extractor, test_file):
 
     # Append a second test file, ensure nonzero current
     data = extractor.read_dataset([test_file.with_suffix('.charge.001'), test_file.with_suffix('.002')])
-    assert data.raw_data['current'].iloc[orig_len] == 0
+    assert np.allclose(data.raw_data['current'].iloc[orig_len:orig_len + 2], 0)
+    assert np.allclose(data.raw_data['file_number'].iloc[orig_len:orig_len + 2], [0, 1])
 
 
 def test_date_check(extractor, test_file):

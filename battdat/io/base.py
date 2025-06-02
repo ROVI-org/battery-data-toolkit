@@ -7,6 +7,7 @@ import pandas as pd
 
 from battdat.data import BatteryDataset
 from battdat.schemas import BatteryMetadata
+from battdat.schemas.column import ChargingState
 
 PathLike = Union[str, Path]
 
@@ -141,12 +142,25 @@ class CycleTestReader(DatasetFileReader):
 
                 # Ensure current is zero if the rest between files is nonzero
                 if rest_between_files != 0 and last_row['current'] != 0:
+                    # Assume the rest occurs a millisecond later
                     new_last_row = output_dfs[-1].iloc[-1:].copy()
-                    new_last_row['test_time'] += 1e-3  # Assume the rest occurs a millisecond later
+                    new_last_row['test_time'] += 1e-3
                     new_last_row['current'] = 0
                     if 'time' in new_last_row:
                         new_last_row['time'] += 1e-3
+                    if 'state' in new_last_row:
+                        new_last_row['state'] = ChargingState.hold
                     output_dfs[-1] = pd.concat([output_dfs[-1], new_last_row], ignore_index=True)
+
+                    # Assume the rest ends a millisecond before the new cycle starts
+                    new_first_row = df_out.iloc[:1].copy()
+                    new_first_row['test_time'] -= 1e-3
+                    new_first_row['current'] = 0.
+                    if 'time' in new_first_row:
+                        new_first_row['time'] -= 1e-3
+                    if 'state' in new_first_row:
+                        df_out['state'] = ChargingState.hold
+                    df_out = pd.concat([new_first_row, df_out], ignore_index=True)
 
                 # Adjust the cycle number, if included
                 #  Assume the new file starts a new cycle
