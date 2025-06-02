@@ -139,6 +139,15 @@ class CycleTestReader(DatasetFileReader):
                 # Increment the test time such that it continues from the last file
                 df_out['test_time'] += last_row['test_time'] + rest_between_files
 
+                # Ensure current is zero if the rest between files is nonzero
+                if rest_between_files != 0 and last_row['current'] != 0:
+                    new_last_row = output_dfs[-1].iloc[-1:].copy()
+                    new_last_row['test_time'] += 1e-3  # Assume the rest occurs a millisecond later
+                    new_last_row['current'] = 0
+                    if 'time' in new_last_row:
+                        new_last_row['time'] += 1e-3
+                    output_dfs[-1] = pd.concat([output_dfs[-1], new_last_row], ignore_index=True)
+
                 # Adjust the cycle number, if included
                 #  Assume the new file starts a new cycle
                 if 'cycle_number' in df_out.columns and 'cycle_number' in last_row:

@@ -45,6 +45,18 @@ def test_test_time_multifile(extractor, test_file):
     assert data.raw_data['cycle_number'].max() == 1
 
 
+def test_add_zero_current(extractor, test_file):
+    """Ensure that we add a zero-current row between files"""
+    data = extractor.read_dataset([test_file.with_suffix('.charge.001')])
+    orig_len = len(data.raw_data)
+    assert data.raw_data['current'].iloc[-1] != 0
+
+    # Append a second test file, ensure nonzero current
+    data = extractor.read_dataset([test_file.with_suffix('.charge.001'), test_file.with_suffix('.002')])
+    assert data.raw_data['current'].iloc[orig_len] == 0
+
+
+
 def test_date_check(extractor, test_file):
     """Test detecting out-of-order files"""
     files = [test_file, test_file.with_suffix('.002')]
