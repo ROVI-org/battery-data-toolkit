@@ -47,6 +47,7 @@ class CapacityPerCycle(CycleSummarizer):
     - ``capacity_charge``: Charge capacity per the cycle in A-hr
     - ``energy_charge``: Discharge energy per cycle in J
     - ``energy_discharge``: Charge energy per the cycle in J
+    - ``max_cycled_capacity``: Maximum amount of charge cycled during the cycle, in A-hr
 
     The full definitions are provided in the :class:`~battdat.schemas.cycling.CycleLevelData` schema
     """
