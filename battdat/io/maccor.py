@@ -1,5 +1,6 @@
 """Extractor for MACCOR"""
 import re
+import logging
 import itertools
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,6 +18,8 @@ from battdat.utils import drop_cycles
 
 _test_date_re = re.compile(r'Date of Test:\s+(\d{2}/\d{2}/\d{4})')
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class MACCORReader(CycleTestReader, DatasetFileReader):
@@ -26,10 +29,16 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
     The :meth:`group` operation will consolidate files such that all with
     the same prefix (i.e., everything except the numerals in the extension)
     are treated as part of the same experiment.
-    """
 
-    ignore_time: bool = False
-    """Ignore the the time column, which can be problematic."""
+    MACCOR files include both a test time relative to the start of testing
+    and a timestamp following the clock time.
+    This parser only assumes the test time to be correct because the timestamps
+    are nontrivial to rely upon, as they may be non-monotonic due to
+    changes to the computer's clock.
+    Test times are always monotonic.
+    The timestamps are generated based on the timestamp of the first row and
+    the change in test time.
+    """
 
     def group(self, files: Union[str, List[str]], directories: List[str] = None,
               context: dict = None) -> Iterator[Tuple[str, ...]]:
@@ -50,7 +59,7 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
         # Verify the cells are ordered by test date
         start_dates = []
         for file in group:
-            with open(file, 'r') as fp:
+            with open(file, 'r', encoding='latin1') as fp:
                 header = fp.readline()
                 test_date = _test_date_re.findall(header)[0]
                 start_dates.append(datetime.strptime(test_date, '%m/%d/%Y'))
@@ -62,11 +71,10 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
 
         return super().read_dataset(group, metadata)
 
-    def read_file(self, file: PathLike, file_number: int = 0, start_cycle: int = 0,
-                  start_time: int = 0) -> pd.DataFrame:
+    def read_file(self, file: PathLike) -> pd.DataFrame:
 
         # Pull the test date from the first line of the file
-        with open(file, 'r') as fp:
+        with open(file, 'r', encoding='latin1') as fp:
             header = fp.readline()
         test_date = _test_date_re.findall(header)[0]
 
@@ -78,22 +86,23 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
         df_out = pd.DataFrame()
 
         # fill in new dataframe
-        df_out['cycle_number'] = df['Cyc#'] + start_cycle - df['Cyc#'].min()
+        df_out['cycle_number'] = df['Cyc#'] - df['Cyc#'].min()
         df_out['cycle_number'] = df_out['cycle_number'].astype('int64')
-        df_out['file_number'] = file_number  # df_out['cycle_number']*0
-        df_out['test_time'] = df['Test (Min)'] * 60 - df['Test (Min)'].iloc[0] * 60 + start_time
+        df_out['test_time'] = (df['Test (Min)'] - df['Test (Min)'].iloc[0]) * 60
         df_out['state'] = df['State']
         df_out['current'] = df['Amps']
         df_out['current'] = np.where(df['State'] == 'D', -1 * df_out['current'], df_out['current'])
+        df_out['voltage'] = df['Volts']
 
-        if not self.ignore_time:
-            def _parse_time(time: str) -> float:
-                if '/' in time:
-                    return datetime.strptime(time, '%m/%d/%Y %H:%M:%S').timestamp()
-                else:
-                    return datetime.strptime(f'{test_date} {time}', '%m/%d/%Y %H:%M:%S').timestamp()
+        # Parse the timestamps
+        def _parse_time(time: str) -> float:
+            if '/' in time:
+                return datetime.strptime(time, '%m/%d/%Y %H:%M:%S').timestamp()
+            else:
+                return datetime.strptime(f'{test_date} {time}', '%m/%d/%Y %H:%M:%S').timestamp()
 
-            df_out['time'] = df['DPt Time'].apply(_parse_time)
+        start_time = _parse_time(df['DPt Time'].iloc[0])
+        df_out['time'] = start_time + df_out['test_time']
 
         #   0 is rest, 1 is charge, -1 is discharge
         df_out.loc[df_out['state'] == 'R', 'state'] = ChargingState.hold
@@ -101,7 +110,6 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
         df_out.loc[df_out['state'] == 'D', 'state'] = ChargingState.discharging
         df_out.loc[df_out['state'].apply(lambda x: x not in {'R', 'C', 'D'}), 'state'] = ChargingState.unknown
 
-        df_out['voltage'] = df['Volts']
         df_out = drop_cycles(df_out)
         AddSteps().enhance(df_out)
         AddMethod().enhance(df_out)

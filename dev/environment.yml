@@ -1,5 +1,5 @@
 # Conda environment file
-name: batdata
+name: battdat
 channels:
   - defaults
 dependencies:
