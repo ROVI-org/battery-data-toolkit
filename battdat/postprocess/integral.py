@@ -47,6 +47,7 @@ class CapacityPerCycle(CycleSummarizer):
     - ``capacity_charge``: Charge capacity per the cycle in A-hr
     - ``energy_charge``: Discharge energy per cycle in J
     - ``energy_discharge``: Charge energy per the cycle in J
+    - ``max_cycled_capacity``: Maximum amount of charge cycled during the cycle, in A-hr
 
     The full definitions are provided in the :class:`~battdat.schemas.cycling.CycleLevelData` schema
     """
@@ -64,6 +65,7 @@ class CapacityPerCycle(CycleSummarizer):
         output = []
         for name in ['charge', 'discharge']:
             output.extend([f'energy_{name}', f'capacity_{name}'])
+        output.extend(['max_cycled_capacity'])
         return output
 
     def _summarize(self, raw_data: pd.DataFrame, cycle_data: pd.DataFrame):
@@ -95,6 +97,7 @@ class CapacityPerCycle(CycleSummarizer):
             # Estimate if the battery starts as charged or discharged
             max_charge = capacity_change.max()
             max_discharge = -capacity_change.min()
+            cycle_data.loc[cyc, 'max_cycled_capacity'] = (max_charge + max_discharge) / 3600  # To Amp-hour
 
             starts_charged = max_discharge > max_charge
             if np.isclose(max_discharge, max_charge, rtol=0.01):

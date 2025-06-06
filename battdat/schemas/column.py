@@ -277,6 +277,9 @@ class CycleLevelData(ColumnSchema):
     coulomb_efficiency: ColumnInfo = ColumnInfo(description='Fraction of electric charge that is lost during charge and recharge',
                                                 units='%', type=DataType.FLOAT)
     energy_efficiency: ColumnInfo = ColumnInfo(description='Amount of energy lost during charge and discharge', type=DataType.FLOAT)
+    max_cycled_capacity: ColumnInfo = ColumnInfo(description='Maximum amount of charge cycled during cycle',
+                                                 units='A-hr',
+                                                 type=DataType.FLOAT)
 
     # Related to voltage
     discharge_V_average: ColumnInfo = ColumnInfo(description='Average voltage during discharging', units='V', type=DataType.FLOAT)
