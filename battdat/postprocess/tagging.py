@@ -191,7 +191,7 @@ def _determine_steps(df: DataFrame, column: str, output_col: str):
 def _determine_state(
         row: pd.Series,
         zero_threshold: float = 1.0e-4
-        ) -> Literal[ChargingState.charging, ChargingState.discharging, ChargingState.hold]:
+        ) -> Literal[ChargingState.charging, ChargingState.discharging, ChargingState.rest]:
     """
     Function to help determine the state of the cell based on the current
 
@@ -200,11 +200,11 @@ def _determine_state(
         zero_threshold: Maximum absolute value a current can take to be assigned rest. Defaults to 0.1 mA
 
     Returns
-        State of the cell, which can be either 'charging', 'discharging', or 'hold'
+        State of the cell, which can be either 'charging', 'discharging', or 'rest'
     """
     current = row['current']
     if abs(current) <= zero_threshold:
-        return ChargingState.hold
+        return ChargingState.rest
     elif current > 0.:
         return ChargingState.charging
     return ChargingState.discharging

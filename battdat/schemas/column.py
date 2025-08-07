@@ -11,7 +11,7 @@ class ChargingState(str, Enum):
     """Potential charging states of the battery"""
 
     charging = "charging"
-    hold = "hold"
+    rest = "resting"
     discharging = "discharging"
     unknown = "unknown"
 
