@@ -16,13 +16,13 @@ def synthetic_data() -> BatteryDataset:
     # Make the segments
     rest_v = [3.5] * 16
     rest_i = [0.] * 16
-    rest_s = [ChargingState.hold] * 16
+    rest_s = [ChargingState.rest] * 16
     discharge_v = np.linspace(3.5, 3.25, 16)
     discharge_i = [-0.125] * 16
     discharge_s = [ChargingState.discharging] * 16
     shortrest_v = [3.25] * 4
     shortrest_i = [0] * 4
-    shortrest_s = [ChargingState.hold] * 4
+    shortrest_s = [ChargingState.rest] * 4
     shortnon_v = [3.25] * 4
     shortnon_i = [-0.1] * 4
     shortnon_s = [ChargingState.discharging] * 4
@@ -105,10 +105,10 @@ def test_state_detection(synthetic_data):
     AddState().enhance(data=raw_data)
 
     # assert False, len(synthetic_data.raw_data)
-    assert (raw_data['state'].iloc[:16] == ChargingState.hold).all(), raw_data['state'].iloc[:16]
+    assert (raw_data['state'].iloc[:16] == ChargingState.rest).all(), raw_data['state'].iloc[:16]
     assert (raw_data['state'].iloc[16:32] == ChargingState.discharging).all(), raw_data['state'].iloc[16:32].to_numpy()
-    assert (raw_data['state'].iloc[32:36] == ChargingState.hold).all()
+    assert (raw_data['state'].iloc[32:36] == ChargingState.rest).all()
     assert (raw_data['state'].iloc[36:40] == ChargingState.discharging).all()
     assert (raw_data['state'].iloc[40:48] == ChargingState.charging).all()
-    assert (raw_data['state'].iloc[48:52] == ChargingState.hold).all()
+    assert (raw_data['state'].iloc[48:52] == ChargingState.rest).all()
     assert (raw_data['state'].iloc[52:] == ChargingState.charging).all()

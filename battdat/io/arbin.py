@@ -49,7 +49,7 @@ class ArbinReader(CycleTestReader):
         # TODO (wardlt): This function should move to post-processing
         def compute_state(x):
             if abs(x) < 1e-6:
-                return ChargingState.hold
+                return ChargingState.rest
             return ChargingState.charging if x > 0 else ChargingState.discharging
 
         df_out['state'] = df_out['current'].apply(compute_state)

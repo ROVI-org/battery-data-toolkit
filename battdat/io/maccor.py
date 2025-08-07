@@ -96,7 +96,7 @@ class MACCORReader(CycleTestReader, DatasetFileReader):
             df_out['time'] = df['DPt Time'].apply(_parse_time)
 
         #   0 is rest, 1 is charge, -1 is discharge
-        df_out.loc[df_out['state'] == 'R', 'state'] = ChargingState.hold
+        df_out.loc[df_out['state'] == 'R', 'state'] = ChargingState.rest
         df_out.loc[df_out['state'] == 'C', 'state'] = ChargingState.charging
         df_out.loc[df_out['state'] == 'D', 'state'] = ChargingState.discharging
         df_out.loc[df_out['state'].apply(lambda x: x not in {'R', 'C', 'D'}), 'state'] = ChargingState.unknown

@@ -43,11 +43,11 @@ class AddMethod(RawDataEnhancer):
             ind = cycle.index.values
             state = cycle['state'].values
 
-            if len(ind) < 5 and state[0] == ChargingState.hold:
+            if len(ind) < 5 and state[0] == ChargingState.rest:
                 # if there's a very short rest (less than 5 points)
                 # we label as "anomalous rest"
                 df.loc[ind, 'method'] = ControlMethod.short_rest
-            elif state[0] == ChargingState.hold:
+            elif state[0] == ChargingState.rest:
                 # if there are 5 or more points it's a
                 # standard "rest"
                 df.loc[ind, 'method'] = ControlMethod.rest
