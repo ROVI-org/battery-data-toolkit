@@ -35,7 +35,6 @@ class AddMethod(RawDataEnhancer):
     def column_names(self) -> List[str]:
         return ['method']
 
-
     def enhance(self, df: pd.DataFrame):
         # Insert a new column into the dataframe, starting with everything marked as other
         df['method'] = ControlMethod.other
