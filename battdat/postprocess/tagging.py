@@ -24,8 +24,17 @@ class AddMethod(RawDataEnhancer):
     of these points then assigning regions to constant voltage or current if one varied
     more than twice the other.
     """
+    def __init__(self, short_period_threshold: float = 30.0):
+        """
+        Args:
+            short_period_threshold: Maximum duration of a step to be considered a short step, in seconds
+        """
+        self.short_period_threshold = short_period_threshold
 
-    column_names = ['method']
+    @property
+    def column_names(self) -> List[str]:
+        return ['method']
+
 
     def enhance(self, df: pd.DataFrame):
         # Insert a new column into the dataframe, starting with everything marked as other
@@ -43,7 +52,7 @@ class AddMethod(RawDataEnhancer):
             ind = cycle.index.values
             state = cycle['state'].values
 
-            if t[-1] - t[0] < 30:
+            if t[-1] - t[0] < self.short_period_threshold:
                 # The step is shorter than 30 seconds
                 if state[0] == ChargingState.rest:
                     # If the step is a rest, we label it as a short rest
