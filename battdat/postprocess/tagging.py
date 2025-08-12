@@ -43,7 +43,7 @@ class AddMethod(RawDataEnhancer):
             ind = cycle.index.values
             state = cycle['state'].values
 
-            if t[-1] - t[0] < 30: 
+            if t[-1] - t[0] < 30:
                 # The step is shorter than 30 seconds
                 if state[0] == ChargingState.rest:
                     # If the step is a rest, we label it as a short rest
