@@ -43,23 +43,26 @@ class AddMethod(RawDataEnhancer):
             ind = cycle.index.values
             state = cycle['state'].values
 
-            if len(ind) < 5 and state[0] == ChargingState.rest:
-                # if there's a very short rest (less than 5 points)
-                # we label as "anomalous rest"
-                df.loc[ind, 'method'] = ControlMethod.short_rest
+            if t[-1] - t[0] < 30: 
+                # The step is shorter than 30 seconds
+                if state[0] == ChargingState.rest:
+                    # If the step is a rest, we label it as a short rest
+                    df.loc[ind, 'method'] = ControlMethod.short_rest
+                elif len(ind) < 5:
+                    # The step contains fewer than 5 data points, so it is innapropriate to label it as anything
+                    # definitive other than a short non-rest
+                    df.loc[ind, 'method'] = ControlMethod.short_nonrest
+                else:
+                    # The step is a pulse
+                    df.loc[ind, 'method'] = ControlMethod.pulse
             elif state[0] == ChargingState.rest:
-                # if there are 5 or more points it's a
-                # standard "rest"
+                # This is a standard rest, which lasts longer than 30 seconds
                 df.loc[ind, 'method'] = ControlMethod.rest
             elif len(ind) < 5:
-                # if it's a charge or discharge and there
-                # are fewer than 5 points it is an
-                # "anomalous charge or discharge"
-                df.loc[ind, 'method'] = ControlMethod.short_nonrest
-            elif t[-1] - t[0] < 30:
-                # if the step is less than 30 seconds
-                # index as "pulse"
-                df.loc[ind, 'method'] = ControlMethod.pulse
+                # The step spans over 30 seconds, but has fewer than 5 data points, rendering inadequate for control
+                # method determination
+                df.loc[ind, 'method'] = ControlMethod.unknown
+
             else:
                 # Normalize the voltage and current before determining which one moves "more"
                 for x in [voltage, current]:
