@@ -20,14 +20,17 @@ class ControlMethod(str, Enum):
     """Method used to control battery during a certain step"""
 
     short_rest = "short_rest"
-    """A very short rest period. Defined as a step with with near-zero current lasting for less than 30 seconds."""
+    """A very short rest period.
+    Defined as a step with with near-zero current lasting for a short period of time, which defaults to 30 seconds."""
     rest = "rest"
     """An extended period of neither charging nor discharging"""
     short_nonrest = "short_nonrest"
     """A very short period of charging or discharging.
-    Defined as a step lasting for less than 30 seconds with a non-zero current, but with fewer than 5 data points."""
+    Defined as a step with a non-zero current lasting for a short period of time (defaults to 30 seconds), but with
+    fewer than 5 data points."""
     pulse = "pulse"
-    """A short period of a large current lasting for less than 30 seconds. Must contain at least 5 data points."""
+    """A short period of a large current lasting for a short period of time, which defaults to 30 seconds.
+    Must contain at least 5 data points."""
     constant_current = "constant_current"
     """A step where the current is held constant"""
     constant_voltage = "constant_voltage"
