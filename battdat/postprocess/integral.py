@@ -56,7 +56,7 @@ class CapacityPerCycle(CycleSummarizer):
         """
 
         Args:
-            reuse_integrals: Whether to reuse the ``cycle_capacity`` and ``cycle_energy`` if they are available
+            reuse_integrals: Whether to reuse the ``cycled_charge`` and ``cycled_energy`` if they are available
         """
         self.reuse_integrals = reuse_integrals
 
@@ -87,9 +87,9 @@ class CapacityPerCycle(CycleSummarizer):
                 continue
 
             # Perform the integration
-            if self.reuse_integrals and 'cycle_energy' in cycle_subset.columns and 'cycle_capacity' in cycle_subset.columns:
-                capacity_change = cycle_subset['cycle_capacity'].values * 3600  # To A-s
-                energy_change = cycle_subset['cycle_energy'].values * 3600  # To J
+            if self.reuse_integrals and 'cycled_energy' in cycle_subset.columns and 'cycled_charge' in cycle_subset.columns:
+                capacity_change = cycle_subset['cycled_charge'].values * 3600  # To A-s
+                energy_change = cycle_subset['cycled_energy'].values * 3600  # To J
             else:
                 capacity_change = cumulative_trapezoid(cycle_subset['current'], x=cycle_subset['test_time'])
                 energy_change = cumulative_trapezoid(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'])
@@ -132,12 +132,45 @@ class StateOfCharge(RawDataEnhancer):
     The energy change is determined by integrating the product
     of current and voltage.
 
-    Output dataframe has 2 new columns:
-        - ``cycle_capacity``: Amount of charge charged since the beginning of the cycle, in A-hr
-        - ``cycle_energy``: Amount of energy charged since the beginning of the cycle, in J
+    Output dataframe has 3 new columns:
+        - ``cycled_charge``: Amount of observed charge cycled since the beginning of the cycle, in A-hr
+        - ``cycled_energy``: Amount of observed energy cycled since the beginning of the cycle, in W-hr
+        - ``CE_charge``: Amount of charge in the battery relative to the beginning of the cycle, accounting for Coulombic
+            Efficiency, in A-hr
     """
+    def __init__(self, coulombic_efficiency: float = 1.0):
+        """
+        Args:
+            coulombic_efficiency: Coulombic efficiency to use when computing the state of charge
+        """
+        self.coulombic_efficiency = coulombic_efficiency
 
-    column_names = ['cycle_capacity', 'cycle_energy']
+    @property
+    def coulombic_efficiency(self) -> float:
+        return self._ce
+
+    @coulombic_efficiency.setter
+    def coulombic_efficiency(self, value: float):
+        if value < 0 or value > 1:
+            raise ValueError('Coulombic efficiency must be between 0 and 1')
+        self._ce = value
+
+    @property
+    def column_names(self) -> List[str]:
+        return ['cycled_charge', 'cycled_energy', 'CE_charge']
+
+    def _get_CE_adjusted_curr(self, current: np.ndarray) -> np.ndarray:
+        """Adjust the current based on the coulombic efficiency
+
+        Args:
+            current: Current array in A
+
+        Returns:
+            Adjusted current array in A
+        """
+        adjusted_current = current.copy()
+        adjusted_current[current > 0] *= self.coulombic_efficiency
+        return adjusted_current
 
     def enhance(self, data: pd.DataFrame):
         # Add columns for the capacity and energy
@@ -153,9 +186,12 @@ class StateOfCharge(RawDataEnhancer):
             cycle_subset = ordered_copy.iloc[start_ind:stop_ind]
 
             # Perform the integration
+            ce_adj_curr = self._get_CE_adjusted_curr(cycle_subset['current'].to_numpy())
             capacity_change = cumulative_trapezoid(cycle_subset['current'], x=cycle_subset['test_time'], initial=0)
+            ce_charge = cumulative_trapezoid(ce_adj_curr, x=cycle_subset['test_time'], initial=0)
             energy_change = cumulative_trapezoid(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
 
             # Store them in the raw data
-            data.loc[cycle_subset['index'], 'cycle_capacity'] = capacity_change / 3600  # To A-hr
-            data.loc[cycle_subset['index'], 'cycle_energy'] = energy_change / 3600  # To W-hr
+            data.loc[cycle_subset['index'], 'cycled_charge'] = capacity_change / 3600  # To A-hr
+            data.loc[cycle_subset['index'], 'CE_charge'] = ce_charge / 3600  # To A-hr
+            data.loc[cycle_subset['index'], 'cycled_energy'] = energy_change / 3600  # To W-hr
