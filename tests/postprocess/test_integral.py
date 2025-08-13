@@ -54,12 +54,12 @@ def test_capacity(file_path, from_charged):
     assert np.isclose(raw_data.drop_duplicates('cycle_number', keep='first')[soc.column_names], 0).all()
 
     # Last cell of the capacity should be zero for our test cases
-    assert np.isclose(raw_data['cycle_capacity'].iloc[-1], 0., atol=1e-3)
+    assert np.isclose(raw_data['cycled_charge'].iloc[-1], 0., atol=1e-3)
 
     # The capacity for the first few steps should be I*t/3600s
     first_steps = raw_data.iloc[:3]
     current = first_steps['current'].iloc[0]
-    assert np.isclose(first_steps['cycle_capacity'], current * first_steps['test_time'] / 3600).all()
+    assert np.isclose(first_steps['cycled_charge'], current * first_steps['test_time'] / 3600).all()
 
     # The energy for the first few steps should be
     #  discharging = I * \int_0^t (2.9 - t/3600) = I * (2.9t - t^2/7200)
@@ -70,7 +70,7 @@ def test_capacity(file_path, from_charged):
     else:
         answer = current * (2.1 * first_steps['test_time'] + first_steps['test_time'] ** 2 / 7200)
         assert (answer[1:] > 0).all()
-    assert np.isclose(first_steps['cycle_energy'], answer / 3600, rtol=1e-3).all()
+    assert np.isclose(first_steps['cycled_energy'], answer / 3600, rtol=1e-3).all()
 
 
 def test_against_battery_data_gov(file_path):
@@ -102,7 +102,7 @@ def test_reuse_integrals(file_path):
 
     # Compute the integrals then intentionally increase capacity and energy 2x
     StateOfCharge().compute_features(example_data)
-    for c in ['cycle_energy', 'cycle_capacity']:
+    for c in ['cycled_energy', 'cycled_charge']:
         example_data.tables['raw_data'][c] *= 2
 
     # Recompute capacity and energy measurements, which should have increased by 2x

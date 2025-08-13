@@ -24,8 +24,16 @@ class AddMethod(RawDataEnhancer):
     of these points then assigning regions to constant voltage or current if one varied
     more than twice the other.
     """
+    def __init__(self, short_period_threshold: float = 30.0):
+        """
+        Args:
+            short_period_threshold: Maximum duration of a step to be considered a short step, in seconds
+        """
+        self.short_period_threshold = short_period_threshold
 
-    column_names = ['method']
+    @property
+    def column_names(self) -> List[str]:
+        return ['method']
 
     def enhance(self, df: pd.DataFrame):
         # Insert a new column into the dataframe, starting with everything marked as other
@@ -43,23 +51,26 @@ class AddMethod(RawDataEnhancer):
             ind = cycle.index.values
             state = cycle['state'].values
 
-            if len(ind) < 5 and state[0] == ChargingState.hold:
-                # if there's a very short rest (less than 5 points)
-                # we label as "anomalous rest"
-                df.loc[ind, 'method'] = ControlMethod.short_rest
-            elif state[0] == ChargingState.hold:
-                # if there are 5 or more points it's a
-                # standard "rest"
+            if t[-1] - t[0] < self.short_period_threshold:
+                # The step is shorter than 30 seconds
+                if state[0] == ChargingState.rest:
+                    # If the step is a rest, we label it as a short rest
+                    df.loc[ind, 'method'] = ControlMethod.short_rest
+                elif len(ind) < 5:
+                    # The step contains fewer than 5 data points, so it is innapropriate to label it as anything
+                    # definitive other than a short non-rest
+                    df.loc[ind, 'method'] = ControlMethod.short_nonrest
+                else:
+                    # The step is a pulse
+                    df.loc[ind, 'method'] = ControlMethod.pulse
+            elif state[0] == ChargingState.rest:
+                # This is a standard rest, which lasts longer than 30 seconds
                 df.loc[ind, 'method'] = ControlMethod.rest
             elif len(ind) < 5:
-                # if it's a charge or discharge and there
-                # are fewer than 5 points it is an
-                # "anomalous charge or discharge"
-                df.loc[ind, 'method'] = ControlMethod.short_nonrest
-            elif t[-1] - t[0] < 30:
-                # if the step is less than 30 seconds
-                # index as "pulse"
-                df.loc[ind, 'method'] = ControlMethod.pulse
+                # The step spans over 30 seconds, but has fewer than 5 data points, rendering inadequate for control
+                # method determination
+                df.loc[ind, 'method'] = ControlMethod.unknown
+
             else:
                 # Normalize the voltage and current before determining which one moves "more"
                 for x in [voltage, current]:
@@ -191,7 +202,7 @@ def _determine_steps(df: DataFrame, column: str, output_col: str):
 def _determine_state(
         row: pd.Series,
         zero_threshold: float = 1.0e-4
-        ) -> Literal[ChargingState.charging, ChargingState.discharging, ChargingState.hold]:
+        ) -> Literal[ChargingState.charging, ChargingState.discharging, ChargingState.rest]:
     """
     Function to help determine the state of the cell based on the current
 
@@ -200,11 +211,11 @@ def _determine_state(
         zero_threshold: Maximum absolute value a current can take to be assigned rest. Defaults to 0.1 mA
 
     Returns
-        State of the cell, which can be either 'charging', 'discharging', or 'hold'
+        State of the cell, which can be either 'charging', 'discharging', or 'rest'
     """
     current = row['current']
     if abs(current) <= zero_threshold:
-        return ChargingState.hold
+        return ChargingState.rest
     elif current > 0.:
         return ChargingState.charging
     return ChargingState.discharging

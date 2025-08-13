@@ -11,7 +11,7 @@ def example_df() -> pd.DataFrame:
         'test_time': [0, 0.1],
         'voltage': [0.1, 0.2],
         'current': [0.1, -0.1],
-        'state': ['charging', 'hold']
+        'state': ['charging', 'resting']
     })
 
 

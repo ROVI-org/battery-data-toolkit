@@ -11,7 +11,7 @@ class ChargingState(str, Enum):
     """Potential charging states of the battery"""
 
     charging = "charging"
-    hold = "hold"
+    rest = "resting"
     discharging = "discharging"
     unknown = "unknown"
 
@@ -20,19 +20,25 @@ class ControlMethod(str, Enum):
     """Method used to control battery during a certain step"""
 
     short_rest = "short_rest"
-    """A very short rest period. Defined as a step with 4 or fewer measurements with near-zero current"""
+    """A very short rest period.
+    Defined as a step with with near-zero current lasting for a short period of time, which defaults to 30 seconds."""
     rest = "rest"
     """An extended period of neither charging nor discharging"""
     short_nonrest = "short_nonrest"
-    """A very short period of charging or discharging. Defined as a step with 4 or fewer measurements with at least one non-zero current."""
+    """A very short period of charging or discharging.
+    Defined as a step with a non-zero current lasting for a short period of time (defaults to 30 seconds), but with
+    fewer than 5 data points."""
+    pulse = "pulse"
+    """A short period of a large current lasting for a short period of time, which defaults to 30 seconds.
+    Must contain at least 5 data points."""
     constant_current = "constant_current"
     """A step where the current is held constant"""
     constant_voltage = "constant_voltage"
     """A step where the voltage is held constant"""
     constant_power = "constant_power"
     """A step where the power is held constant"""
-    pulse = "pulse"
-    """A short period of a large current"""
+    unknown = "unknown"
+    """A step where the control method is not known"""
     other = "other"
 
 
