@@ -1,5 +1,5 @@
 """Read and write from `battery-data-toolkit's HDF format <https://rovi-org.github.io/battery-data-toolkit/user-guide/formats.html#hdf5>`_"""
-from typing import Optional, Union, Tuple, Set, Collection, Dict, Generator
+from typing import Optional, Union, Tuple, Set, Collection, Dict
 from contextlib import contextmanager
 from dataclasses import dataclass
 from json import JSONDecodeError
