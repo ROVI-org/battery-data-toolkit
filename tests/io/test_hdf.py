@@ -76,7 +76,7 @@ def test_append(tmpdir, prefix):
         df_copy = read_df_from_table(table)
         assert len(df_copy) == len(example_df) * 2
         assert np.allclose(df_copy['a'], [1, 2, 1, 2])
-        assert np.equal(df_copy['c'], [b'charge', b'discharge'] * 2).all()
+        assert np.equal(df_copy['c'], ['charge', 'discharge'] * 2).all()
 
         # Test data check
         with raises(ValueError, match='Existing and new'):
