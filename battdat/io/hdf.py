@@ -93,17 +93,34 @@ def read_df_from_table(table: Table) -> pd.DataFrame:
     array = np.empty((table.nrows,), dtype=table.dtype)
     for i, row in enumerate(table.iterrows()):
         array[i] = row.fetch_all_fields()
-    as_dict = dict((c, array[c]) for c in array.dtype.names)
 
-    # Expand ndarrays into a list
-    for k, v in as_dict.items():
-        if v.ndim != 1:
-            as_dict[k] = list(v)
+    as_dict = {}
+    # Expand the array
+    for c in array.dtype.names:
+        col = array[c]
+
+        # Expand ndarrays into a list
+        if col.ndim != 1:
+            as_dict[c] = list(col)
+        # Decode fixed-length byte strings to Python str
+        elif col.dtype.kind == "S":
+            as_dict[c] = np.char.decode(col, "ascii")
+        else:
+            as_dict[c] = col
+
     return pd.DataFrame(as_dict)
+
+    # as_dict = dict((c, array[c]) for c in array.dtype.names)
+
+    # # Expand ndarrays into a list
+    # for k, v in as_dict.items():
+    #     if v.ndim != 1:
+    #         as_dict[k] = list(v)
+    # return pd.DataFrame(as_dict)
 
 
 @contextmanager
-def as_hdf5_object(path_or_file: Union[PathLike, File], **kwargs) -> File:
+def as_hdf5_object(path_or_file: Union[PathLike, File], **kwargs):
     """Open a path as a PyTables file object if not done already.
 
     Keyword arguments are used when creating a store from a new file
