@@ -37,7 +37,7 @@ class AddMethod(RawDataEnhancer):
 
     def enhance(self, df: pd.DataFrame):
         # Insert a new column into the dataframe, starting with everything marked as other
-        df['method'] = ControlMethod.other
+        df.loc[:, ('method',)] = ControlMethod.other
 
         # array of indexes
         cycles = df.groupby(["cycle_number", "step_index"])
@@ -148,7 +148,7 @@ class AddState(RawDataEnhancer):
 
     def enhance(self, data: pd.DataFrame) -> None:
         logger.debug('Adding states')
-        data['state'] = data.apply(_determine_state, axis=1, args=(self.rest_curr_threshold,))
+        data.loc[:, ('state',)] = data.apply(_determine_state, axis=1, args=(self.rest_curr_threshold,))
 
 
 class AddSteps(RawDataEnhancer):
@@ -192,7 +192,7 @@ def _determine_steps(df: DataFrame, column: str, output_col: str):
 
     # The step number is equal to the number of changes observed previously in a batch
     #  Step 1: Compute the changes since the beginning of file
-    df[output_col] = change.cumsum()
+    df.loc[:, (output_col,)] = change.cumsum()
 
     # Step 2: Adjust so that each cycle starts with step 0
     for _, cycle in df.groupby("cycle_number"):
