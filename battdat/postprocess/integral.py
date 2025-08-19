@@ -135,8 +135,8 @@ class StateOfCharge(RawDataEnhancer):
     Output dataframe has 3 new columns:
         - ``cycled_charge``: Amount of observed charge cycled since the beginning of the cycle, in A-hr
         - ``cycled_energy``: Amount of observed energy cycled since the beginning of the cycle, in W-hr
-        - ``CE_charge``: Amount of charge in the battery relative to the beginning of the cycle, accounting for Coulombic
-            Efficiency, in A-hr
+        - ``CE_adjusted_charge``: Amount of charge in the battery relative to the beginning of the cycle, accounting for
+            Coulombic Efficiency (CE), in A-hr
     """
     def __init__(self, coulombic_efficiency: float = 1.0):
         """
@@ -157,7 +157,7 @@ class StateOfCharge(RawDataEnhancer):
 
     @property
     def column_names(self) -> List[str]:
-        return ['cycled_charge', 'cycled_energy', 'CE_charge']
+        return ['cycled_charge', 'cycled_energy', 'CE_adjusted_charge']
 
     def _get_CE_adjusted_curr(self, current: np.ndarray) -> np.ndarray:
         """Adjust the current based on the coulombic efficiency
@@ -168,14 +168,13 @@ class StateOfCharge(RawDataEnhancer):
         Returns:
             Adjusted current array in A
         """
-        adjusted_current = current.copy()
-        adjusted_current[current > 0] *= self.coulombic_efficiency
-        return adjusted_current
+        adjusted_current = np.where(current > 0, self.coulombic_efficiency * current, current)
+        return adjusted_current.flatten()
 
     def enhance(self, data: pd.DataFrame):
         # Add columns for the capacity and energy
         for c in self.column_names:
-            data[c] = np.nan
+            data.loc[:, (c,)] = np.nan
 
         # Compute the capacity and energy for each cycle
         ordered_copy = data.reset_index()  # Ensure a sequential ordering from 0
@@ -193,5 +192,5 @@ class StateOfCharge(RawDataEnhancer):
 
             # Store them in the raw data
             data.loc[cycle_subset['index'], 'cycled_charge'] = capacity_change / 3600  # To A-hr
-            data.loc[cycle_subset['index'], 'CE_charge'] = ce_charge / 3600  # To A-hr
+            data.loc[cycle_subset['index'], 'CE_adjusted_charge'] = ce_charge / 3600  # To A-hr
             data.loc[cycle_subset['index'], 'cycled_energy'] = energy_change / 3600  # To W-hr
