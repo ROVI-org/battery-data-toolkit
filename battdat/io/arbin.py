@@ -21,8 +21,7 @@ class ArbinReader(CycleTestReader):
             if file.lower().endswith('.csv'):
                 yield file
 
-    def read_file(self, file: str, file_number: int = 0, start_cycle: int = 0,
-                  start_time: float = 0) -> pd.DataFrame:
+    def read_file(self, file: str) -> pd.DataFrame:
 
         # Read the file and rename the file
         df = pd.read_csv(file)
@@ -32,10 +31,9 @@ class ArbinReader(CycleTestReader):
         df_out = pd.DataFrame()
 
         # Convert the column names
-        df_out['cycle_number'] = df['Cycle_Index'] + start_cycle - df['Cycle_Index'].min()
+        df_out['cycle_number'] = df['Cycle_Index'] - df['Cycle_Index'].min()
         df_out['cycle_number'] = df_out['cycle_number'].astype('int64')
-        df_out['file_number'] = file_number  # df_out['cycle_number']*0
-        df_out['test_time'] = np.array(df['test_time'] - df['test_time'][0] + start_time, dtype=float)
+        df_out['test_time'] = np.array(df['test_time'] - df['test_time'][0], dtype=float)
         df_out['current'] = df['Current']  # TODO (wardlt): Check this!?
         df_out['temperature'] = df['Temperature']
         df_out['internal_resistance'] = df['Internal_Resistance']

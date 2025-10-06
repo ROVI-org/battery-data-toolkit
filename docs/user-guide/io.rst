@@ -61,8 +61,17 @@ find files:
     group = next(extractor.identify_files('./example-path/'))
     dataset = extractor.read_dataset(group)
 
-The :ref:`type of output dataset <type-table>` is defined by the :attr:`~battdat.io.base.DatasetFileReader.output_class` attribute.
-Most uses of readers do not require modifying this attribute.
+
+Reading Data from Multiple Files
+++++++++++++++++++++++++++++++++
+
+The MACCOR and Arbin readers can combine test data from multiple files into the same, contiguous dataset.
+Combining is built on two key assumptions:
+
+1. The cells passed to ``read_dataset`` are in chronological order.
+2. The battery is at rest in any period between testing files.
+   The dataset reader will insert rows with zero current
+   if the current in the first or last measurement of a file is nonzero.
 
 Writing Data
 ------------
