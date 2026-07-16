@@ -8,6 +8,63 @@ import pandas as pd
 from scipy.integrate import cumulative_trapezoid
 
 from battdat.postprocess.base import RawDataEnhancer, CycleSummarizer
+from battdat.schemas.column import ChargingState
+
+
+_REST_CURRENT_THRESHOLD = 1.0e-4
+
+
+def _states_for_integration(data: pd.DataFrame) -> np.ndarray:
+    """Get the charging state used to decide which intervals are integrated.
+
+    A labelled ``state`` column is authoritative.  When it is absent, infer the
+    same states as :class:`~battdat.postprocess.tagging.AddState` without
+    mutating the caller's dataframe.
+    """
+    if 'state' in data:
+        return np.asarray([
+            value.value if isinstance(value, ChargingState) else value
+            for value in data['state'].to_numpy()
+        ])
+
+    current = data['current'].to_numpy()
+    state = np.full(len(current), ChargingState.rest.value, dtype=object)
+    state[current > _REST_CURRENT_THRESHOLD] = ChargingState.charging.value
+    state[current < -_REST_CURRENT_THRESHOLD] = ChargingState.discharging.value
+    return state
+
+
+def _cumulative_trapezoid_by_state(
+        values: np.ndarray,
+        test_time: np.ndarray,
+        state: np.ndarray,
+) -> np.ndarray:
+    """Integrate active, contiguous charging-state segments within one cycle.
+
+    The interval between differently labelled states is intentionally omitted:
+    the dataset does not contain the exact transition time, and assigning its
+    area to either state would introduce an undocumented assumption.  Rest and
+    unknown segments therefore preserve the prior cumulative value.
+    """
+    output = np.zeros(len(values), dtype=float)
+    if len(values) == 0:
+        return output
+
+    segment_starts = np.r_[0, np.flatnonzero(state[1:] != state[:-1]) + 1]
+    segment_stops = np.r_[segment_starts[1:], len(values)]
+    carry = 0.
+    active_states = (ChargingState.charging.value, ChargingState.discharging.value)
+
+    for start, stop in zip(segment_starts, segment_stops):
+        output[start:stop] = carry
+        if state[start] in active_states and stop - start > 1:
+            segment_change = cumulative_trapezoid(
+                values[start:stop], x=test_time[start:stop], initial=0,
+            )
+            output[start:stop] += segment_change
+            carry = output[stop - 1]
+
+    return output
 
 
 class CapacityPerCycle(CycleSummarizer):
@@ -137,6 +194,12 @@ class StateOfCharge(RawDataEnhancer):
         - ``cycled_energy``: Amount of observed energy cycled since the beginning of the cycle, in W-hr
         - ``CE_adjusted_charge``: Amount of charge in the battery relative to the beginning of the cycle, accounting for
             Coulombic Efficiency (CE), in A-hr
+
+    When a ``state`` column is available, each contiguous charging or
+    discharging segment is integrated independently. Rest and unknown segments
+    preserve the preceding cumulative value. If ``state`` is absent, states are
+    inferred from current using the same 0.1 mA rest threshold as
+    :class:`~battdat.postprocess.tagging.AddState`.
     """
     def __init__(self, coulombic_efficiency: float = 1.0):
         """
@@ -186,9 +249,15 @@ class StateOfCharge(RawDataEnhancer):
 
             # Perform the integration
             ce_adj_curr = self._get_CE_adjusted_curr(cycle_subset['current'].to_numpy())
-            capacity_change = cumulative_trapezoid(cycle_subset['current'], x=cycle_subset['test_time'], initial=0)
-            ce_charge = cumulative_trapezoid(ce_adj_curr, x=cycle_subset['test_time'], initial=0)
-            energy_change = cumulative_trapezoid(cycle_subset['current'] * cycle_subset['voltage'], x=cycle_subset['test_time'], initial=0)
+            state = _states_for_integration(cycle_subset)
+            time = cycle_subset['test_time'].to_numpy()
+            capacity_change = _cumulative_trapezoid_by_state(
+                cycle_subset['current'].to_numpy(), time, state,
+            )
+            ce_charge = _cumulative_trapezoid_by_state(ce_adj_curr, time, state)
+            energy_change = _cumulative_trapezoid_by_state(
+                (cycle_subset['current'] * cycle_subset['voltage']).to_numpy(), time, state,
+            )
 
             # Store them in the raw data
             data.loc[cycle_subset['index'], 'cycled_charge'] = capacity_change / 3600  # To A-hr

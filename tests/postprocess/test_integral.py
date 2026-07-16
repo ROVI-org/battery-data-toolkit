@@ -110,3 +110,56 @@ def test_reuse_integrals(file_path):
     final_data = example_data.tables['cycle_stats'][
         ['capacity_discharge', 'capacity_charge', 'energy_discharge', 'energy_charge']].copy()
     assert np.isclose(initial_data.values * 2, final_data.values, atol=1e-3).all()
+
+
+def _data_with_rest(rest_time: float, rest_current: float = 0.) -> pd.DataFrame:
+    return pd.DataFrame({
+        'test_time': [0., 600., rest_time, rest_time + 600., rest_time + 1200.],
+        'current': [1., 1., rest_current, -1., -1.],
+        'voltage': [4., 4., 3.8, 3., 3.],
+        'cycle_number': [0] * 5,
+        'state': ['charging', 'charging', 'resting', 'discharging', 'discharging'],
+    })
+
+
+def test_state_of_charge_does_not_integrate_across_rests():
+    """A longer rest must not add a false trapezoid to charge or energy."""
+    short_rest = _data_with_rest(rest_time=4200.)
+    long_rest = _data_with_rest(rest_time=86400.)
+
+    for raw_data in [short_rest, long_rest]:
+        StateOfCharge(coulombic_efficiency=0.9).enhance(raw_data)
+
+    expected_charge = [0., 1 / 6, 1 / 6, 1 / 6, 0.]
+    expected_energy = [0., 2 / 3, 2 / 3, 2 / 3, 1 / 6]
+    expected_ce_charge = [0., 0.15, 0.15, 0.15, -1 / 60]
+
+    for raw_data in [short_rest, long_rest]:
+        assert np.allclose(raw_data['cycled_charge'], expected_charge)
+        assert np.allclose(raw_data['cycled_energy'], expected_energy)
+        assert np.allclose(raw_data['CE_adjusted_charge'], expected_ce_charge)
+
+    assert np.allclose(
+        short_rest[['cycled_charge', 'cycled_energy', 'CE_adjusted_charge']],
+        long_rest[['cycled_charge', 'cycled_energy', 'CE_adjusted_charge']],
+    )
+
+
+def test_state_of_charge_uses_state_label_for_noisy_rests():
+    """A labelled rest remains a no-integration segment despite small leakage current."""
+    raw_data = _data_with_rest(rest_time=4200., rest_current=5.e-5)
+
+    StateOfCharge().enhance(raw_data)
+
+    assert np.isclose(raw_data['cycled_charge'].iloc[2], 1 / 6)
+    assert np.isclose(raw_data['cycled_energy'].iloc[2], 2 / 3)
+    assert np.isclose(raw_data['cycled_charge'].iloc[-1], 0.)
+
+
+def test_state_of_charge_infers_missing_state_without_mutating_data():
+    raw_data = _data_with_rest(rest_time=4200.).drop(columns='state')
+
+    StateOfCharge().enhance(raw_data)
+
+    assert 'state' not in raw_data
+    assert np.allclose(raw_data['cycled_charge'], [0., 1 / 6, 1 / 6, 1 / 6, 0.])
