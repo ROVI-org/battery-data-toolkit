@@ -37,8 +37,10 @@ class SignConventionChecker(ConsistencyChecker):
 
     def check_subset(self, time_series: pd.DataFrame) -> Optional[str]:
         # Convert the test time (seconds) to a time object so that Panda's rolling window can use a time
-        time_series['timestamp'] = time_series['test_time'].apply(datetime.fromtimestamp)
-        nonzero_current = time_series.query(f'current > {self.minimum_current} or current < {-self.minimum_current}')  # Only get nonzero currents
+        nonzero_current = time_series.query(
+            f'current > {self.minimum_current} or current < {-self.minimum_current}'
+        ).copy()
+        nonzero_current['timestamp'] = nonzero_current['test_time'].apply(datetime.fromtimestamp)
         windowed = nonzero_current[['timestamp', 'test_time', 'current', 'voltage']].rolling(
             window=timedelta(seconds=self.window_length), on='timestamp', min_periods=4,
         )
